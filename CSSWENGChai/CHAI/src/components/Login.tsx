@@ -25,7 +25,7 @@ function Login(){
     return (
         <>
             <img src= {CHAI} alt="Logo" className='w-45 h-45 p-1 mt-10 mb-10 m-auto rounded-full border-3 border-solid border-[#E3E3E3]'/>
-            <h2 className=' font-[Montserrat] font-bold text-2xl flex justify-center'>Management and Events Tracker (MET)</h2>
+            <h2 className=' font-[Montserrat] font-bold text-2xl flex justify-center'>Management and Events Tracker</h2>
             <div className='m-auto w-[60vh] p-10'>
                 <form className='flex flex-col' onSubmit={login}>
                     <label htmlFor='username' className='font-[Montserrat] font-semibold'>Username</label>
