@@ -1,14 +1,45 @@
 import CHAI from '../assets/CHAI.jpg'
-import { useNavigate } from "react-router";
+import { toast } from "react-toastify";
 import '../css/styles.css'
 
 function ProfileCreation(){
+
+    const submitDetails = async (e: React.FormEvent<HTMLFormElement>) => {
+            e.preventDefault()
+    
+            const formData = new FormData(e.target as HTMLFormElement);
+
+            let err = false
+            for (const [_, value] of formData.entries()) {
+                console.log(value.toString(), err)
+                if(!value)
+                    err = true
+            }
+
+            const emailRegEx = new RegExp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)
+            if(!err)
+            {
+                if(!emailRegEx.test(formData.get("email") as string) ) {
+                    toast.error("Please input a proper email.");
+                }
+                else if((formData.get("cNum") as string).length != 11 || formData.get("cNum")?.slice(0, 2) != "09") {
+                    toast.error("Please input a valid phone number." + formData.get("cNum")?.toString.length);
+                }
+                else {
+                    console.log("im here")
+                    toast.success("Success!")
+                    // more stuff
+                }
+            }
+            else
+                toast.error("Please fill up all fields!")
+        }
 
     return (
         <div className='flex items-center justify-center h-[100vh]'>
             <div className='flex items-end justify-center w-[65vh] h-[90vh] bg-[#254151] rounded-[5px] pb-[15px]'>
                 <div className='w-[61vh] h-[70vh]  bg-[#45B29D] rounded-[5px] p-[9px] '>
-                    <form className='flex flex-col'>
+                    <form className='flex flex-col' onSubmit={submitDetails}>
                         <label htmlFor='dropdown' className='text-white font-[Montserrat] font-semibold '>Role</label>
                         <select name='dropdown' className='rounded-[5px] appearance-none p-1.5 dark:text-white h-12 font-[Montserrat] border-solid border-3 border-[#254151]'>
                             <option value='Admin' >Admin</option>
