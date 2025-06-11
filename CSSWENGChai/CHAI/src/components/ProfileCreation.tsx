@@ -38,28 +38,31 @@ function ProfileCreation(){
     return (
         <div className='flex items-center justify-center h-[100vh]'>
             <div className='flex items-end justify-center w-[65vh] h-[90vh] bg-[#254151] rounded-[5px] pb-[15px]'>
-                <div className='w-[61vh] h-[70vh]  bg-[#45B29D] rounded-[5px] p-[9px] '>
+                <div className='overflow-hidden bg-gray-500 w-[20vh] h-[20vh] absolute top-[14%] border-3 border-[#45B29D] rounded-full '>
+                    <i className="relative right-0.5 bottom-6 text-[20vh] text-gray-300 fi fi-ss-circle-user"></i>
+                </div>
+                <div className='w-[61vh] h-[70vh]  bg-[#45B29D] rounded-[5px] p-[9px] pt-20'>
                     <form className='flex flex-col' onSubmit={submitDetails}>
                         <label htmlFor='dropdown' className='text-white font-[Montserrat] font-semibold '>Role</label>
                         <select name='dropdown' className='rounded-[5px] appearance-none p-1.5 dark:text-white h-12 font-[Montserrat] border-solid border-3 border-[#254151]'>
                             <option value='Admin' >Admin</option>
                             <option value='Admin' >Volunteer</option>
                         </select>
-                        <label htmlFor='username' className='text-white font-[Montserrat] font-semibold mt-5'>Username</label>
+                        <label htmlFor='username' className='text-white font-[Montserrat] font-semibold'>Username</label>
                         <input 
                             id='username'
                             name='username'  
                             type='text'
                             className='font-[Montserrat] text-white border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-1.5'
                         />
-                        <label htmlFor='email' className='text-white font-[Montserrat] font-semibold mt-5'>Email</label>
+                        <label htmlFor='email' className='text-white font-[Montserrat] font-semibold'>Email</label>
                         <input 
                             id='email'
                             name='email'
                             type='email'
                             className='font-[Montserrat] text-white border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-1.5'
                         />
-                        <div className='flex flex-row justify-between mt-5'>
+                        <div className='flex flex-row justify-between'>
                             <div className='flex flex-col w-61'>
                                 <label htmlFor='fName' className='text-white flex flex-col font-[Montserrat] font-semibold'>First Name</label>
                                 <input 
@@ -79,14 +82,14 @@ function ProfileCreation(){
                                 />
                             </div>
                         </div>
-                        <label htmlFor='address' className='text-white font-[Montserrat] font-semibold mt-5'>Address</label>
+                        <label htmlFor='address' className='text-white font-[Montserrat] font-semibold'>Address</label>
                         <input 
                             id='address'
                             name='address'
                             type='text'
                             className='font-[Montserrat] text-white border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-1.5'
                         />
-                        <label htmlFor='cNum' className='text-white font-[Montserrat] font-semibold mt-5'>Contact No.</label>
+                        <label htmlFor='cNum' className='text-white font-[Montserrat] font-semibold'>Contact No.</label>
                         <input 
                             id='cNum'
                             name='cNum'
