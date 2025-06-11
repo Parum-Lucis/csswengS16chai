@@ -18,7 +18,7 @@ function Login(){
             toast.error("Please input your username and password.");
         }
         else {
-            navigate("/profile")
+            navigate("/ProfileCreation")
         }
     }
 
@@ -33,14 +33,14 @@ function Login(){
                         id='username'
                         name='username'  
                         type='text'
-                        className='border-solid border-3 rounded-[5px] p-1.5'
+                        className='font-[Montserrat] border-solid border-3 rounded-[5px] p-1.5'
                     />
                     <label htmlFor='password' className='font-[Montserrat] font-semibold mt-5'>Password</label>
                     <input 
                         id='pw'
                         name='pw'
                         type='password'
-                        className=' border-solid border-3 rounded-[5px] p-1.5'
+                        className='font-[Montserrat]  border-solid border-3 rounded-[5px] p-1.5'
                     />
                     <div className='flex justify-between mt-1.5'>
                         <label className="font-[Montserrat] text-[1.1rem]">
