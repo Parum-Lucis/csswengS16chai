@@ -1,7 +1,18 @@
-import EventCard from "./EventCard";
+import EventCard from "../components/EventCard";
+import { useNavigate } from "react-router";
+import { auth } from "../firebase/firebaseConfig";
 import "../css/styles.css";
 
 function ProfileDetails() {
+  // If there is no user logged in, skip this page and redirect to login page
+  auth.onAuthStateChanged((user) => {
+    if (!user) {
+      navigate("/");
+    }
+  });
+
+  const navigate = useNavigate();
+
   const isEditable = false;
   let isStudent = false;
   let hasID = false;
@@ -23,7 +34,8 @@ function ProfileDetails() {
     { id: 1, name: "Class", date: "12/2/2002" },
     { id: 2, name: "Church", date: "12/2/2004" },
   ];
-
+  
+  // Account role checking
   if (user.role === "Student") {
     isStudent = true;
     if (user.id) hasID = true;
@@ -31,16 +43,16 @@ function ProfileDetails() {
 
   return (
     <div className="h-[100vh] flex items-center justify-center border-4">
+      <button onClick={ () => {
+        auth.signOut();
+        navigate("/"); 
+      }}>Sign Out</button>
       <div
-        className={`relative overflow-hidden flex  items-center justify-center w-[65vh] h-[${
-          isStudent ? "90vh" : "70vh"
-        }] bg-[#254151] rounded-[5px] pb-[15px]`}
+        className={`relative overflow-hidden flex  items-center justify-center w-[65vh] ${
+          isStudent ? "h-[90vh]" : "h-[70vh]"
+        } bg-[#254151] rounded-[5px] pb-[15px]`}
       >
-        <div
-          className={`z-1 overflow-hidden bg-gray-500 w-[20vh] h-[20vh] absolute top-[${
-            isStudent ? "4%" : "5%"
-          }] border-5 border-[#45B29D] rounded-full`}
-        >
+        <div className="z-1 overflow-hidden bg-gray-500 w-[20vh] h-[20vh] absolute top-[4%] border-5 border-[#45B29D] rounded-full">
           <i className="relative right-0.5 bottom-6 text-[20vh] text-gray-300 fi fi-ss-circle-user"></i>
         </div>
         <div className="z-0 flex flex-col relative top-[7%]">

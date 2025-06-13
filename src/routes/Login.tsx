@@ -16,7 +16,7 @@ function Login() {
   // if there is already a user logged in, just skip the login page.
   auth.onAuthStateChanged((user) => {
     if (user) {
-      navigate("/profile");
+      navigate("/ProfileDetails");
     }
   });
 
@@ -40,7 +40,7 @@ function Login() {
         rememberMe ? browserLocalPersistence : browserSessionPersistence
       );
       console.log(user);
-      navigate("/profile");
+      navigate("/ProfileDetails");
     } catch (error) {
       // see https://firebase.google.com/docs/auth/admin/errors for other auth/error-codes
       if (error instanceof FirebaseError) {
