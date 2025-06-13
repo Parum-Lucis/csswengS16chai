@@ -43,10 +43,6 @@ function ProfileDetails() {
 
   return (
     <div className="h-[100vh] flex items-center justify-center border-4">
-      <button onClick={ () => {
-        auth.signOut();
-        navigate("/"); 
-      }}>Sign Out</button>
       <div
         className={`relative overflow-hidden flex  items-center justify-center w-[65vh] ${
           isStudent ? "h-[90vh]" : "h-[70vh]"
@@ -55,6 +51,15 @@ function ProfileDetails() {
         <div className="z-1 overflow-hidden bg-gray-500 w-[20vh] h-[20vh] absolute top-[4%] border-5 border-[#45B29D] rounded-full">
           <i className="relative right-0.5 bottom-6 text-[20vh] text-gray-300 fi fi-ss-circle-user"></i>
         </div>
+        <button 
+          onClick={ () => {
+          auth.signOut();
+          navigate("/"); 
+          }}
+          className="absolute z-1 left-[3%] top-[2%] h-[4vh] text-[2vh] justify-center items-center bg-[#45B29D] text-white p-1.5 rounded-[5px] w-[10vh] m-auto font-semibold duration-500 hover:bg-[#45b29c8a]"
+        >
+            Sign Out
+        </button>
         <div className="z-0 flex flex-col relative top-[7%]">
           <div className="flex flex-col w-[61vh] h-[50vh]  overflow-hidden bg-[#45B29D] rounded-[5px] p-[9px] pt-20 ">
             <h3 className="text-[#254151] mt-6 flex text-[3vh] justify-center font-[Montserrat] font-bold">
