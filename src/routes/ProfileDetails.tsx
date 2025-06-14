@@ -69,7 +69,7 @@ function ProfileDetails() {
             </h3>
             {hasID && (
               <h3 className="flex text-[#254151] justify-center font-[Montserrat] font-regular">
-                id: {user.id}{" "}
+                ID: {user.id}{" "}
               </h3>
             )}
             <div className="flex flex-col p-3">
@@ -83,7 +83,7 @@ function ProfileDetails() {
                   </label>
                   <input
                     type="date"
-                    name="bDate"
+                    id="bDate"
                     className="flex text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
                     readOnly={!isEditable}
                     value={user.birthday}
@@ -98,7 +98,7 @@ function ProfileDetails() {
                   </label>
                   <input
                     type="text"
-                    name="Sex"
+                    id="Sex"
                     className="w-[1.5rem] flex text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
                     readOnly={!isEditable}
                     value={user.sex}
@@ -114,7 +114,7 @@ function ProfileDetails() {
                 </label>
                 <input
                   type="text"
-                  name="gLevel"
+                  id="gLevel"
                   className="flex-1/2 text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
                   readOnly={!isEditable}
                   value={user.gLevel}
@@ -129,7 +129,7 @@ function ProfileDetails() {
                 </label>
                 <input
                   type="number"
-                  name="cNum"
+                  id="cNum"
                   className="flex-1/2 text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
                   readOnly={!isEditable}
                   value={user.contact}
@@ -137,14 +137,14 @@ function ProfileDetails() {
               </div>
               <div className="flex flex-row items-center mt-2">
                 <label
-                  htmlFor="Address"
+                  htmlFor="add"
                   className="flex mr-2 font-[Montserrat] justify-center items-center bg-[#254151] text-white p-1 rounded-[5px] font-semibold"
                 >
                   Address:
                 </label>
                 <input
                   type="text"
-                  name="Address"
+                  id="add"
                   className="flex-1/2 text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
                   readOnly={!isEditable}
                   value={user.address}
@@ -166,8 +166,8 @@ function ProfileDetails() {
                 Attended Events
               </h3>
               <div className="overflow-auto">
-                {eventsTest.map((event) => (
-                  <EventCard date={event.date} event={event.name} />
+                {eventsTest.map((event, index) => (
+                  <EventCard key={index} date={event.date} event={event.name} />
                 ))}
               </div>
             </div>

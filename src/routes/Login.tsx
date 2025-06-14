@@ -64,7 +64,7 @@ function Login() {
         alt="Logo"
         className="w-45 h-45 p-1 mt-10 mb-10 rounded-full border-3 border-solid border-[#E3E3E3]"
       />
-      <h2 className=" font-[Montserrat] font-bold text-2xl flex justify-center">
+      <h2 className=" font-[Montserrat] font-bold text-[1.3rem] flex justify-center">
         Management and Events Tracker
       </h2>
       <div className="flex justify-center items-center mb-3 p-10">
