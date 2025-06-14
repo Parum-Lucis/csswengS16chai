@@ -3,5 +3,5 @@
 @import "tailwindcss";
 
 .input-text {
-  @apply font-[Montserrat] text-white border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-1.5;
+  @apply w-full font-[Montserrat] text-white border-solid border border-[#254151] bg-[#3EA08D] rounded-[5px] p-1.5;
 }

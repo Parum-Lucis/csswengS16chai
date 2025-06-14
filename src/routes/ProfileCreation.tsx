@@ -37,12 +37,12 @@ function ProfileCreation() {
   };
 
   return (
-    <div className="flex items-center justify-center h-[100vh]">
-      <div className="flex items-end justify-center w-[65vh] h-[90vh] bg-[#254151] rounded-[5px] pb-[15px]">
-        <div className="overflow-hidden bg-gray-500 w-[20vh] h-[20vh] absolute top-[14.5%] border-5 border-[#45B29D] rounded-full ">
-          <i className="relative right-1 bottom-6 text-[20vh] text-gray-300 fi fi-ss-circle-user"></i>
+    <div className="flex items-center justify-center h-screen p-5">
+      <div className="relative flex items-end justify-center pl-3 pr-3 pt-24 h-auto bg-[#254151] rounded-[5px] p-3">
+        <div className="z-1 overflow-hidden bg-gray-500 w-[9rem] h-[9rem] absolute top-[4%] border-5 border-[#45B29D] rounded-full">
+          <i className="relative right-0.5 bottom-6 text-[9rem] text-gray-300 fi fi-ss-circle-user"></i>
         </div>
-        <div className="w-[61vh] h-[70vh]  bg-[#45B29D] rounded-[5px] p-[9px] pt-20">
+        <div className="flex bg-[#45B29D] rounded-[5px] p-2 pt-20">
           <form className="flex flex-col" onSubmit={submitDetails}>
             <label
               htmlFor="dropdown"
@@ -52,7 +52,7 @@ function ProfileCreation() {
             </label>
             <select
               name="dropdown"
-              className="rounded-[5px] appearance-none p-1.5 dark:text-white h-12 font-[Montserrat] border-solid border-3 border-[#254151]"
+              className="rounded-[5px] appearance-none p-1.5 dark:text-white font-[Montserrat] border-solid border-3 border-[#254151]"
             >
               <option value="Admin">Admin</option>
               <option value="Volunteer">Volunteer</option>
@@ -83,8 +83,8 @@ function ProfileCreation() {
               type="email"
               className="input-text"
             />
-            <div className="flex flex-row justify-between">
-              <div className="flex flex-col w-61">
+            <div className="flex flex-row justify-between gap-2">
+              <div className="flex flex-col">
                 <label
                   htmlFor="fName"
                   className="text-white flex flex-col font-[Montserrat] font-semibold"
@@ -98,7 +98,7 @@ function ProfileCreation() {
                   className="input-text"
                 />
               </div>
-              <div className="flex flex-col w-61">
+              <div className="flex flex-col">
                 <label
                   htmlFor="lName"
                   className="text-white font-[Montserrat] font-semibold"
@@ -134,7 +134,7 @@ function ProfileCreation() {
             <input id="cNum" name="cNum" type="number" className="input-text" />
             <button
               type="submit"
-              className="bg-[#254151] text-white mt-10 p-1.5 rounded-[5px] w-60 m-auto font-semibold"
+              className=" bg-[#254151] text-white mt-7 p-1.5 rounded-[5px] font-semibold"
             >
               {" "}
               Create Account{" "}
