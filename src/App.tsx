@@ -6,6 +6,7 @@ import ProfileDetails from "./routes/ProfileDetails";
 import { useState } from "react";
 import { auth } from "./firebase/firebaseConfig";
 import { UserContext, type UserStateType } from "./assets/userContext";
+import NavBar from "./components/NavBar";
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/ProfileDetails" element={<ProfileDetails />} />
         <Route path="/ProfileCreation" element={<ProfileCreation />} />
       </Routes>
+      <NavBar/>
     </UserContext>
   );
 }

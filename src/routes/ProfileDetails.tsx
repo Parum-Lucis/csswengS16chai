@@ -46,7 +46,7 @@ function ProfileDetails() {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center p-3">
+    <div className="h-screen flex items-center justify-center pb-">
       <div
         className={`relative overflow-hidden flex items-end justify-center pl-3 pr-3 pt-20 h-auto bg-[#254151] rounded-[5px] pb-3`}
       >
