@@ -62,13 +62,13 @@ function Login() {
       <img
         src={CHAI}
         alt="Logo"
-        className="w-45 h-45 p-1 mt-10 mb-10 rounded-full border-3 border-solid border-[#E3E3E3]"
+        className="w-24 h-24 sm:w-32 sm:h-32 p-1 mt-10 mb-6 rounded-full border-2 border-solid border-[#E3E3E3]"
       />
-      <h2 className=" font-[Montserrat] text-center font-bold text-[1.3rem] flex justify-center">
+      <h2 className="font-[Montserrat] text-center font-bold text-[1.2rem] sm:text-[1.3rem]">
         Management and Events Tracker
       </h2>
-      <div className="md:container w-full flex justify-center items-center mb-3 p-10">
-        <form className="w-full flex flex-col p-2" onSubmit={login}>
+      <div className="w-full max-w-md flex justify-center items-center mb-6 mt-4">
+        <form className="w-full flex flex-col gap-2 p-4 sm:p-6" onSubmit={login}>
           <label htmlFor="username" className="font-[Montserrat] font-semibold">
             Username
           </label>
@@ -90,7 +90,7 @@ function Login() {
             type="password"
             className=" border-solid border-3 rounded-[5px] p-1.5"
           />
-          <div className="flex justify-between mt-1.5">
+          <div className="flex justify-between items-center mt-2">
             <label className="font-[Montserrat] text-sm">
               <input
                 id="cbox"
