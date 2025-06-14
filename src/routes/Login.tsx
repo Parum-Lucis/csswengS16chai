@@ -9,16 +9,19 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
+import { useContext, useEffect } from "react";
+import { UserContext } from "../assets/userContext";
 
 function Login() {
   const navigate = useNavigate();
+  const user = useContext(UserContext);
 
   // if there is already a user logged in, just skip the login page.
-  auth.onAuthStateChanged((user) => {
+  useEffect(() => {
     if (user) {
-      navigate("/ProfileDetails");
+      navigate("/profileDetails");
     }
-  });
+  }, [user, navigate]);
 
   const login = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,8 +29,7 @@ function Login() {
     const formData = new FormData(e.target as HTMLFormElement);
     const username = formData.get("username") as string; // coerce them to strings cause form doesn't know what datatype these guys are.
     const password = formData.get("pw") as string;
-    const rememberMe = !!formData.get("cbox"); // !! tocoerce to true/false, trust me bro
-    console.log(rememberMe);
+    const rememberMe = !!formData.get("cbox"); // !! to coerce to true/false, trust me bro
 
     if (!username || !password) {
       toast.error("Please input your username and password.");

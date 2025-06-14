@@ -3,14 +3,25 @@ import { Routes, Route } from "react-router";
 import "./css/styles.css";
 import ProfileCreation from "./routes/ProfileCreation";
 import ProfileDetails from "./routes/ProfileDetails";
+import { useState } from "react";
+import { auth } from "./firebase/firebaseConfig";
+import { UserContext, type UserStateType } from "./assets/userContext";
+
 
 function App() {
+  const [user, setUser] = useState<UserStateType>(undefined);
+  auth.onAuthStateChanged(currUser => {
+    setUser(currUser);
+  });
+
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/ProfileDetails" element={<ProfileDetails />} />
-      <Route path="/ProfileCreation" element={<ProfileCreation />} />
-    </Routes>
+    <UserContext value={user}>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/ProfileDetails" element={<ProfileDetails />} />
+        <Route path="/ProfileCreation" element={<ProfileCreation />} />
+      </Routes>
+    </UserContext>
   );
 }
 
