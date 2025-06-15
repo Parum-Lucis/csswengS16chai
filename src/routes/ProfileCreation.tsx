@@ -43,7 +43,6 @@ function ProfileCreation() {
           <div className="absolute top-0 sm:top-0 z-10 w-28 h-28 sm:w-36 sm:h-36 overflow-hidden bg-gray-500 border-4 border-[#45B29D] rounded-full flex items-center justify-center">
             <i className="text-[6rem] sm:text-[7rem] text-gray-300 fi fi-ss-circle-user"></i>
           </div>
-
           <div className="flex w-full bg-[#45B29D] rounded-[5px] p-4 pt-20">
             <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
               <div>
@@ -60,7 +59,6 @@ function ProfileCreation() {
                   <option value="Waitlist">Waitlist</option>
                 </select>
               </div>
-
               <div>
                 <label htmlFor="username" className="text-white font-[Montserrat] font-semibold">
                   Username
@@ -72,7 +70,6 @@ function ProfileCreation() {
                     className="input-text w-full"
                 />
               </div>
-
               <div>
                 <label htmlFor="email" className="text-white font-[Montserrat] font-semibold">
                   Email
@@ -84,7 +81,6 @@ function ProfileCreation() {
                     className="input-text w-full"
                 />
               </div>
-
               <div className="flex flex-col sm:flex-row sm:gap-4">
                 <div className="flex flex-col w-full sm:w-1/2">
                   <label htmlFor="fName" className="text-white font-[Montserrat] font-semibold">
@@ -109,7 +105,6 @@ function ProfileCreation() {
                   />
                 </div>
               </div>
-
               <div>
                 <label htmlFor="address" className="text-white font-[Montserrat] font-semibold">
                   Address
@@ -121,7 +116,6 @@ function ProfileCreation() {
                     className="input-text w-full"
                 />
               </div>
-
               <div>
                 <label htmlFor="cNum" className="text-white font-[Montserrat] font-semibold">
                   Contact No.
@@ -133,7 +127,6 @@ function ProfileCreation() {
                     className="input-text w-full"
                 />
               </div>
-
               <button
                   type="submit"
                   className="bg-[#254151] text-white mt-4 p-2 rounded-[5px] font-semibold"
