@@ -101,8 +101,7 @@ function Login() {
               Remember Me
             </label>
             <a
-              href="http://google.com"
-              target="_blank"
+              onClick={() => {navigate("/forget-password")}}
               className="font-[Montserrat] text-sm text-[#45B29D] hover:underline"
             >
               Forgot Password?

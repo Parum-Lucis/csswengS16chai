@@ -8,6 +8,7 @@ import { auth } from "./firebase/firebaseConfig";
 import { UserContext, type UserStateType } from "./context/userContext.ts";
 import NavigationBar from "./components/NavigationBar.tsx";
 import Temp from "./components/Temp.tsx";
+import ForgetMeNot from "./routes/ForgetMeNot.tsx";
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
     <UserContext value={user}>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/forget-password" element={<ForgetMeNot />} />
         <Route path="/view-profile" element={<ProfileDetails />} />
         <Route path="/create-profile" element={<ProfileCreation />} />
         <Route path="/view-profile-list" element={<Temp />} />
