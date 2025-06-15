@@ -60,7 +60,7 @@ function ProfileDetails() {
 
           <button
               onClick={() => auth.signOut()}
-              className="absolute left-4 top-4 bg-[#45B29D] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
+              className="absolute left-4 top-8 bg-[#45B29D] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
             Sign Out
           </button>
 
