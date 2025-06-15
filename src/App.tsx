@@ -5,8 +5,9 @@ import ProfileCreation from "./routes/ProfileCreation";
 import ProfileDetails from "./routes/ProfileDetails";
 import { useState } from "react";
 import { auth } from "./firebase/firebaseConfig";
-import { UserContext, type UserStateType } from "./assets/userContext";
-import NavBar from "./components/NavBar";
+import { UserContext, type UserStateType } from "./context/userContext.ts";
+import NavigationBar from "./components/NavigationBar.tsx";
+import Temp from "./components/Temp.tsx";
 
 
 function App() {
@@ -19,10 +20,13 @@ function App() {
     <UserContext value={user}>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/ProfileDetails" element={<ProfileDetails />} />
-        <Route path="/ProfileCreation" element={<ProfileCreation />} />
+        <Route path="/view-profile" element={<ProfileDetails />} />
+        <Route path="/create-profile" element={<ProfileCreation />} />
+        <Route path="/view-profile-list" element={<Temp />} />
+        <Route path="/view-calendar" element={<Temp />} />
+        <Route path="/view-event-list" element={<Temp />} />
       </Routes>
-      <NavBar/>
+      <NavigationBar/>
     </UserContext>
   );
 }

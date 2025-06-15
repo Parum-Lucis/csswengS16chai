@@ -1,25 +1,24 @@
 import "../css/styles.css";
 import { NavLink } from "react-router";
-import { auth } from "../firebase/firebaseConfig";
 import { useContext } from "react";
-import { UserContext } from "../assets/userContext";
-import { useEffect } from "react";
+import { UserContext } from "../context/userContext.ts";
 
-function NavBar(){
+
+function NavigationBar(){
     const user = useContext(UserContext)
-    const urlssss = [
-        {  name: "Admin",  pldt: "/ProfileCreation" },
-        {  name: "Beneficiaries", pldt: "/ProfileList" },
-        {  name: "You", pldt: "/ProfileDetails" },
-        {  name: "Events", pldt: "/Events"},
-        {  name: "Calendar", pldt: "/Calendar" }
+    const urls = [
+        {  name: "Admin",  pldt: "/create-profile" },
+        {  name: "Beneficiaries", pldt: "/view-profile-list"},
+        {  name: "You", pldt: "/view-profile" },
+        {  name: "Events", pldt: "/view-event-list"},
+        {  name: "Calendar", pldt: "/view-calendar" }
     ];
 
     return(
         <>
             { user && (
             <div className="flex flex-row items-center justify-around p-4 sticky bottom-0  bg-[#254151] font-[Montserrat] font-bold text-white w-full shadow-[0px_-3px_20px] shadow-gray-500">
-                { urlssss.map ((ur) => (
+                { urls.map ((ur) => (
                     <NavLink to={ur.pldt}
                     className={({ isActive, isPending }) =>
                                     (isPending ? "pending " : 
@@ -33,8 +32,4 @@ function NavBar(){
     )
 }
 
-function fuckery(){
-
-}
-
-export default NavBar;
+export default NavigationBar;

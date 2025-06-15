@@ -1,7 +1,7 @@
-import EventCard from "../components/EventCard";
+import EventCard from "../components/EventCard.tsx";
 import { useNavigate } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../assets/userContext";
+import { UserContext } from "../context/userContext.ts";
 import { useContext, useEffect } from "react";
 import { auth } from "../firebase/firebaseConfig";
 
