@@ -38,8 +38,8 @@ function ProfileCreation() {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen p-5">
-      <div className="relative flex items-end justify-center pl-3 pr-3 pt-24 h-auto bg-[#254151] rounded-[5px] p-3">
+    <div className="flex items-center justify-center h-screen p-5 bg-[#254151]">
+      <div className="relative flex items-end justify-center pl-3 pr-3 pt-24 h-auto rounded-[5px] p-3">
         <div className="z-1 overflow-hidden bg-gray-500 w-[9rem] h-[9rem] absolute top-[4%] border-5 border-[#45B29D] rounded-full">
           <i className="relative right-0.5 bottom-6 text-[9rem] text-gray-300 fi fi-ss-circle-user"></i>
         </div>
