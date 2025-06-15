@@ -34,9 +34,15 @@ function ProfileDetails() {
   };
 
   const eventsTest = [
-    { id: 0, name: "Donation", date: "12/2/1902" },
-    { id: 1, name: "Class", date: "12/2/2002" },
-    { id: 2, name: "Church", date: "12/2/2004" },
+    { id: 0, name: "Donation", date: "12/02/1902" },
+    { id: 1, name: "Teaching", date: "12/02/1999" },
+    { id: 2, name: "Airplane Visit", date: "11/09/2001" },
+    { id: 3, name: "Church", date: "12/02/2004" },
+    { id: 4, name: "Donation", date: "12/02/2005" },
+    { id: 5, name: "Teaching", date: "12/02/2006" },
+    { id: 6, name: "Food Drive", date: "12/02/2007" },
+    { id: 7, name: "Food Drive", date: "12/02/2008" },
+    { id: 8, name: "Christmas Party", date: "22/12/2009" },
   ];
 
   // Account role checking
@@ -46,136 +52,127 @@ function ProfileDetails() {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center pb-">
-      <div
-        className={`relative overflow-hidden flex items-end justify-center pl-3 pr-3 pt-20 h-auto bg-[#254151] rounded-[5px] pb-3`}
-      >
-        <div className="z-1 overflow-hidden bg-gray-500 w-[9rem] h-[9rem] absolute top-[4%] border-5 border-[#45B29D] rounded-full">
-          <i className="relative right-0.5 bottom-6 text-[9rem] text-gray-300 fi fi-ss-circle-user"></i>
-        </div>
-        <button
-          onClick={() => {
-            auth.signOut();
-            // navigate("/");
-          }}
-          className="absolute left-[3%] top-[2%] bg-[#45B29D] text-white p-1.5 rounded-[5px] font-semibold duration-500 hover:bg-[#45b29c8a]"
-        >
-          Sign Out
-        </button>
-        <div className=" flex flex-col justify-center items-center">
-          <div className="flex flex-col overflow-hidden bg-[#45B29D] rounded-[5px] p-2 pt-20">
-            <h3 className="text-[#254151] mt-6 flex text-2xl justify-center font-[Montserrat] font-bold">
+      <div className="w-full min-h-screen bg-[#254151] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
+        <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6 overflow-hidden">
+          <div className="-top-5 sm:-top-20 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[5px] border-[#45B29D] rounded-full flex items-center justify-center mb-1">
+            <i className="text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
+          </div>
+
+          <button
+              onClick={() => auth.signOut()}
+              className="absolute left-4 top-4 bg-[#45B29D] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
+            Sign Out
+          </button>
+
+          <div className="w-full max-w-2xl bg-[#45B29D] rounded-md px-4 sm:px-6 py-8">
+            <h3 className="text-[#254151] text-2xl text-center font-bold font-[Montserrat]">
               {user.lName}, {user.fName}
             </h3>
+
             {hasID && (
-              <h3 className="flex text-[#254151] justify-center font-[Montserrat] font-regular">
-                ID: {user.id}{" "}
-              </h3>
+                <h3 className="text-[#254151] text-center font-[Montserrat] mt-1">
+                  ID: {user.id}
+                </h3>
             )}
-            <div className="flex flex-col p-3">
-              <div className="flex flex-row justify-between items-center gap-2">
-                <div className="flex items-center">
+
+            <div className="flex flex-col gap-4 mt-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col flex-1">
                   <label
-                    htmlFor="bDate"
-                    className="text-nowrap mr-2 flex font-[Montserrat] justify-center items-center bg-[#254151] text-white p-1 rounded-[5px] font-semibold"
-                  >
+                      htmlFor="bDate"
+                      className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
                     Birth Date:
                   </label>
                   <input
-                    type="date"
-                    id="bDate"
-                    className="flex text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
-                    readOnly={!isEditable}
-                    value={user.birthday}
-                  />
+                      type="date"
+                      id="bDate"
+                      className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                      readOnly={!isEditable}
+                      value={user.birthday}/>
                 </div>
-                <div className="flex items-center">
+
+                <div className="flex flex-col flex-1">
                   <label
-                    htmlFor="Sex"
-                    className="flex mr-2 font-[Montserrat] justify-center items-center bg-[#254151] text-white p-1 rounded-[5px] font-semibold"
-                  >
+                      htmlFor="Sex"
+                      className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
                     Sex:
                   </label>
                   <input
-                    type="text"
-                    id="Sex"
-                    className="w-[1.5rem] flex text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
-                    readOnly={!isEditable}
-                    value={user.sex}
-                  />
+                      type="text"
+                      id="Sex"
+                      className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                      readOnly={!isEditable}
+                      value={user.sex}/>
                 </div>
               </div>
-              <div className="flex flex-row items-center mt-2">
+
+              <div className="flex flex-col">
                 <label
-                  htmlFor="gLevel"
-                  className="flex mr-2 font-[Montserrat] justify-center items-center bg-[#254151] text-white p-1 rounded-[5px] font-semibold"
-                >
+                    htmlFor="gLevel"
+                    className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
                   Grade Level:
                 </label>
                 <input
-                  type="text"
-                  id="gLevel"
-                  className="flex-1/2 text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
-                  readOnly={!isEditable}
-                  value={user.gLevel}
-                />
+                    type="text"
+                    id="gLevel"
+                    className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                    readOnly={!isEditable}
+                    value={user.gLevel}/>
               </div>
-              <div className="flex flex-row items-center mt-2">
+
+              <div className="flex flex-col">
                 <label
-                  htmlFor="cNum"
-                  className="flex mr-2 font-[Montserrat] justify-center items-center bg-[#254151] text-white p-1 rounded-[5px] font-semibold"
-                >
+                    htmlFor="cNum"
+                    className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
                   Contact No:
                 </label>
                 <input
-                  type="number"
-                  id="cNum"
-                  className="flex-1/2 text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
-                  readOnly={!isEditable}
-                  value={user.contact}
-                />
+                    type="number"
+                    id="cNum"
+                    className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                    readOnly={!isEditable}
+                    value={user.contact}/>
               </div>
-              <div className="flex flex-row items-center mt-2">
+
+              <div className="flex flex-col">
                 <label
-                  htmlFor="add"
-                  className="flex mr-2 font-[Montserrat] justify-center items-center bg-[#254151] text-white p-1 rounded-[5px] font-semibold"
-                >
+                    htmlFor="add"
+                    className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
                   Address:
                 </label>
                 <input
-                  type="text"
-                  id="add"
-                  className="flex-1/2 text-white font-[Montserrat] border-solid border-1 border-[#254151] bg-[#3EA08D] rounded-[5px] p-[0.18rem]"
-                  readOnly={!isEditable}
-                  value={user.address}
-                />
+                    type="text"
+                    id="add"
+                    className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                    readOnly={!isEditable}
+                    value={user.address}/>
               </div>
+
               <button
-                type="submit"
-                className="flex mt-3 justify-center items-center bg-[#254151] text-white p-1.5 rounded-[5px] font-semibold"
-                disabled={!isEditable}
-              >
-                {" "}
-                Edit{" "}
+                  type="submit"
+                  className="mt-2 bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat]"
+                  disabled={!isEditable}>
+                Edit
               </button>
             </div>
           </div>
+
           {isStudent && (
-            <div className="flex flex-col align-center h-[27vh] p-4">
-              <h3 className="text-[#45B29D] mt-2 flex text-3xl justify-center font-[Montserrat] font-bold">
-                Attended Events
-              </h3>
-              <div className="overflow-auto">
-                {eventsTest.map((event, index) => (
-                  <EventCard key={index} date={event.date} event={event.name} />
-                ))}
+              <div className="w-full max-w-2xl mt-8">
+                <h3 className="text-[#45B29D] text-2xl text-center font-bold font-[Montserrat] mb-4">
+                  Attended Events
+                </h3>
+                <div className="space-y-2">
+                  {eventsTest.map((event, index) => (
+                      <EventCard key={index} date={event.date} event={event.name}/>
+                  ))}
+                </div>
               </div>
-            </div>
           )}
         </div>
       </div>
-    </div>
-  );
+  )
+      ;
 }
 
 export default ProfileDetails;
