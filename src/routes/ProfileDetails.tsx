@@ -1,17 +1,21 @@
 import EventCard from "../components/EventCard";
 import { useNavigate } from "react-router";
-import { auth } from "../firebase/firebaseConfig";
 import "../css/styles.css";
+import { UserContext } from "../assets/userContext";
+import { useContext, useEffect } from "react";
+import { auth } from "../firebase/firebaseConfig";
 
 function ProfileDetails() {
-  // If there is no user logged in, skip this page and redirect to login page
   const navigate = useNavigate();
+  const usertest = useContext(UserContext);
 
-  auth.onAuthStateChanged((user) => {
-    if (!user) {
+  useEffect(() => {
+
+    // If there is no user logged in, skip this page and redirect to login page
+    if (usertest === null) {
       navigate("/");
     }
-  });
+  }, [usertest, navigate]);
 
   const isEditable = false;
   let isStudent = false;
@@ -34,7 +38,7 @@ function ProfileDetails() {
     { id: 1, name: "Class", date: "12/2/2002" },
     { id: 2, name: "Church", date: "12/2/2004" },
   ];
-  
+
   // Account role checking
   if (user.role === "Student") {
     isStudent = true;
@@ -42,21 +46,21 @@ function ProfileDetails() {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center p-3">
+    <div className="h-screen flex items-center justify-center pb-">
       <div
         className={`relative overflow-hidden flex items-end justify-center pl-3 pr-3 pt-20 h-auto bg-[#254151] rounded-[5px] pb-3`}
       >
         <div className="z-1 overflow-hidden bg-gray-500 w-[9rem] h-[9rem] absolute top-[4%] border-5 border-[#45B29D] rounded-full">
           <i className="relative right-0.5 bottom-6 text-[9rem] text-gray-300 fi fi-ss-circle-user"></i>
         </div>
-        <button 
-          onClick={ () => {
-          auth.signOut();
-          navigate("/"); 
+        <button
+          onClick={() => {
+            auth.signOut();
+            // navigate("/");
           }}
           className="absolute left-[3%] top-[2%] bg-[#45B29D] text-white p-1.5 rounded-[5px] font-semibold duration-500 hover:bg-[#45b29c8a]"
         >
-            Sign Out
+          Sign Out
         </button>
         <div className=" flex flex-col justify-center items-center">
           <div className="flex flex-col overflow-hidden bg-[#45B29D] rounded-[5px] p-2 pt-20">

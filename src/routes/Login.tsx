@@ -9,16 +9,19 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
+import { useContext, useEffect } from "react";
+import { UserContext } from "../assets/userContext";
 
 function Login() {
   const navigate = useNavigate();
+  const user = useContext(UserContext);
 
   // if there is already a user logged in, just skip the login page.
-  auth.onAuthStateChanged((user) => {
+  useEffect(() => {
     if (user) {
-      navigate("/ProfileDetails");
+      navigate("/profileDetails");
     }
-  });
+  }, [user, navigate]);
 
   const login = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,8 +29,7 @@ function Login() {
     const formData = new FormData(e.target as HTMLFormElement);
     const username = formData.get("username") as string; // coerce them to strings cause form doesn't know what datatype these guys are.
     const password = formData.get("pw") as string;
-    const rememberMe = !!formData.get("cbox"); // !! tocoerce to true/false, trust me bro
-    console.log(rememberMe);
+    const rememberMe = !!formData.get("cbox"); // !! to coerce to true/false, trust me bro
 
     if (!username || !password) {
       toast.error("Please input your username and password.");
@@ -56,17 +58,17 @@ function Login() {
   };
 
   return (
-    <div className=" h-[90vh] flex flex-col items-center justify-center">
+    <div className=" w-full max-w-lg mx-auto h-[90vh] flex flex-col items-center justify-center">
       <img
         src={CHAI}
         alt="Logo"
-        className="w-45 h-45 p-1 mt-10 mb-10 rounded-full border-3 border-solid border-[#E3E3E3]"
+        className="w-24 h-24 sm:w-32 sm:h-32 p-1 mt-10 mb-6 rounded-full border-2 border-solid border-[#E3E3E3]"
       />
-      <h2 className=" font-[Montserrat] font-bold text-[1.3rem] flex justify-center">
+      <h2 className="font-[Montserrat] text-center font-bold text-[1.2rem] sm:text-[1.3rem]">
         Management and Events Tracker
       </h2>
-      <div className="flex justify-center items-center mb-3 p-10">
-        <form className="flex flex-col" onSubmit={login}>
+      <div className="w-full max-w-md flex justify-center items-center mb-6 mt-4">
+        <form className="w-full flex flex-col gap-2 p-4 sm:p-6" onSubmit={login}>
           <label htmlFor="username" className="font-[Montserrat] font-semibold">
             Username
           </label>
@@ -88,27 +90,27 @@ function Login() {
             type="password"
             className=" border-solid border-3 rounded-[5px] p-1.5"
           />
-          <div className="flex justify-between mt-1.5">
-            <label className="font-[Montserrat] text-[1.1rem]">
+          <div className="flex justify-between items-center mt-2">
+            <label className="font-[Montserrat] text-sm">
               <input
                 id="cbox"
                 name="cbox"
                 type="checkbox"
-                className="mr-2 h-4 w-4"
+                className="mr-2 h-3 w-3"
               />
               Remember Me
             </label>
             <a
               href="http://google.com"
               target="_blank"
-              className="font-[Montserrat] text-[1.1rem] text-[#45B29D] hover:underline"
+              className="font-[Montserrat] text-sm text-[#45B29D] hover:underline"
             >
               Forgot Password?
             </a>
           </div>
           <button
             type="submit"
-            className="bg-[#45B29D] text-white mt-10 p-1.5 rounded-[5px] w-90 m-auto font-semibold cursor-pointer
+            className="bg-[#45B29D] text-white mt-10 p-1.5 rounded-[5px] w-full m-auto font-semibold cursor-pointer
             hover:opacity-50 focus:opacity-50"
           >
             Log in
