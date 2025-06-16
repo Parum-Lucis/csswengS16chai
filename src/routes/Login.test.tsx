@@ -111,7 +111,7 @@ describe('Login Component', () => {
     await waitFor(() => {
       const alerts = document.body.querySelectorAll('[role="alert"]');
       const match = Array.from(alerts).some((el) =>
-        el.textContent?.includes('Something is wrong with your email or password.')
+        el.textContent?.includes('Something went wrong. Please try again.')
       );
       expect(match).toBe(true);
     });
@@ -139,7 +139,7 @@ describe('Login Component', () => {
     await waitFor(() => {
       const alerts = document.body.querySelectorAll('[role="alert"]');
       const match = Array.from(alerts).some((el) =>
-        el.textContent?.includes('Something is wrong with your email or password.')
+        el.textContent?.includes('Something went wrong. Please try again.')
       );
       expect(match).toBe(true);
     });
