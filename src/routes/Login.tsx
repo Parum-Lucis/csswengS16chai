@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { useContext, useEffect } from "react";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../context/userContext";
 
 function Login() {
   const navigate = useNavigate();

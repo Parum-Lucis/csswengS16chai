@@ -1,10 +1,9 @@
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Login from './Login';
 import { BrowserRouter } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
-import { waitFor } from '@testing-library/react';
 import { ToastContainer } from 'react-toastify';
 
 jest.mock('firebase/auth', () => ({
@@ -21,11 +20,11 @@ jest.mock('../firebase/firebaseConfig', () => ({
 }));
 
 function renderLogin() {
-  render(
+  return render(
     <BrowserRouter>
       <>
         <Login />
-        <ToastContainer /> {/* Important: render the toast container */}
+        <ToastContainer />
       </>
     </BrowserRouter>
   );
@@ -34,7 +33,7 @@ function renderLogin() {
 describe('Login Component', () => {
   test('renders login form fields', () => {
     renderLogin();
-    
+
     const textboxes = screen.getAllByRole('textbox');
     expect(textboxes[0]).toBeInTheDocument(); // Username field
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument(); // optional
@@ -43,8 +42,8 @@ describe('Login Component', () => {
     expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
   });
 
-  test('shows error if username/password is missing', async () => {
-    renderLogin(); 
+  test('shows error if both username and password is missing', async () => {
+    renderLogin();
 
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
@@ -55,17 +54,111 @@ describe('Login Component', () => {
     });
   });
 
-  test('successful login attempts to call firebase', async () => {
-    (signInWithEmailAndPassword as jest.Mock).mockResolvedValue({
-      user: { email: 'test@example.com' },
+  test('shows error if username is missing', async () => {
+    const { container } = renderLogin();
+
+    const passwordInput = container.querySelector('input[name="pw"]');
+    expect(passwordInput).toBeInTheDocument();
+
+    fireEvent.change(passwordInput!, {
+      target: { value: 'password123' },
     });
 
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/please input your username and password/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  test('shows error if password is missing', async () => {
     renderLogin();
 
     fireEvent.change(screen.getByLabelText(/username/i), {
       target: { value: 'test@example.com' },
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
+
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/please input your username and password/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  test('shows error if password is incorrect for existing user', async () => { //needs fixing
+    (signInWithEmailAndPassword as jest.Mock).mockRejectedValue({
+      code: 'auth/invalid-credential',
+    });
+
+    const { container } = renderLogin();
+
+    const usernameInput = screen.getByLabelText(/username/i);
+    const passwordInput = container.querySelector('input[name="pw"]');
+
+    fireEvent.change(usernameInput, {
+      target: { value: 'test@example.com' },
+    });
+    fireEvent.change(passwordInput!, {
+      target: { value: 'wrongpassword' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+      const alerts = document.body.querySelectorAll('[role="alert"]');
+      const match = Array.from(alerts).some((el) =>
+        el.textContent?.includes('Something is wrong with your email or password.')
+      );
+      expect(match).toBe(true);
+    });
+  });
+
+  test('shows error if username is not in database', async () => { //needs fixing
+    (signInWithEmailAndPassword as jest.Mock).mockRejectedValue({
+      code: 'auth/invalid-credential',
+    });
+
+    const { container } = renderLogin();
+
+    const usernameInput = screen.getByLabelText(/username/i);
+    const passwordInput = container.querySelector('input[name="pw"]');
+
+    fireEvent.change(usernameInput, {
+      target: { value: 'unknownuser@example.com' },
+    });
+    fireEvent.change(passwordInput!, {
+      target: { value: 'somepassword' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+      const alerts = document.body.querySelectorAll('[role="alert"]');
+      const match = Array.from(alerts).some((el) =>
+        el.textContent?.includes('Something is wrong with your email or password.')
+      );
+      expect(match).toBe(true);
+    });
+  });
+
+  test('successful login attempts to call firebase', async () => {
+    (signInWithEmailAndPassword as jest.Mock).mockResolvedValue({
+      user: { email: 'test@example.com' },
+    });
+
+    const { container } = renderLogin();
+
+    const usernameInput = screen.getByLabelText(/username/i);
+    const passwordInput = container.querySelector('input[name="pw"]');
+
+    fireEvent.change(usernameInput, {
+      target: { value: 'test@example.com' },
+    });
+    fireEvent.change(passwordInput!, {
       target: { value: 'password123' },
     });
 
