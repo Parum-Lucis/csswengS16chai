@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Login from './Login';
 import { BrowserRouter } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 import { ToastContainer } from 'react-toastify';
 
@@ -89,7 +89,7 @@ describe('Login Component', () => {
     });
   });
 
-  test('shows error if password is incorrect for existing user', async () => { //needs fixing
+  test('shows error if password is incorrect for existing user', async () => {
     (signInWithEmailAndPassword as jest.Mock).mockRejectedValue({
       code: 'auth/invalid-credential',
     });
@@ -111,13 +111,13 @@ describe('Login Component', () => {
     await waitFor(() => {
       const alerts = document.body.querySelectorAll('[role="alert"]');
       const match = Array.from(alerts).some((el) =>
-        el.textContent?.includes('Something is wrong with your email or password.')
+        el.textContent?.includes('Something went wrong. Please try again.')
       );
       expect(match).toBe(true);
     });
   });
 
-  test('shows error if username is not in database', async () => { //needs fixing
+  test('shows error if username is not in database', async () => {
     (signInWithEmailAndPassword as jest.Mock).mockRejectedValue({
       code: 'auth/invalid-credential',
     });
@@ -139,7 +139,7 @@ describe('Login Component', () => {
     await waitFor(() => {
       const alerts = document.body.querySelectorAll('[role="alert"]');
       const match = Array.from(alerts).some((el) =>
-        el.textContent?.includes('Something is wrong with your email or password.')
+        el.textContent?.includes('Something went wrong. Please try again.')
       );
       expect(match).toBe(true);
     });
@@ -170,6 +170,73 @@ describe('Login Component', () => {
         'test@example.com',
         'password123'
       );
+    });
+  });
+
+  // ===== new test cases for remember me ===== //
+
+  test('sets persistence to browserLocalPersistence when "Remember Me" is checked on succesful login', async () => {
+    (signInWithEmailAndPassword as jest.Mock).mockResolvedValue({
+      user: { email: 'test@example.com' },
+    });
+
+    const { container } = renderLogin(); // so we can use querySelector to get password
+
+    fireEvent.change(screen.getByLabelText(/username/i), {
+      target: { value: 'test@example.com' },
+    });
+    
+    const passwordInput = container.querySelector('input[name="pw"]');
+    fireEvent.change(passwordInput!, {
+      target: { value: 'password123' },
+    });
+    fireEvent.click(screen.getByLabelText(/remember me/i)); // check yung remember me
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+      expect(auth.setPersistence).toHaveBeenCalledWith(browserLocalPersistence);
+    });
+  });
+
+  test('sets persistence to browserSessionPersistence when "Remember Me" is unchecked', async () => {
+    (signInWithEmailAndPassword as jest.Mock).mockResolvedValue({
+      user: { email: 'test@example.com' },
+    });
+
+    const { container } = renderLogin();
+
+    fireEvent.change(screen.getByLabelText(/username/i), {
+      target: { value: 'test@example.com' },
+    });
+    
+    const passwordInput = container.querySelector('input[name="pw"]');
+    fireEvent.change(passwordInput!, {
+      target: { value: 'password123' },
+    });
+
+    // its unchecked by default but to be sure we uncheck if checked
+    const rememberMeCheckbox = screen.getByLabelText(/remember me/i) as HTMLInputElement;
+    if (rememberMeCheckbox.checked) {
+      fireEvent.click(rememberMeCheckbox);
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+      expect(auth.setPersistence).toHaveBeenCalledWith(browserSessionPersistence);
+    });
+  });
+
+  test('redirects to /view-profile if user is already logged in', async () => {
+    (auth.onAuthStateChanged as jest.Mock).mockImplementation(callback => {
+      callback({ uid: 'test-uid', email: 'test@example.com' });
+      return jest.fn();
+    });
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/view-profile');
     });
   });
 });
