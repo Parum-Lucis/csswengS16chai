@@ -2,12 +2,32 @@ import EventCard from "../components/EventCard.tsx";
 import { useNavigate } from "react-router";
 import "../css/styles.css";
 import { UserContext } from "../context/userContext.ts";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { auth } from "../firebase/firebaseConfig";
+import { doc, getDoc, updateDoc } from "firebase/firestore"
 
 function ProfileDetails() {
   const navigate = useNavigate();
   const usertest = useContext(UserContext);
+
+  const userEx = {
+    role: "Student",
+    fName: "Juan",
+    lName: "DELA CRUZ",
+    birthday: "2000-04-11",
+    id: 12341991,
+    gLevel: "2",
+    sex: "M",
+    contact: "09171111111",
+    address: "Earth",
+  };
+
+  const [user, setUser] = useState(userEx) // userEx is temporary, set to firebase via getDoc soontm
+  const [birthday, setBirthday] = useState(user.birthday)
+  const [sex, setSex] = useState(user.sex)
+  const [level, setLevel] = useState(user.gLevel)
+  const [contact, setContact] = useState(user.contact)
+  const [address, setAddress] = useState(user.address)
 
   useEffect(() => {
 
@@ -21,17 +41,17 @@ function ProfileDetails() {
   let isStudent = false;
   let hasID = false;
 
-  const user = {
-    role: "Student",
-    fName: "Juan",
-    lName: "DELA CRUZ",
-    birthday: "2000-04-11",
-    id: 12341991,
-    gLevel: "2",
-    sex: "M",
-    contact: "09171111111",
-    address: "Earth",
-  };
+  const handleEdit = async () => {
+    /* wip
+    await updateDoc(user, {
+      address : address,
+      birthdate : birthday,
+      contact_number : contact,
+      grade_level : level,
+      sex : sex,
+    })
+    */
+  }
 
   const eventsTest = [
     { id: 0, name: "Donation", date: "12/02/1902" },
@@ -46,9 +66,9 @@ function ProfileDetails() {
   ];
 
   // Account role checking
-  if (user.role === "Student") {
+  if (userEx.role === "Student") {
     isStudent = true;
-    if (user.id) hasID = true;
+    if (userEx.id) hasID = true;
   }
 
   return (
@@ -87,8 +107,9 @@ function ProfileDetails() {
                       type="date"
                       id="bDate"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                      readOnly={!isEditable}
-                      value={user.birthday}/>
+                      readOnly={isEditable}
+                      onChange={(e) => setBirthday(e.target.value)}
+                      value={birthday}/>
                 </div>
 
                 <div className="flex flex-col flex-1">
@@ -101,8 +122,9 @@ function ProfileDetails() {
                       type="text"
                       id="Sex"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                      readOnly={!isEditable}
-                      value={user.sex}/>
+                      readOnly={isEditable}
+                      onChange={(e) => setSex(e.target.value)}
+                      value={sex}/>
                 </div>
               </div>
 
@@ -116,8 +138,9 @@ function ProfileDetails() {
                     type="text"
                     id="gLevel"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={!isEditable}
-                    value={user.gLevel}/>
+                    readOnly={isEditable}
+                    onChange={(e) => setLevel(e.target.value)}
+                    value={level}/>
               </div>
 
               <div className="flex flex-col">
@@ -130,8 +153,9 @@ function ProfileDetails() {
                     type="number"
                     id="cNum"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={!isEditable}
-                    value={user.contact}/>
+                    readOnly={isEditable}
+                    onChange={(e) => setContact(e.target.value)}
+                    value={contact}/>
               </div>
 
               <div className="flex flex-col">
@@ -144,13 +168,15 @@ function ProfileDetails() {
                     type="text"
                     id="add"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={!isEditable}
-                    value={user.address}/>
+                    readOnly={isEditable}
+                    onChange={(e) => setAddress(e.target.value)}
+                    value={address}/>
               </div>
 
               <button
                   type="submit"
                   className="mt-2 bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat]"
+                  onClick={handleEdit}
                   disabled={!isEditable}>
                 Edit
               </button>
