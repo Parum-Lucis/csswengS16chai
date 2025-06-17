@@ -1,14 +1,32 @@
 import EventCard from "../components/EventCard.tsx";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
 import { UserContext } from "../context/userContext.ts";
 import { useContext, useEffect, useState } from "react";
-import { auth } from "../firebase/firebaseConfig";
-import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { auth, db } from "../firebase/firebaseConfig";
+import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
+import type { Beneficiary } from "../models/beneficiaryType.ts";
 
 function ProfileDetails() {
+  // const params = useParams()
+  const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null)
+  const [docID, setDocID] = useState(beneficiary?.docID)
+
+  useEffect(() =>  {
+    const fetchBeneficiary = async () => {
+      const getQuery = doc(db, "beneficiaries", "test-1")
+      const beneficiariesSnap = await getDoc(getQuery)
+      if(beneficiariesSnap.exists())
+        setBeneficiary(beneficiariesSnap.data() as Beneficiary)
+        setDocID(beneficiariesSnap.id)
+    }
+    fetchBeneficiary()
+  }, [setBeneficiary])
+  console.log(beneficiary)
   const navigate = useNavigate();
   const usertest = useContext(UserContext);
+  const { sex, contact_number : contact, grade_level : level, address } = beneficiary || {}
+  const birthdate = new Date((beneficiary?.birthdate.seconds ?? 0)*1000)
 
   const userEx = {
     role: "Student",
@@ -16,18 +34,11 @@ function ProfileDetails() {
     lName: "DELA CRUZ",
     birthday: "2000-04-11",
     id: 12341991,
-    gLevel: "2",
+    gLevel: 2,
     sex: "M",
     contact: "09171111111",
     address: "Earth",
   };
-
-  const [user, setUser] = useState(userEx) // userEx is temporary, set to firebase via getDoc soontm
-  const [birthday, setBirthday] = useState(user.birthday)
-  const [sex, setSex] = useState(user.sex)
-  const [level, setLevel] = useState(user.gLevel)
-  const [contact, setContact] = useState(user.contact)
-  const [address, setAddress] = useState(user.address)
 
   useEffect(() => {
 
@@ -42,15 +53,20 @@ function ProfileDetails() {
   let hasID = false;
 
   const handleEdit = async () => {
-    /* wip
-    await updateDoc(user, {
-      address : address,
-      birthdate : birthday,
-      contact_number : contact,
-      grade_level : level,
-      sex : sex,
+    if(!sex || !level || !contact)
+      return
+    if(sex != "M" && sex != "F")
+      return
+    if(level > 12 || level < 1)
+      return 
+    if(contact.toString().length != 12) 
+      return
+
+    const updateRef = doc(db, "beneficiaries", docID!)
+    console.log(beneficiary)
+    await updateDoc(updateRef, {
+      ...beneficiary
     })
-    */
   }
 
   const eventsTest = [
@@ -86,12 +102,12 @@ function ProfileDetails() {
 
           <div className="w-full max-w-2xl bg-[#45B29D] rounded-md px-4 sm:px-6 py-8">
             <h3 className="text-[#254151] text-2xl text-center font-bold font-[Montserrat]">
-              {user.lName}, {user.fName}
+              {beneficiary?.last_name}, {beneficiary?.first_name}
             </h3>
 
             {hasID && (
                 <h3 className="text-[#254151] text-center font-[Montserrat] mt-1">
-                  ID: {user.id}
+                  ID: {beneficiary?.accredited_id}
                 </h3>
             )}
 
@@ -108,8 +124,8 @@ function ProfileDetails() {
                       id="bDate"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                       readOnly={isEditable}
-                      onChange={(e) => setBirthday(e.target.value)}
-                      value={birthday}/>
+                      onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, birthdate : Timestamp.fromDate(birthdate)})}
+                      value={birthdate?.toISOString().substring(0,10)}/>
                 </div>
 
                 <div className="flex flex-col flex-1">
@@ -123,7 +139,7 @@ function ProfileDetails() {
                       id="Sex"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                       readOnly={isEditable}
-                      onChange={(e) => setSex(e.target.value)}
+                      onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, sex : e.target.value})}
                       value={sex}/>
                 </div>
               </div>
@@ -139,7 +155,7 @@ function ProfileDetails() {
                     id="gLevel"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                     readOnly={isEditable}
-                    onChange={(e) => setLevel(e.target.value)}
+                    onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, grade_level : Number(e.target.value)})}
                     value={level}/>
               </div>
 
@@ -154,7 +170,7 @@ function ProfileDetails() {
                     id="cNum"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                     readOnly={isEditable}
-                    onChange={(e) => setContact(e.target.value)}
+                    onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, contact_number : Number(e.target.value)})}
                     value={contact}/>
               </div>
 
@@ -169,15 +185,15 @@ function ProfileDetails() {
                     id="add"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                     readOnly={isEditable}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
                     value={address}/>
               </div>
 
               <button
                   type="submit"
-                  className="mt-2 bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat]"
+                  className="mt-2 bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
                   onClick={handleEdit}
-                  disabled={!isEditable}>
+                  disabled={isEditable}>
                 Edit
               </button>
             </div>
