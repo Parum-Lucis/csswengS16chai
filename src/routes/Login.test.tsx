@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { signInWithEmailAndPassword, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 import { ToastContainer } from 'react-toastify';
+import { FirebaseError } from 'firebase/app'; // added this for case 5 & 6
 
 jest.mock('firebase/auth', () => ({
   signInWithEmailAndPassword: jest.fn(),
@@ -90,9 +91,11 @@ describe('Login Page', () => {
   });
 
   test('shows error if password is incorrect for existing user', async () => {
-    (signInWithEmailAndPassword as jest.Mock).mockRejectedValue({
-      code: 'auth/invalid-credential',
-    });
+    const mockError = new FirebaseError(
+      'auth/invalid-credential', 
+      'Firebase: Error (auth/invalid-credential).'
+    );
+    (signInWithEmailAndPassword as jest.Mock).mockRejectedValue(mockError);
 
     const { container } = renderLogin();
 
@@ -111,16 +114,18 @@ describe('Login Page', () => {
     await waitFor(() => {
       const alerts = document.body.querySelectorAll('[role="alert"]');
       const match = Array.from(alerts).some((el) =>
-        el.textContent?.includes('Something went wrong. Please try again.')
+        el.textContent?.includes('Something is wrong with your email or password.')
       );
       expect(match).toBe(true);
     });
   });
 
   test('shows error if username is not in database', async () => {
-    (signInWithEmailAndPassword as jest.Mock).mockRejectedValue({
-      code: 'auth/invalid-credential',
-    });
+    const mockError = new FirebaseError(
+      'auth/invalid-credential',
+      'Firebase: Error (auth/invalid-credential).'
+    );
+    (signInWithEmailAndPassword as jest.Mock).mockRejectedValue(mockError);
 
     const { container } = renderLogin();
 
@@ -139,7 +144,7 @@ describe('Login Page', () => {
     await waitFor(() => {
       const alerts = document.body.querySelectorAll('[role="alert"]');
       const match = Array.from(alerts).some((el) =>
-        el.textContent?.includes('Something went wrong. Please try again.')
+        el.textContent?.includes('Something is wrong with your email or password.')
       );
       expect(match).toBe(true);
     });
