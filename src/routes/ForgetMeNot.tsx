@@ -1,12 +1,12 @@
 import CHAI from "../assets/CHAI.jpg";
 import "../css/styles.css";
 import { useNavigate } from "react-router";
-import { auth } from "../firebase/firebaseConfig.ts";
+import { auth } from "../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { useContext, useEffect, useState, useRef } from "react";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../context/userContext";
 
 function ForgetMeNot() {
     const [formState, setForm] = useState(1);
