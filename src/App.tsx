@@ -9,6 +9,7 @@ import { UserContext, type UserStateType } from "./context/userContext.ts";
 import NavigationBar from "./components/NavigationBar.tsx";
 import Temp from "./components/Temp.tsx";
 import ForgetMeNot from "./routes/ForgetMeNot.tsx";
+import BeneficiaryList from "./routes/BeneficiaryList.tsx";
 
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
         <Route path="/forget-password" element={<ForgetMeNot />} />
         <Route path="/view-profile" element={<ProfileDetails />} />
         <Route path="/create-profile" element={<ProfileCreation />} />
-        <Route path="/view-profile-list" element={<Temp />} />
+        <Route path="/view-profile-list" element={<BeneficiaryList />} />
         <Route path="/view-calendar" element={<Temp />} />
         <Route path="/view-event-list" element={<Temp />} />
       </Routes>
