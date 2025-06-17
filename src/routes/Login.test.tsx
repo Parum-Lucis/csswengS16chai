@@ -30,7 +30,7 @@ function renderLogin() {
   );
 }
 
-describe('Login Component', () => {
+describe('Login Page', () => {
   test('renders login form fields', () => {
     renderLogin();
 

@@ -32,7 +32,7 @@ function renderForgetMeNot(user: any = null) {
   );
 }
 
-describe('ForgetMeNot Component', () => {
+describe('ForgetMeNot Page', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -59,8 +59,8 @@ describe('ForgetMeNot Component', () => {
     });
   });
 
-  test('handles error when sendPasswordResetEmail fails', async () => { // needs to be checked
-     const consoleErrorSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  test('handles error when sendPasswordResetEmail fails', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     (sendPasswordResetEmail as jest.Mock).mockRejectedValue({
       code: 'auth/invalid-email',
       message: 'Invalid email',
@@ -70,14 +70,16 @@ describe('ForgetMeNot Component', () => {
 
     const emailInput = screen.getByLabelText(/enter email/i);
     fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-    const continueButton = screen.getByRole('button', { name: /continue/i });
-    fireEvent.click(continueButton);
+
+    const form = emailInput.closest('form')!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
-        expect(sendPasswordResetEmail).toHaveBeenCalledWith(auth, 'invalid-email');
-        expect(consoleErrorSpy).toHaveBeenCalledWith('auth/invalid-email');
-        expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid email');
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(auth, 'invalid-email');
+      expect(consoleErrorSpy).toHaveBeenCalledWith('auth/invalid-email');
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid email');
     });
+
     consoleErrorSpy.mockRestore();
   });
 
