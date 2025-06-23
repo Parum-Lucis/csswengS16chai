@@ -1,5 +1,7 @@
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
+import { db } from "../firebase/firebaseConfig"
+import { collection, doc, addDoc/*, Timestamp*/ } from "firebase/firestore"
 import React from "react";
 
 function ProfileCreation() {
@@ -20,19 +22,33 @@ function ProfileCreation() {
     if (!err) {
       if (!emailRegEx.test(formData.get("email") as string)) {
         toast.error("Please input a proper email.");
+        return
       } else if (
         (formData.get("cNum") as string).length != 11 ||
         formData.get("cNum")?.slice(0, 2) != "09"
       ) {
-        toast.error(
-          "Please input a valid phone number." +
-            formData.get("cNum")?.toString.length
-        );
+        toast.error("Please input a valid phone number.");
+        return
       } else {
         console.log("im here");
-        toast.success("Success!");
-        navigate("/ProfileDetails");
-        // more stuff
+        const role = formData.get("dropdown") as string
+        if( role == "Admin" || "Volunteer") {
+          const is_admin = (role == "Admin" ? true : false )
+          const addRef = await addDoc(collection(db, "volunteers"), {
+            contact_number: parseInt(formData.get("cNum") as string),
+            email: formData.get("email") as string,
+            first_name: formData.get("fName") as string,
+            last_name: formData.get("lName") as string,
+            is_admin: is_admin,
+            role: role,
+          });
+
+          if(addRef) {
+            toast.success("Success!");
+            navigate("/view-profile");
+          }
+          else toast.error("Submission failed.");
+        }
       }
     } else toast.error("Please fill up all fields!");
   };
@@ -60,12 +76,12 @@ function ProfileCreation() {
                 </select>
               </div>
               <div>
-                <label htmlFor="username" className="text-white font-[Montserrat] font-semibold">
-                  Username
+                <label htmlFor="role" className="text-white font-[Montserrat] font-semibold">
+                  Temporary
                 </label>
                 <input
-                    id="username"
-                    name="username"
+                    id="Temporary"
+                    name="Temporary"
                     type="text"
                     className="input-text w-full"
                 />
