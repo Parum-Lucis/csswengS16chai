@@ -42,7 +42,7 @@ function ProfileDetails() {
 
   useEffect(() => {
 
-    // If there is no user logged in, skip this page and redirect to login page
+    // If there is no user logged in, skip this page and redirect to login page.
     if (usertest === null) {
       navigate("/");
     }
