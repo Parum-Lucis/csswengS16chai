@@ -1,14 +1,15 @@
 import Login from "./routes/Login";
 import { Routes, Route } from "react-router";
 import "./css/styles.css";
-import ProfileCreation from "./routes/ProfileCreation";
-import ProfileDetails from "./routes/ProfileDetails";
+import { VolunteerProfileCreation, BeneficiaryProfileCreation } from "./routes/ProfileCreation";
+import { ProfileDetails } from "./routes/ProfileDetails";
 import { useState } from "react";
 import { auth } from "./firebase/firebaseConfig";
 import { UserContext, type UserStateType } from "./context/userContext.ts";
 import NavigationBar from "./components/NavigationBar.tsx";
 import Temp from "./components/Temp.tsx";
 import ForgetMeNot from "./routes/ForgetMeNot.tsx";
+import Admin from "./routes/Admin.tsx"
 
 
 function App() {
@@ -22,8 +23,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/forget-password" element={<ForgetMeNot />} />
+        <Route path="/view-admin" element={<Admin />} />
         <Route path="/view-profile" element={<ProfileDetails />} />
-        <Route path="/create-profile" element={<ProfileCreation />} />
+        <Route path="/create-volunteer-profile" element={<VolunteerProfileCreation />} />
+        <Route path="/create-beneficiary-profile" element={<BeneficiaryProfileCreation />} />
         <Route path="/view-profile-list" element={<Temp />} />
         <Route path="/view-calendar" element={<Temp />} />
         <Route path="/view-event-list" element={<Temp />} />

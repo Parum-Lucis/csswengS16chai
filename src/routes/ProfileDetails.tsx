@@ -7,9 +7,10 @@ import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Beneficiary } from "../models/beneficiaryType.ts";
 
-function ProfileDetails() {
+export function ProfileDetails() {
   // const params = useParams()
   const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null)
+  const [formState, setForm] = useState(1);
   const [docID, setDocID] = useState(beneficiary?.docID)
 
   useEffect(() =>  {
@@ -48,11 +49,19 @@ function ProfileDetails() {
     }
   }, [usertest, navigate]);
 
-  const isEditable = false;
   let isStudent = false;
   let hasID = false;
 
-  const handleEdit = async () => {
+  function handleEdit(){
+    if (formState == 1) {
+      setForm(2)
+    }
+    else{
+      setForm(1)
+    }
+  }
+  const handleSave = 
+  async () => {
     if(!sex || !level || !contact)
       return
     if(sex != "M" && sex != "F")
@@ -67,6 +76,7 @@ function ProfileDetails() {
     await updateDoc(updateRef, {
       ...beneficiary
     })
+    setForm(1)
   }
 
   const eventsTest = [
@@ -107,7 +117,7 @@ function ProfileDetails() {
 
             {hasID && (
                 <h3 className="text-[#254151] text-center font-[Montserrat] mt-1">
-                  ID: {beneficiary?.accredited_id}
+                  ID: <span className="underline">{beneficiary?.accredited_id}</span>
                 </h3>
             )}
 
@@ -123,7 +133,7 @@ function ProfileDetails() {
                       type="date"
                       id="bDate"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                      readOnly={isEditable}
+                      readOnly={formState == 1}
                       onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, birthdate : Timestamp.fromDate(birthdate)})}
                       value={birthdate?.toISOString().substring(0,10)}/>
                 </div>
@@ -138,7 +148,7 @@ function ProfileDetails() {
                       type="text"
                       id="Sex"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                      readOnly={isEditable}
+                      readOnly={formState == 1}
                       onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, sex : e.target.value})}
                       value={sex}/>
                 </div>
@@ -154,7 +164,7 @@ function ProfileDetails() {
                     type="text"
                     id="gLevel"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={isEditable}
+                    readOnly={formState == 1}
                     onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, grade_level : Number(e.target.value)})}
                     value={level}/>
               </div>
@@ -169,7 +179,7 @@ function ProfileDetails() {
                     type="number"
                     id="cNum"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={isEditable}
+                    readOnly={formState == 1}
                     onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, contact_number : Number(e.target.value)})}
                     value={contact}/>
               </div>
@@ -184,18 +194,27 @@ function ProfileDetails() {
                     type="text"
                     id="add"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={isEditable}
+                    readOnly={formState == 1}
                     onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
                     value={address}/>
               </div>
-
-              <button
-                  type="submit"
-                  className="mt-2 bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
-                  onClick={handleEdit}
-                  disabled={isEditable}>
-                Edit
-              </button>
+              <div className="flex flex-row items-center justify-around w-full gap-4">
+                {formState == 2 && (
+                  <button
+                      type="submit"
+                      className="mt-2 w-full bg-[#FF0000] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
+                      onClick={handleEdit}>
+                    Discard
+                  </button>
+                  )
+                }
+                <button
+                    type="submit"
+                    className="mt-2 w-full bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
+                    onClick={formState == 1 ? handleEdit : handleSave}>
+                  {formState == 1 ? "Edit" : "Save Changes"}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -217,4 +236,4 @@ function ProfileDetails() {
       ;
 }
 
-export default ProfileDetails;
+
