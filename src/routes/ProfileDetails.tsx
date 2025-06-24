@@ -198,6 +198,33 @@ export function ProfileDetails() {
                     onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
                     value={address}/>
               </div>
+              <div className="flex flex-col">
+                <h3
+                    className="text-center bg-[#254151] text-[#45B29D] px-2 py-1 rounded-t-sm font-semibold font-[Montserrat]">
+                  Parent Information
+                </h3>
+                <input
+                    type="text"
+                    id="add"
+                    className="w-full text-white border-x border-t border-[#254151] bg-[#3EA08D] px-3 py-2 font-[Montserrat]"
+                    readOnly={true}
+                    //onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
+                    value="Name:"/>
+                <input
+                    type="text"
+                    id="add"
+                    className="w-full text-white border-x border-[#254151] bg-[#3EA08D] px-3 py-2 font-[Montserrat]"
+                    readOnly={true}
+                    //onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
+                    value="Affliation:"/>
+                <input
+                    type="text"
+                    id="add"
+                    className="w-full text-white border-x border-b border-[#254151] bg-[#3EA08D] rounded-b-sm px-3 py-2 font-[Montserrat]"
+                    readOnly={true}
+                    //onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
+                    value="Contact No.:"/>
+              </div>
               <div className="flex flex-row items-center justify-around w-full gap-4">
                 {formState == 2 && (
                   <button

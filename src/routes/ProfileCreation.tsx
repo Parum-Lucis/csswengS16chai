@@ -1,7 +1,10 @@
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
+import { db } from "../firebase/firebaseConfig"
+import { collection, doc, addDoc/*, Timestamp*/ } from "firebase/firestore"
 import React from "react";
 
+//password generator
 function GenPass(){
 
   const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -27,23 +30,39 @@ export function VolunteerProfileCreation() {
       if (!value) err = true;
     }
 
+    const password = GenPass()
+
     const emailRegEx = new RegExp(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g);
     if (!err) {
       if (!emailRegEx.test(formData.get("email") as string)) {
         toast.error("Please input a proper email.");
+        return
       } else if (
         (formData.get("cNum") as string).length != 11 ||
         formData.get("cNum")?.slice(0, 2) != "09"
       ) {
-        toast.error(
-          "Please input a valid phone number." +
-            formData.get("cNum")?.toString.length
-        );
+        toast.error("Please input a valid phone number.");
+        return
       } else {
         console.log("im here");
-        toast.success("Success!");
-        navigate("/ProfileDetails");
-        // more stuff
+        const role = formData.get("dropdown") as string
+        if( role == "Admin" || "Volunteer") {
+          const is_admin = (role == "Admin" ? true : false )
+          const addRef = await addDoc(collection(db, "volunteers"), {
+            contact_number: parseInt(formData.get("cNum") as string),
+            email: formData.get("email") as string,
+            first_name: formData.get("fName") as string,
+            last_name: formData.get("lName") as string,
+            is_admin: is_admin,
+            role: role,
+          });
+
+          if(addRef) {
+            toast.success("Success!");
+            navigate("/view-profile");
+          }
+          else toast.error("Submission failed.");
+        }
       }
     } else toast.error("Please fill up all fields!");
   };
@@ -61,25 +80,13 @@ export function VolunteerProfileCreation() {
                   Role
                 </label>
                 <select
+                    id="dropdown"
                     name="dropdown"
                     className="w-full rounded-[5px] p-2 font-[Montserrat] border-2 border-[#254151]"
                 >
                   <option value="Admin">Admin</option>
                   <option value="Volunteer">Volunteer</option>
-                  <option value="Student">Student</option>
-                  <option value="Waitlist">Waitlist</option>
                 </select>
-              </div>
-              <div>
-                <label htmlFor="username" className="text-white font-[Montserrat] font-semibold">
-                  Username
-                </label>
-                <input
-                    id="username"
-                    name="username"
-                    type="text"
-                    className="input-text w-full"
-                />
               </div>
               <div>
                 <label htmlFor="email" className="text-white font-[Montserrat] font-semibold">
@@ -195,27 +202,13 @@ export function BeneficiaryProfileCreation() {
           <div className="flex w-full bg-[#45B29D] rounded-[5px] p-4 pt-20">
             <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
               <div>
-                <label htmlFor="dropdown" className="text-white font-[Montserrat] font-semibold">
-                  Role
-                </label>
-                <select
-                    name="dropdown"
-                    className="w-full rounded-[5px] p-2 font-[Montserrat] border-2 border-[#254151]"
-                >
-                  <option value="Admin">Admin</option>
-                  <option value="Volunteer">Volunteer</option>
-                  <option value="Student">Student</option>
-                  <option value="Waitlist">Waitlist</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="username" className="text-white font-[Montserrat] font-semibold">
-                  Username
+                <label htmlFor="idNum" className="text-white font-[Montserrat] font-semibold">
+                  ID no.
                 </label>
                 <input
-                    id="username"
-                    name="username"
-                    type="text"
+                    id="idNum"
+                    name="idNum"
+                    type="number"
                     className="input-text w-full"
                 />
               </div>
@@ -253,6 +246,27 @@ export function BeneficiaryProfileCreation() {
                       className="input-text w-full"
                   />
                 </div>
+              </div>
+              <div className="flex flex-col">
+                <h3
+                    className="text-center bg-[#254151] text-[#45B29D] px-2 py-1 rounded-t-sm font-semibold font-[Montserrat]">
+                  Parent Information
+                </h3>
+                <input
+                    type="text"
+                    id="add"
+                    className="w-full text-white border-x border-t border-[#254151] bg-[#3EA08D] px-3 py-2 font-[Montserrat]"
+                    value="Name:"/>
+                <input
+                    type="text"
+                    id="add"
+                    className="w-full text-white border-x border-[#254151] bg-[#3EA08D] px-3 py-2 font-[Montserrat]"
+                    value="Affliation:"/>
+                <input
+                    type="text"
+                    id="add"
+                    className="w-full text-white border-x border-b border-[#254151] bg-[#3EA08D] rounded-b-sm px-3 py-2 font-[Montserrat]"
+                    value="Contact No.:"/>
               </div>
               <div>
                 <label htmlFor="address" className="text-white font-[Montserrat] font-semibold">
