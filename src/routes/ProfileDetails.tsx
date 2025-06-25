@@ -56,15 +56,19 @@ export function ProfileDetails() {
   let hasID = false;
 
   function handleEdit(){
+    // view beneficiary
     if (formState == 1) {
       setForm(2)
     }
+    // view volunteer
     else if (formState == 3){
       setForm(4)
     }
+    // edit volunteer
     else if (formState == 4){
       setForm(3)
     }
+    // beneficiary
     else if (formState == 2){
       setForm(1)
     }
