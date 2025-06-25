@@ -203,27 +203,36 @@ export function ProfileDetails() {
                     className="text-center bg-[#254151] text-[#45B29D] px-2 py-1 rounded-t-sm font-semibold font-[Montserrat]">
                   Parent Information
                 </h3>
-                <input
-                    type="text"
-                    id="add"
-                    className="w-full text-white border-x border-t border-[#254151] bg-[#3EA08D] px-3 py-2 font-[Montserrat]"
-                    readOnly={true}
-                    //onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
-                    value="Name:"/>
-                <input
-                    type="text"
-                    id="add"
-                    className="w-full text-white border-x border-[#254151] bg-[#3EA08D] px-3 py-2 font-[Montserrat]"
-                    readOnly={true}
-                    //onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
-                    value="Affliation:"/>
-                <input
-                    type="text"
-                    id="add"
-                    className="w-full text-white border-x border-b border-[#254151] bg-[#3EA08D] rounded-b-sm px-3 py-2 font-[Montserrat]"
-                    readOnly={true}
-                    //onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
-                    value="Contact No.:"/>
+                <div className="flex flex-row items-center w-full text-white border-x border-[#254151] bg-[#3EA08D] px-3">
+                  <label htmlFor="ParentName" className="text-white font-[Montserrat] font-bold text-center">Name:</label>
+                  <input
+                      type="text"
+                      name="ParentName"
+                      id="ParentName"
+                      className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
+                      readOnly={formState == 1}
+                      />
+                </div>
+                <div className="flex flex-row items-center w-full text-white border-x border-[#254151] bg-[#3EA08D] px-3">
+                  <label htmlFor="ParentAffliation" className="text-white font-[Montserrat] font-bold text-center">Affliation:</label>
+                  <input
+                      type="text"
+                      name="ParentAffliation"
+                      id="ParentAffliation"
+                      className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
+                      readOnly={formState == 1}
+                      />
+                </div>
+                <div className="flex flex-row items-center w-full text-white border-b border-x rounded-b-sm border-[#254151] bg-[#3EA08D] px-3">
+                  <label htmlFor="ParentcNum" className="text-nowrap text-white font-[Montserrat] font-bold text-center">Contant Number:</label>
+                  <input
+                      type="text"
+                      name="ParentcNum"
+                      id="ParentcNum"
+                      className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
+                      readOnly={formState == 1}
+                      />
+                </div>
               </div>
               <div className="flex flex-row items-center justify-around w-full gap-4">
                 {formState == 2 && (
