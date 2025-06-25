@@ -32,16 +32,16 @@ function BeneficiaryList() {
   useEffect(() => {
     if (useTestProfiles) {
       setProfileTest([
-        { firstName: "Juan", lastName: "Dela Cruz", age: 12, sex: "M", type: "student" },
-        { firstName: "Maria", lastName: "Clara", age: 10, sex: "F", type: "student" },
-        { firstName: "Jose", lastName: "Rizal", age: 13, sex: "M", type: "student" },
-        { firstName: "Melchora", lastName: "Aquino", age: 9, sex: "F", type: "student" },
-        { firstName: "Gabriela", lastName: "Silang", age: 7, sex: "F", type: "waitlist" },
-        { firstName: "Maria", lastName: "Elena", age: 11, sex: "F", type: "waitlist" },
-        { firstName: "Apolinario", lastName: "Mabini", age: 8, sex: "M", type: "waitlist" },
-        { firstName: "Juan", lastName: "Tamad", age: 20, sex: "M", type: "volunteer" },
-        { firstName: "Jane", lastName: "Doe", age: 21, sex: "M", type: "volunteer" },
-        { firstName: "Wanda", lastName: "Hoi", age: 22, sex: "F", type: "volunteer" },
+        { first_name: "Juan", last_name: "Dela Cruz", age: 12, sex: "M", type: "student" },
+        { first_name: "Maria", last_name: "Clara", age: 10, sex: "F", type: "student" },
+        { first_name: "Jose", last_name: "Rizal", age: 13, sex: "M", type: "student" },
+        { first_name: "Melchora", last_name: "Aquino", age: 9, sex: "F", type: "student" },
+        { first_name: "Gabriela", last_name: "Silang", age: 7, sex: "F", type: "waitlist" },
+        { first_name: "Maria", last_name: "Elena", age: 11, sex: "F", type: "waitlist" },
+        { first_name: "Apolinario", last_name: "Mabini", age: 8, sex: "M", type: "waitlist" },
+        { first_name: "Juan", last_name: "Tamad", age: 20, sex: "M", type: "volunteer" },
+        { first_name: "Jane", last_name: "Doe", age: 21, sex: "M", type: "volunteer" },
+        { first_name: "Wanda", last_name: "Hoi", age: 22, sex: "F", type: "volunteer" },
       ]);
       setLoading(false);
     } else {
@@ -67,7 +67,7 @@ function BeneficiaryList() {
             type: "volunteer"
           });
         });
-
+        console.log(profiles)
         setProfileTest(profiles);
         setLoading(false);
       };
@@ -82,10 +82,10 @@ function BeneficiaryList() {
   let filteredprofiles = filter ? profileTest.filter(profile => profile.type === filter) : profileTest;
 
   // Sort profiles based on selected sort val
-  if (sort === "lastName") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.lastName.localeCompare(b.lastName));
-  } else if (sort === "firstName") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.firstName.localeCompare(b.firstName));
+  if (sort === "last_name") {
+    filteredprofiles = [...filteredprofiles].sort((a, b) => a.last_name.localeCompare(b.last_name));
+  } else if (sort === "first_name") {
+    filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
   } else if (sort === "age") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.age - b.age);
   }
@@ -95,8 +95,8 @@ function BeneficiaryList() {
     const searchLower = search.trim().toLowerCase();
     filteredprofiles = filteredprofiles.filter(
       profile =>
-        profile.firstName.toLowerCase().includes(searchLower) ||
-        profile.lastName.toLowerCase().includes(searchLower) ||
+        profile.first_name.toLowerCase().includes(searchLower) ||
+        profile.last_name.toLowerCase().includes(searchLower) ||
         profile.age.toString().includes(searchLower)
     );
   }
@@ -123,8 +123,8 @@ function BeneficiaryList() {
           className="p-2 rounded-md border border-gray-300 text-sm"
         >
           <option value="">Sort by</option>
-          <option value="lastName">Last Name</option>
-          <option value="firstName">First Name</option>
+          <option value="last_name">Last Name</option>
+          <option value="first_name">First Name</option>
           <option value="age">Age</option>
         </select>
 
@@ -151,7 +151,7 @@ function BeneficiaryList() {
               <div
                 key={`${sort}-${index}`}
                 onClick={() => {
-                  console.log(`Profile clicked: ${profile.firstName} ${profile.lastName}`);
+                  console.log(`Profile clicked: ${profile.first_name} ${profile.last_name}`);
                   // TODO: navigate to actual profile
                   navigate(`/view-profile`);
                 }}
@@ -168,7 +168,7 @@ function BeneficiaryList() {
                     />
                   </svg>
                 </div>
-                <ProfileCard key={`${sort}-${index}`} firstName={profile.firstName} lastName={profile.lastName} age={profile.age} sex={profile.sex} sort={sort} />
+                <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
               </div>
             ))
           )}
