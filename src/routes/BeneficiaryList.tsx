@@ -1,29 +1,34 @@
 import { useNavigate } from "react-router";
 import "../css/styles.css";
+import ProfileCard from "../components/ProfileCard.tsx";
 import { UserContext } from "../context/userContext.ts";
 import { useContext, useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig"; 
-
+import { db } from "../firebase/firebaseConfig";
 
 function BeneficiaryList() {
   const navigate = useNavigate();
   const usertest = useContext(UserContext);
-  
+
   useEffect(() => {
     if (usertest === null) {
       navigate("/");
     }
   }, [usertest, navigate]);
-  
+
+  // List control states
   const [filter, setFilter] = useState<string>("");
   const [sort, setSort] = useState<string>("");
   const [search, setSearch] = useState<string>("");
-  
-  // Test data
+
+  // Loading prompt state
+  const [loading, setLoading] = useState(true);
+
+  // Test data and profile test state
   const [profileTest, setProfileTest] = useState<any[]>([]);
-  const useTestProfiles = true; // false if db query - delete later
-  
+  const useTestProfiles = false; // false if db query
+
+
   useEffect(() => {
     if (useTestProfiles) {
       setProfileTest([
@@ -38,18 +43,40 @@ function BeneficiaryList() {
         { firstName: "Jane", lastName: "Doe", age: 21, sex: "M", type: "volunteer" },
         { firstName: "Wanda", lastName: "Hoi", age: 22, sex: "F", type: "volunteer" },
       ]);
+      setLoading(false);
     } else {
-      const fetchBeneficiaries = async () => {
-        const querySnapshot = await getDocs(collection(db, "beneficiaries"));
+      const fetchProfiles = async () => {
+        setLoading(true); // display "fetching..."
+        const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
+        const volunteerSnap = await getDocs(collection(db, "volunteers"));
         const profiles: any[] = [];
-        querySnapshot.forEach((doc) => {
-          profiles.push(doc.data());
+
+        beneficiarySnap.docs.forEach(doc => {
+          profiles.push({
+            id: doc.id,
+            ...doc.data(),
+            type: "student"
+            // TODO: base type on whether kid is student or in waitlist.
+          });
         });
+
+        volunteerSnap.docs.forEach(doc => {
+          profiles.push({
+            id: doc.id,
+            ...doc.data(),
+            type: "volunteer"
+          });
+        });
+
         setProfileTest(profiles);
+        setLoading(false);
       };
-      fetchBeneficiaries();
+      fetchProfiles();
     }
   }, []);
+
+
+
 
   // Filter profiles based on filter val
   let filteredprofiles = filter ? profileTest.filter(profile => profile.type === filter) : profileTest;
@@ -62,15 +89,15 @@ function BeneficiaryList() {
   } else if (sort === "age") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.age - b.age);
   }
-  
+
   // Search filter (partial or exact matches on name and age)
   if (search.trim() !== "") {
     const searchLower = search.trim().toLowerCase();
     filteredprofiles = filteredprofiles.filter(
       profile =>
-      profile.firstName.toLowerCase().includes(searchLower) ||
-      profile.lastName.toLowerCase().includes(searchLower) ||
-      profile.age.toString().includes(searchLower)
+        profile.firstName.toLowerCase().includes(searchLower) ||
+        profile.lastName.toLowerCase().includes(searchLower) ||
+        profile.age.toString().includes(searchLower)
     );
   }
 
@@ -110,43 +137,45 @@ function BeneficiaryList() {
         />
       </div>
 
-    <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
-      <div className="flex flex-col gap-4">
-        {filteredprofiles.map((profile, index) => (
-          <div
-            key={index}
-            onClick={() => {
-              console.log(`Profile clicked: ${profile.firstName} ${profile.lastName}`);
-              navigate(`/view-profile`);
-            }}
-          className="flex items-center bg-[#45B29D] text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
-          >
-
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-              <svg
-                className="w-6 h-6 text-[#45B29D]"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              > 
-                <path
-                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
-                />
-              </svg>
-            </div>
-
-            <div className="flex flex-col text-sm">
-              <span className="font-bold text-base font-[Montserrat]">
-                {profile.lastName.toUpperCase()}, {profile.firstName}
-              </span>
-              <span>Age: {profile.age}</span>
-              <span>Sex: {profile.sex}</span>
-            </div>
+      <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
+        <div className="flex flex-col gap-4">
+          
+          {loading ? (
+            // display loading while fetching from database.
+            <div className="text-center text-white py-8">Fetching...</div>
+          ) : filteredprofiles.length === 0 ? (
+            <div className="text-center text-white py-8">No profiles to show.</div>
+          ) : (
+            // non-empty profiles
+            filteredprofiles.map((profile, index) => (
+              <div
+                key={`${sort}-${index}`}
+                onClick={() => {
+                  console.log(`Profile clicked: ${profile.firstName} ${profile.lastName}`);
+                  // TODO: navigate to actual profile
+                  navigate(`/view-profile`);
+                }}
+                className="flex items-center bg-[#45B29D] text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
+              >
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
+                  <svg
+                    className="w-6 h-6 text-[#45B29D]"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+                    />
+                  </svg>
+                </div>
+                <ProfileCard key={`${sort}-${index}`} firstName={profile.firstName} lastName={profile.lastName} age={profile.age} sex={profile.sex} sort={sort} />
+              </div>
+            ))
+          )}
         </div>
-        ))}
       </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default BeneficiaryList;
