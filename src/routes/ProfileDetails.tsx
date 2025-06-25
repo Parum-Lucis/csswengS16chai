@@ -10,6 +10,8 @@ import type { Beneficiary } from "../models/beneficiaryType.ts";
 export function ProfileDetails() {
   // const params = useParams()
   const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null)
+  // formState == 1 && 2 for beneficiary view and edit 
+  // formState == 3 && 4 for volunteer view and edit 
   const [formState, setForm] = useState(1);
   const [docID, setDocID] = useState(beneficiary?.docID)
 
@@ -20,6 +22,7 @@ export function ProfileDetails() {
       if(beneficiariesSnap.exists())
         setBeneficiary(beneficiariesSnap.data() as Beneficiary)
         setDocID(beneficiariesSnap.id)
+        //setForm(3)
     }
     fetchBeneficiary()
   }, [setBeneficiary])
@@ -56,7 +59,13 @@ export function ProfileDetails() {
     if (formState == 1) {
       setForm(2)
     }
-    else{
+    else if (formState == 3){
+      setForm(4)
+    }
+    else if (formState == 4){
+      setForm(3)
+    }
+    else if (formState == 2){
       setForm(1)
     }
   }
@@ -76,7 +85,10 @@ export function ProfileDetails() {
     await updateDoc(updateRef, {
       ...beneficiary
     })
-    setForm(1)
+    if (formState == 2)
+      setForm(1)
+    else if (formState == 4)
+      setForm(3)
   }
 
   const eventsTest = [
@@ -115,7 +127,7 @@ export function ProfileDetails() {
               {beneficiary?.last_name}, {beneficiary?.first_name}
             </h3>
 
-            {hasID && (
+            {(formState == 1 || formState == 2) && hasID && (
                 <h3 className="text-[#254151] text-center font-[Montserrat] mt-1">
                   ID: <span className="underline">{beneficiary?.accredited_id}</span>
                 </h3>
@@ -133,7 +145,7 @@ export function ProfileDetails() {
                       type="date"
                       id="bDate"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                      readOnly={formState == 1}
+                      readOnly={formState == 1 || formState==3}
                       onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, birthdate : Timestamp.fromDate(birthdate)})}
                       value={birthdate?.toISOString().substring(0,10)}/>
                 </div>
@@ -148,26 +160,27 @@ export function ProfileDetails() {
                       type="text"
                       id="Sex"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                      readOnly={formState == 1}
+                      readOnly={formState == 1 || formState==3}
                       onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, sex : e.target.value})}
                       value={sex}/>
                 </div>
               </div>
-
-              <div className="flex flex-col">
-                <label
-                    htmlFor="gLevel"
-                    className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
-                  Grade Level:
-                </label>
-                <input
-                    type="text"
-                    id="gLevel"
-                    className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={formState == 1}
-                    onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, grade_level : Number(e.target.value)})}
-                    value={level}/>
-              </div>
+              { (formState == 1 || formState == 2) && (
+                <div className="flex flex-col">
+                  <label
+                      htmlFor="gLevel"
+                      className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
+                    Grade Level:
+                  </label>
+                  <input
+                      type="text"
+                      id="gLevel"
+                      className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                      readOnly={formState == 1}
+                      onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, grade_level : Number(e.target.value)})}
+                      value={level}/>
+                </div>
+              )}
 
               <div className="flex flex-col">
                 <label
@@ -179,7 +192,7 @@ export function ProfileDetails() {
                     type="number"
                     id="cNum"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={formState == 1}
+                    readOnly={formState == 1 || formState==3}
                     onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, contact_number : Number(e.target.value)})}
                     value={contact}/>
               </div>
@@ -194,10 +207,11 @@ export function ProfileDetails() {
                     type="text"
                     id="add"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={formState == 1}
+                    readOnly={formState == 1 || formState==3}
                     onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
                     value={address}/>
               </div>
+              {(formState == 1 || formState == 2) && (
               <div className="flex flex-col">
                 <h3
                     className="text-center bg-[#254151] text-[#45B29D] px-2 py-1 rounded-t-sm font-semibold font-[Montserrat]">
@@ -234,8 +248,9 @@ export function ProfileDetails() {
                       />
                 </div>
               </div>
+              )}
               <div className="flex flex-row items-center justify-around w-full gap-4">
-                {formState == 2 && (
+                {(formState === 2 || formState === 4) && (
                   <button
                       type="submit"
                       className="mt-2 w-full bg-[#FF0000] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
@@ -247,14 +262,14 @@ export function ProfileDetails() {
                 <button
                     type="submit"
                     className="mt-2 w-full bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
-                    onClick={formState == 1 ? handleEdit : handleSave}>
-                  {formState == 1 ? "Edit" : "Save Changes"}
+                    onClick={formState == 1 || formState == 3 ? handleEdit : handleSave}>
+                  {formState == 1 || formState == 3 ? "Edit" : "Save Changes"}
                 </button>
               </div>
             </div>
           </div>
 
-          {isStudent && (
+          {(formState == 1 || formState == 2) && (
               <div className="w-full max-w-2xl mt-8">
                 <h3 className="text-[#45B29D] text-2xl text-center font-bold font-[Montserrat] mb-4">
                   Attended Events

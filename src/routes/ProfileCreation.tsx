@@ -247,6 +247,17 @@ export function BeneficiaryProfileCreation() {
                   />
                 </div>
               </div>
+              <div>
+                <label htmlFor="gradelevel" className="text-white font-[Montserrat] font-semibold">
+                  Grade Level
+                </label>
+                <input
+                    id="gradelevel"
+                    name="gradelevel"
+                    type="number"
+                    className="input-text w-full"
+                />
+              </div>
               <div className="flex flex-col">
                 <h3
                     className="text-center bg-[#254151] text-[#45B29D] px-2 py-1 rounded-t-sm font-semibold font-[Montserrat]">
