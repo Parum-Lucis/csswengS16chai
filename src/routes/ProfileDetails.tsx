@@ -12,7 +12,7 @@ export function ProfileDetails() {
   const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null)
   // formState == 1 && 2 for beneficiary view and edit 
   // formState == 3 && 4 for volunteer view and edit 
-  const [formState, setForm] = useState(1);
+  const [formState, setForm] = useState(0);
   const [docID, setDocID] = useState(beneficiary?.docID)
 
   useEffect(() =>  {
@@ -22,7 +22,7 @@ export function ProfileDetails() {
       if(beneficiariesSnap.exists())
         setBeneficiary(beneficiariesSnap.data() as Beneficiary)
         setDocID(beneficiariesSnap.id)
-        //setForm(3)
+        setForm(1)
     }
     fetchBeneficiary()
   }, [setBeneficiary])
@@ -121,6 +121,12 @@ export function ProfileDetails() {
               className="absolute left-4 top-8 bg-[#45B29D] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
             Sign Out
           </button>
+          {(formState == 0) && (
+          <h3
+              className="z-1 absolute right-4 bottom-0 bg-[#e7c438] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
+            Fetching...
+          </h3>
+          )}
 
           <div className="w-full max-w-2xl bg-[#45B29D] rounded-md px-4 sm:px-6 py-8">
             <h3 className="text-[#254151] text-2xl text-center font-bold font-[Montserrat]">
@@ -156,7 +162,7 @@ export function ProfileDetails() {
                       type="date"
                       id="bDate"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                      readOnly={formState == 1 || formState==3}
+                      readOnly={formState == 0 || formState == 1 || formState==3}
                       onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, birthdate : Timestamp.fromDate(birthdate)})}
                       value={birthdate?.toISOString().substring(0,10)}/>
                 </div>
@@ -171,7 +177,7 @@ export function ProfileDetails() {
                       type="text"
                       id="Sex"
                       className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                      readOnly={formState == 1 || formState==3}
+                      readOnly={formState == 0 || formState == 1 || formState==3}
                       onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, sex : e.target.value})}
                       value={sex}/>
                 </div>
@@ -203,7 +209,7 @@ export function ProfileDetails() {
                     type="number"
                     id="cNum"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={formState == 1 || formState==3}
+                    readOnly={formState == 0 || formState == 1 || formState==3}
                     onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, contact_number : Number(e.target.value)})}
                     value={contact}/>
               </div>
@@ -218,7 +224,7 @@ export function ProfileDetails() {
                     type="text"
                     id="add"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
-                    readOnly={formState == 1 || formState==3}
+                    readOnly={formState == 0 || formState == 1 || formState==3}
                     onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
                     value={address}/>
               </div>
@@ -273,8 +279,9 @@ export function ProfileDetails() {
                 <button
                     type="submit"
                     className="mt-2 w-full bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
-                    onClick={formState == 1 || formState == 3 ? handleEdit : handleSave}>
-                  {formState == 1 || formState == 3 ? "Edit" : "Save Changes"}
+                    onClick={formState == 0 || formState == 1 || formState == 3 ? handleEdit : handleSave}
+                    disabled={formState == 0}>
+                  {formState == 0 || formState == 1 || formState == 3 ? "Edit" : "Save Changes"}
                 </button>
               </div>
             </div>
