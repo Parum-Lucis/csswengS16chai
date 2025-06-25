@@ -128,9 +128,20 @@ export function ProfileDetails() {
             </h3>
 
             {(formState == 1 || formState == 2) && hasID && (
-                <h3 className="text-[#254151] text-center font-[Montserrat] mt-1">
-                  ID: <span className="underline">{beneficiary?.accredited_id}</span>
-                </h3>
+                <div className="w-full flex justify-center mt-1">
+                  <div className="flex flex-row gap-2 text-[#254151] font-[Montserrat]">
+                    <label htmlFor="idNum">ID:</label>
+                    <input
+                      name="idNum"
+                      id="idNum"
+                      type="number"
+                      className="underline text-sm text-[#254151] font-[Montserrat] px-0 py-0 w-auto border border-[#254151] rounded-sm"
+                      onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, accredited_id : Number(e.target.value)})}
+                      value={beneficiary?.accredited_id}
+                      readOnly={formState == 1}
+                    />
+                  </div>
+                </div>
             )}
 
             <div className="flex flex-col gap-4 mt-6">
