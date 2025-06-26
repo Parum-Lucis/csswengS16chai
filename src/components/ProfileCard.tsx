@@ -2,7 +2,7 @@ function ProfileCard({firstName, lastName, age, sex, sort}: {firstName: string, 
   return (
     <div className="flex flex-col text-sm">
               <span className="font-bold text-base font-[Montserrat]">
-                {sort === "firstName"
+                {sort === "first"
                   ? `${firstName.toUpperCase()} ${lastName}`
                   : `${lastName.toUpperCase()}, ${firstName}`}
               </span>
