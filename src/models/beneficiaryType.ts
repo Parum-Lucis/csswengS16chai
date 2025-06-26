@@ -3,15 +3,14 @@ import type { AttendedEvents } from "./attendedEventsType";
 import type { Guardian } from "./guardianType";
 
 export interface Beneficiary {
-  docID: string;
+  docID?: string;
   accredited_id?: number;
   last_name: string;
   first_name: string;
   birthdate: Timestamp;
-  contact_number: number;
   address: string;
   sex: string;
-  grade_level: number;
+  grade_level?: number;
   attended_events: AttendedEvents[];
   guardians: Guardian[];
 }
