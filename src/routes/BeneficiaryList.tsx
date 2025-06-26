@@ -82,7 +82,6 @@ function BeneficiaryList() {
             type: "volunteer"
           });
         });
-        console.log(profiles)
         setProfileTest(profiles);
         setLoading(false);
       };
