@@ -5,6 +5,7 @@ import { UserContext } from "../context/userContext.ts";
 import { useContext, useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
+import { differenceInYears } from "date-fns";
 
 function BeneficiaryList() {
   const navigate = useNavigate();
@@ -51,19 +52,33 @@ function BeneficiaryList() {
         const volunteerSnap = await getDocs(collection(db, "volunteers"));
         const profiles: any[] = [];
 
+        // TODO: update fields here, initially worked on an older branch
+
         beneficiarySnap.docs.forEach(doc => {
-          profiles.push({
-            id: doc.id,
-            ...doc.data(),
-            type: "student"
-            // TODO: base type on whether kid is student or in waitlist.
-          });
+          const data = doc.data();
+            const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
+            const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
+            const type = data.accredited_id == null ? "waitlist" : "student";
+
+            profiles.push({
+              id: data.id,
+              ...data,
+              age: age,
+              type: type
+            });
         });
 
         volunteerSnap.docs.forEach(doc => {
+          const data = doc.data();
+          const birthDate = data.birthdate?.toDate ? data.birthDate.toDate() : null;
+          const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
+          const sex = data.sex ? data.sex : "N/A"
+
           profiles.push({
-            id: doc.id,
-            ...doc.data(),
+            id: data.id,
+            ...data,
+            age: age,
+            sex: sex,
             type: "volunteer"
           });
         });
@@ -82,9 +97,9 @@ function BeneficiaryList() {
   let filteredprofiles = filter ? profileTest.filter(profile => profile.type === filter) : profileTest;
 
   // Sort profiles based on selected sort val
-  if (sort === "last_name") {
+  if (sort === "last") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.last_name.localeCompare(b.last_name));
-  } else if (sort === "first_name") {
+  } else if (sort === "first") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
   } else if (sort === "age") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.age - b.age);
@@ -123,8 +138,8 @@ function BeneficiaryList() {
           className="p-2 rounded-md border border-gray-300 text-sm"
         >
           <option value="">Sort by</option>
-          <option value="last_name">Last Name</option>
-          <option value="first_name">First Name</option>
+          <option value="last">Last Name</option>
+          <option value="first">First Name</option>
           <option value="age">Age</option>
         </select>
 
@@ -139,7 +154,7 @@ function BeneficiaryList() {
 
       <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
         <div className="flex flex-col gap-4">
-          
+
           {loading ? (
             // display loading while fetching from database.
             <div className="text-center text-white py-8">Fetching...</div>
