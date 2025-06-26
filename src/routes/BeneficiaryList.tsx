@@ -56,16 +56,16 @@ function BeneficiaryList() {
 
         beneficiarySnap.docs.forEach(doc => {
           const data = doc.data();
-            const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
-            const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
-            const type = data.accredited_id == null ? "waitlist" : "student";
+          const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
+          const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
+          const type = data.accredited_id == null ? "waitlist" : "student";
 
-            profiles.push({
-              id: data.id,
-              ...data,
-              age: age,
-              type: type
-            });
+          profiles.push({
+            id: data.id,
+            ...data,
+            age: age,
+            type: type
+          });
         });
 
         volunteerSnap.docs.forEach(doc => {
@@ -108,12 +108,18 @@ function BeneficiaryList() {
   // Search filter (partial or exact matches on name and age)
   if (search.trim() !== "") {
     const searchLower = search.trim().toLowerCase();
-    filteredprofiles = filteredprofiles.filter(
-      profile =>
-        profile.first_name.toLowerCase().includes(searchLower) ||
-        profile.last_name.toLowerCase().includes(searchLower) ||
-        profile.age.toString().includes(searchLower)
-    );
+    const terms = searchLower.split(/[\s,]+/).filter(Boolean);
+
+    filteredprofiles = filteredprofiles.filter(profile => {
+      const values = [
+        profile.first_name.toLowerCase(),
+        profile.last_name.toLowerCase(),
+        profile.age.toString()
+      ];
+      return terms.every(term =>
+        values.some(value => value.includes(term))
+      );
+    });
   }
 
   return (
