@@ -17,7 +17,7 @@ function NavigationBar(){
     return(
         <>
             { user && (
-            <div className="flex flex-row items-center justify-around p-4 sticky bottom-0  bg-[#254151] font-[Montserrat] font-bold text-white w-full shadow-[0px_-3px_20px] shadow-gray-500">
+            <div className="flex flex-row items-center justify-around p-4 fixed bottom-0 left-0  bg-[#254151] font-[Montserrat] font-bold text-white w-full shadow-[0px_-3px_20px] shadow-gray-500">
                 { urls.map ((ur) => (
                     <NavLink to={ur.pldt}
                     className={({ isActive, isPending }) =>
