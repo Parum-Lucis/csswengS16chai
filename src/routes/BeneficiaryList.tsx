@@ -6,6 +6,7 @@ import { useContext, useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { differenceInYears } from "date-fns";
+import { toast } from "react-toastify";
 
 function BeneficiaryList() {
   const navigate = useNavigate();
@@ -25,14 +26,16 @@ function BeneficiaryList() {
   // Loading prompt state
   const [loading, setLoading] = useState(true);
 
-  // Test data and profile test state
-  const [profileTest, setProfileTest] = useState<any[]>([]);
+  // Profiles and test profiles flag
+  const [profiles, setProfiles] = useState<any[]>([]);
   const useTestProfiles = false; // false if db query
 
-
+  // Fetching profiles 
+  // RUNS TWICE while in development because of React's strict mode
+  // https://www.reddit.com/r/reactjs/comments/1epir3s/why_is_my_useeffect_being_called_twice_even/
   useEffect(() => {
     if (useTestProfiles) {
-      setProfileTest([
+      setProfiles([
         { first_name: "Juan", last_name: "Dela Cruz", age: 12, sex: "M", type: "student" },
         { first_name: "Maria", last_name: "Clara", age: 10, sex: "F", type: "student" },
         { first_name: "Jose", last_name: "Rizal", age: 13, sex: "M", type: "student" },
@@ -40,60 +43,53 @@ function BeneficiaryList() {
         { first_name: "Gabriela", last_name: "Silang", age: 7, sex: "F", type: "waitlist" },
         { first_name: "Maria", last_name: "Elena", age: 11, sex: "F", type: "waitlist" },
         { first_name: "Apolinario", last_name: "Mabini", age: 8, sex: "M", type: "waitlist" },
-        { first_name: "Juan", last_name: "Tamad", age: 20, sex: "M", type: "volunteer" },
-        { first_name: "Jane", last_name: "Doe", age: 21, sex: "M", type: "volunteer" },
-        { first_name: "Wanda", last_name: "Hoi", age: 22, sex: "F", type: "volunteer" },
       ]);
       setLoading(false);
     } else {
       const fetchProfiles = async () => {
         setLoading(true); // display "fetching..."
         const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
-        const volunteerSnap = await getDocs(collection(db, "volunteers"));
         const profiles: any[] = [];
+        let flag: boolean = false;
 
-        // TODO: update fields here, initially worked on an older branch
-
+        // TODO: use db models when pulled in main
         beneficiarySnap.docs.forEach(doc => {
           const data = doc.data();
           const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
           const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
           const type = data.accredited_id == null ? "waitlist" : "student";
 
+          // skip docs with incomplete fields
+          // realistically this won't happen during production
+          // but just so that the page will actually load for now
+          if (!data.last_name || !data.first_name || !data.sex) {
+            flag = true;
+            return
+          }
+
           profiles.push({
-            id: data.id,
+            id: doc.id,
             ...data,
             age: age,
             type: type
           });
-        });
+        });        
 
-        volunteerSnap.docs.forEach(doc => {
-          const data = doc.data();
-          const birthDate = data.birthdate?.toDate ? data.birthDate.toDate() : null;
-          const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
-          const sex = data.sex ? data.sex : "N/A"
+        setProfiles(profiles);
+        setLoading(false); 
 
-          profiles.push({
-            id: data.id,
-            ...data,
-            age: age,
-            sex: sex,
-            type: "volunteer"
-          });
-        });
-        setProfileTest(profiles);
-        setLoading(false);
+        // warn that one or more profiles were skipped
+        if (flag) {
+          toast.warn("One or more profiles failed to load.");
+        }
       };
       fetchProfiles();
     }
   }, []);
 
 
-
-
   // Filter profiles based on filter val
-  let filteredprofiles = filter ? profileTest.filter(profile => profile.type === filter) : profileTest;
+  let filteredprofiles = filter ? profiles.filter(profile => profile.type === filter) : profiles;
 
   // Sort profiles based on selected sort val
   if (sort === "last") {
@@ -134,8 +130,7 @@ function BeneficiaryList() {
           <option value="">Filter By</option>
           <option value="student">Student</option>
           <option value="waitlist">Waitlist</option>
-          <option value="volunteer">Volunteer</option>
-        </select>
+         </select>
 
         <select
           value={sort}
@@ -159,7 +154,6 @@ function BeneficiaryList() {
 
       <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
         <div className="flex flex-col gap-4">
-
           {loading ? (
             // display loading while fetching from database.
             <div className="text-center text-white py-8">Fetching...</div>
@@ -168,12 +162,12 @@ function BeneficiaryList() {
           ) : (
             // non-empty profiles
             filteredprofiles.map((profile, index) => (
+              
               <div
                 key={`${sort}-${index}`}
                 onClick={() => {
-                  console.log(`Profile clicked: ${profile.first_name} ${profile.last_name}`);
-                  // TODO: navigate to actual profile
-                  navigate(`/view-profile`);
+                  console.log(`Profile clicked: ${profile.first_name} ${profile.last_name} (${profile.id})`);
+                  navigate(`/view-profile/${profile.id}`);
                 }}
                 className="flex items-center bg-[#45B29D] text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
               >
