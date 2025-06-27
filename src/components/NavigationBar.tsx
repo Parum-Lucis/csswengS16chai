@@ -8,7 +8,7 @@ function NavigationBar(){
     const user = useContext(UserContext)
     const urls = [
         {  name: "Admin",  pldt: "/create-profile" },
-        {  name: "Beneficiaries", pldt: "/view-profile-list"},
+        {  name: "Beneficiaries", pldt: "/view-beneficiary-list"},
         {  name: "You", pldt: "/view-profile" },
         {  name: "Events", pldt: "/view-event-list"},
         {  name: "Calendar", pldt: "/view-calendar" }
