@@ -6,6 +6,7 @@ import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Beneficiary } from "../models/beneficiaryType.ts";
+import { toast } from "react-toastify";
 
 function ProfileDetails() {
   // const params = useParams()
@@ -25,7 +26,7 @@ function ProfileDetails() {
   console.log(beneficiary)
   const navigate = useNavigate();
   const usertest = useContext(UserContext);
-  const { sex, contact_number : contact, grade_level : level, address } = beneficiary || {}
+  const { sex, grade_level : level, address } = beneficiary || {}
   const birthdate = new Date((beneficiary?.birthdate.seconds ?? 0)*1000)
 
   const userEx = {
@@ -53,20 +54,23 @@ function ProfileDetails() {
   let hasID = false;
 
   const handleEdit = async () => {
-    if(!sex || !level || !contact)
+    if(!sex || !level )
       return
     if(sex != "M" && sex != "F")
       return
     if(level > 12 || level < 1)
       return 
+    /*
     if(contact.toString().length != 12) 
       return
+    */
 
     const updateRef = doc(db, "beneficiaries", docID!)
     console.log(beneficiary)
     await updateDoc(updateRef, {
       ...beneficiary
     })
+    toast.success("Success!")
   }
 
   const eventsTest = [
@@ -165,15 +169,16 @@ function ProfileDetails() {
                     className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
                   Contact No:
                 </label>
+                {/*
                 <input
                     type="number"
                     id="cNum"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                     readOnly={isEditable}
                     onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, contact_number : Number(e.target.value)})}
-                    value={contact}/>
+                    value={contact}/>   */}
               </div>
-
+               
               <div className="flex flex-col">
                 <label
                     htmlFor="add"
