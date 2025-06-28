@@ -1,8 +1,10 @@
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { db } from "../firebase/firebaseConfig"
-import { collection, doc, addDoc/*, Timestamp*/ } from "firebase/firestore"
+import { collection, doc, addDoc,/*, Timestamp*/ 
+Timestamp} from "firebase/firestore"
 import React from "react";
+import type { Guardian } from "../models/guardianType";
 
 //password generator
 function GenPass(){
@@ -44,25 +46,25 @@ export function VolunteerProfileCreation() {
         toast.error("Please input a valid phone number.");
         return
       } else {
-        console.log("im here");
         const role = formData.get("dropdown") as string
-        if( role == "Admin" || "Volunteer") {
-          const is_admin = (role == "Admin" ? true : false )
-          const addRef = await addDoc(collection(db, "volunteers"), {
-            contact_number: parseInt(formData.get("cNum") as string),
-            email: formData.get("email") as string,
-            first_name: formData.get("fName") as string,
-            last_name: formData.get("lName") as string,
-            is_admin: is_admin,
-            role: role,
-          });
+        const is_admin = (role == "Admin" ? true : false )
+        const addRef = await addDoc(collection(db, "volunteers"), {
+          contact_number: formData.get("cNum") as string,
+          email: formData.get("email") as string,
+          first_name: formData.get("fName") as string,
+          last_name: formData.get("lName") as string,
+          is_admin: is_admin,
+          birthdate: Timestamp.fromMillis(Date.parse(/*formData.get("") as string*/ "2000-01-01T00:00:00.001Z")),
+          address: /* formData.get("") as string */ "Earth",
+          sex: /* formData.get("") as string */ "M",
+          role: role,
+        });
 
-          if(addRef) {
-            toast.success("Success!");
-            navigate("/view-profile");
-          }
-          else toast.error("Submission failed.");
+        if(addRef) {
+          toast.success("Success!");
+          navigate("/view-profile");
         }
+        else toast.error("Submission failed.");
       }
     } else toast.error("Please fill up all fields!");
   };
@@ -167,9 +169,11 @@ export function BeneficiaryProfileCreation() {
     const formData = new FormData(e.target as HTMLFormElement);
 
     let err = false;
-    for (const [, value] of formData.entries()) {
+    let is_waitlisted = false;
+    for (const [key, value] of formData.entries()) {
       console.log(value.toString(), err);
-      if (!value) err = true;
+      if (!value)
+        key == "idNum" ? is_waitlisted = true : err = true
     }
 
     const emailRegEx = new RegExp(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g);
@@ -177,18 +181,37 @@ export function BeneficiaryProfileCreation() {
       if (!emailRegEx.test(formData.get("email") as string)) {
         toast.error("Please input a proper email.");
       } else if (
-        (formData.get("cNum") as string).length != 11 ||
-        formData.get("cNum")?.slice(0, 2) != "09"
+        (formData.get("ParentcNum") as string).length != 11 ||
+        formData.get("ParentcNum")?.slice(0, 2) != "09"
       ) {
         toast.error(
           "Please input a valid phone number." +
             formData.get("cNum")?.toString.length
         );
       } else {
-        console.log("im here");
-        toast.success("Success!");
-        navigate("/ProfileDetails");
-        // more stuff
+        const role = formData.get("dropdown") as string
+        const guardianEx: Guardian[] = [{
+            name: "string",
+            relation: "string",
+            email: "string@string.com",
+            contact_number: "09876543210"
+        }] // temp
+        const addRef = await addDoc(collection(db, "beneficiaries"), {
+          accredited_id: Number(formData.get("idNum") as string) || NaN,
+          first_name: formData.get("fName") as string,
+          last_name: formData.get("lName") as string,
+          address: formData.get("address") as string,
+          birthdate: Timestamp.fromMillis(Date.parse(/*formData.get("") as string*/ "2000-01-01T00:00:00.001Z")),
+          grade_level: Number(formData.get("gradelevel") as string),
+          is_waitlisted: is_waitlisted,
+          guardians: guardianEx,
+        });
+
+        if(addRef) {
+          toast.success("Success!");
+          navigate("/view-profile");
+        }
+        else toast.error("Submission failed.");
       }
     } else toast.error("Please fill up all fields!");
   };
