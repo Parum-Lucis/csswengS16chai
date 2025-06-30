@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router";
 import "../css/styles.css";
-import ProfileCard from "../components/ProfileCard.tsx";
-import { UserContext } from "../context/userContext.ts";
+import ProfileCard from "../components/ProfileCard";
+import { UserContext } from "../context/userContext";
 import { useContext, useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig.ts";
+import { db } from "../firebase/firebaseConfig";
 import { differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
 
