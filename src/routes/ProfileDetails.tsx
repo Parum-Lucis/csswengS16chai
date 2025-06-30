@@ -1,11 +1,11 @@
-import EventCard from "../components/EventCard.tsx";
+import EventCard from "../components/EventCard";
 import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../context/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
-import type { Beneficiary } from "../models/beneficiaryType.ts";
+import type { Beneficiary } from "../models/beneficiaryType";
 import { toast } from "react-toastify";
 
 function ProfileDetails() {
