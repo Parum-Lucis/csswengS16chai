@@ -85,7 +85,9 @@ export function YourProfile() {
         })
         setOriginalVolunteer(volunteer)
         toast.success("Account update success!")
-        location.reload();
+        setTimeout(function() {
+            location.reload();
+        }, 1000);
     }
 
     return (
