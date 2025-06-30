@@ -4,7 +4,9 @@ import { db } from "../firebase/firebaseConfig"
 import { collection, doc, addDoc,/*, Timestamp*/ 
 Timestamp} from "firebase/firestore"
 import React from "react";
+import { useState } from "react";
 import type { Guardian } from "../models/guardianType";
+import GuardianCard from "../components/GuardianCard.tsx";
 
 //password generator
 function GenPass(){
@@ -126,6 +128,19 @@ export function VolunteerProfileCreation() {
                 </div>
               </div>
               <div>
+                <label htmlFor="SexDropdown" className="text-white font-[Montserrat] font-semibold">
+                  Sex
+                </label>
+                <select
+                    id="SexDropdown"
+                    name="SexDropdown"
+                    className="w-full rounded-[5px] p-2 font-[Montserrat] border-2 border-[#254151]"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Volunteer">Female</option>
+                </select>
+              </div>
+              <div>
                 <label htmlFor="address" className="text-white font-[Montserrat] font-semibold">
                   Address
                 </label>
@@ -162,7 +177,17 @@ export function VolunteerProfileCreation() {
 
 export function BeneficiaryProfileCreation() {
   const navigate = useNavigate();
-  
+  //formState = 0, 0 guardian (just because lol)
+  //formState = 1, 1 guardian
+  //formState = 2, 2 guardian
+  //formState = 3, 3 guardian
+  const [guardianState, setGuardian] = useState(1)
+  const [minimizeState, setMinimize] = useState(false)
+
+  function handleMinimize(){
+        setMinimize(!minimizeState)
+  } 
+
   const submitDetails = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -216,13 +241,29 @@ export function BeneficiaryProfileCreation() {
     } else toast.error("Please fill up all fields!");
   };
 
+  function handleAdd(){
+    if (guardianState+1 <= 3){
+      setGuardian(guardianState+1)
+    }
+    else
+      toast.error("Cannot add more than 3 guardians!")
+  }
+
+  function handleSub(){
+    if (guardianState-1 >= 1){
+      setGuardian(guardianState-1)
+    }
+    else
+      toast.error("Cannot have 0 guardians!")
+  }
+
   return (
       <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 bg-[#254151]">
         <div className="relative w-full max-w-2xl flex flex-col items-center rounded-[5px] p-4 sm:p-6">
           <div className="absolute top-0 sm:top-0 z-10 w-28 h-28 sm:w-36 sm:h-36 overflow-hidden bg-gray-500 border-4 border-[#45B29D] rounded-full flex items-center justify-center">
             <i className="text-[6rem] sm:text-[7rem] text-gray-300 fi fi-ss-circle-user"></i>
           </div>
-          <div className="flex w-full bg-[#45B29D] rounded-[5px] p-4 pt-20">
+          <div className="flex w-full flex-col bg-[#45B29D] rounded-[5px] p-4 pt-20">
             <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
               <div>
                 <label htmlFor="idNum" className="text-white font-[Montserrat] font-semibold">
@@ -232,17 +273,6 @@ export function BeneficiaryProfileCreation() {
                     id="idNum"
                     name="idNum"
                     type="number"
-                    className="input-text w-full"
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="text-white font-[Montserrat] font-semibold">
-                  Email
-                </label>
-                <input
-                    id="email"
-                    name="email"
-                    type="email"
                     className="input-text w-full"
                 />
               </div>
@@ -271,6 +301,19 @@ export function BeneficiaryProfileCreation() {
                 </div>
               </div>
               <div>
+                <label htmlFor="SexDropdown" className="text-white font-[Montserrat] font-semibold">
+                  Sex
+                </label>
+                <select
+                    id="SexDropdown"
+                    name="SexDropdown"
+                    className="w-full rounded-[5px] p-2 font-[Montserrat] border-2 border-[#254151]"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Volunteer">Female</option>
+                </select>
+              </div>
+              <div>
                 <label htmlFor="gradelevel" className="text-white font-[Montserrat] font-semibold">
                   Grade Level
                 </label>
@@ -280,39 +323,6 @@ export function BeneficiaryProfileCreation() {
                     type="number"
                     className="input-text w-full"
                 />
-              </div>
-              <div className="flex flex-col">
-                <h3
-                    className="text-center bg-[#254151] text-[#45B29D] px-2 py-1 rounded-t-sm font-semibold font-[Montserrat]">
-                  Parent Information
-                </h3>
-                <div className="flex flex-row items-center w-full text-white border-x border-[#254151] bg-[#3EA08D] px-3">
-                  <label htmlFor="ParentName" className="text-white font-[Montserrat] font-bold text-center">Name:</label>
-                  <input
-                      type="text"
-                      name="ParentName"
-                      id="ParentName"
-                      className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
-                      />
-                </div>
-                <div className="flex flex-row items-center w-full text-white border-x border-[#254151] bg-[#3EA08D] px-3">
-                  <label htmlFor="ParentAffliation" className="text-white font-[Montserrat] font-bold text-center">Affliation:</label>
-                  <input
-                      type="text"
-                      name="ParentAffliation"
-                      id="ParentAffliation"
-                      className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
-                      />
-                </div>
-                <div className="flex flex-row items-center w-full text-white border-b border-x rounded-b-sm border-[#254151] bg-[#3EA08D] px-3">
-                  <label htmlFor="ParentcNum" className="text-nowrap text-white font-[Montserrat] font-bold text-center">Contant Number:</label>
-                  <input
-                      type="text"
-                      name="ParentcNum"
-                      id="ParentcNum"
-                      className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
-                      />
-                </div>
               </div>
               <div>
                 <label htmlFor="address" className="text-white font-[Montserrat] font-semibold">
@@ -324,6 +334,44 @@ export function BeneficiaryProfileCreation() {
                     type="text"
                     className="input-text w-full"
                 />
+              </div>
+              <div className="flex flex-row justify-end gap-1">
+                <button
+                  type="button"
+                  className={`flex w-fit bg-[#254151] text-[#45B29D] p-1 px-3 rounded-sm font-semibold font-[Montserrat] cursor-pointer`}
+                  onClick={handleAdd}>
+                  +
+                </button>
+                <button
+                  type="button"
+                  className={`flex w-fit bg-[#254151] text-[#45B29D] p-1 px-3 rounded-sm font-semibold font-[Montserrat] cursor-pointer`}
+                  onClick={handleSub}>
+                  -
+                </button>
+              </div>
+              <div className="flex flex-col">
+                    <button
+                      type="button"
+                      className={`flex items-center justify-between bg-[#254151] text-[#45B29D] px-2 py-1 rounded-t-sm font-semibold font-[Montserrat] transition-all duration-300 cursor-pointer ${minimizeState ? "rounded-b-sm" : "rounded-t-sm"}`}
+                      onClick={handleMinimize}>
+                      Guardian Information
+                      <span className="flex items-center justify-center">
+                          <i className={`text-3xl mb-[-0.5rem] fi fi-ss-angle-small-down transition-all duration-300 ${minimizeState ? "rotate-180 mt-[-1rem]" : "rotate-0"}`}></i>
+                      </span>
+                    </button>
+                    <div className={`overflow-auto transition-all duration-300 ease-in-out ${minimizeState ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}>
+                      <div className="w-full rounded-b-sm text-white border border-[#254151] bg-[#3EA08D] p-3">
+                        {Array.from(
+                          {length: guardianState},
+                          (_, i) => (
+                            <div className="pb-4">
+                              <h3 className="font-[Montserrat] mb-2">Guardian {i + 1}</h3>
+                              <GuardianCard formState={false} />
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
               </div>
               <button
                   type="submit"

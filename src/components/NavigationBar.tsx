@@ -8,7 +8,7 @@ function NavigationBar(){
     const user = useContext(UserContext)
     const urls = [
         {  name: "Admin",  pldt: "/view-admin" },
-        {  name: "Beneficiaries", pldt: "/view-profile-list"},
+        {  name: "Search", pldt: "/view-profile-list"},
         {  name: "You", pldt: "/view-profile" },
         {  name: "Events", pldt: "/view-event-list"},
         {  name: "Calendar", pldt: "/view-calendar" }
@@ -17,7 +17,7 @@ function NavigationBar(){
     return(
         <>
             { user && (
-            <div className="flex items-center justify-center p-4 sticky bottom-0  bg-[#254151] font-[Montserrat] font-bold text-white w-full border-t border-t-gray-400">
+            <div className="flex items-center justify-center p-4 fixed bottom-0 left-0  bg-[#254151] font-[Montserrat] font-bold text-white w-full border-t border-t-gray-400">
                 <div className="flex flex-row gap-3 md:gap-10">
                     { urls.map ((ur) => (
                         <NavLink to={ur.pldt}

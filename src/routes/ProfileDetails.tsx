@@ -73,6 +73,9 @@ export function ProfileDetails() {
       setForm(1)
     }
   }
+  async function handleDelete(){
+
+  }
   const handleSave = 
   async () => {
     if(!sex || !level || !contact)
@@ -288,6 +291,15 @@ export function ProfileDetails() {
                   {formState == 0 || formState == 1 || formState == 3 ? "Edit" : "Save Changes"}
                 </button>
               </div>
+              {(formState == 1 || formState == 3) && (
+              <button
+                    type="submit"
+                    className="mt-2 w-full bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
+                    onClick={handleDelete}
+                    disabled={formState == 0}>
+                    Delete Account
+              </button>
+              )}
             </div>
           </div>
 

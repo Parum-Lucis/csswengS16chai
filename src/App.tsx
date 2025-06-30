@@ -2,7 +2,9 @@ import Login from "./routes/Login";
 import { Routes, Route } from "react-router";
 import "./css/styles.css";
 import { VolunteerProfileCreation, BeneficiaryProfileCreation } from "./routes/ProfileCreation";
-import { ProfileDetails } from "./routes/ProfileDetails";
+import { YourProfile } from "./routes/YourProfile.tsx";
+import { BeneficiaryProfile } from "./routes/BeneficiaryProfile.tsx";
+import { VolunteerProfile } from "./routes/VolunteerProfile.tsx";
 import { useState } from "react";
 import { auth } from "./firebase/firebaseConfig";
 import { UserContext, type UserStateType } from "./context/userContext.ts";
@@ -24,7 +26,9 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/forget-password" element={<ForgetMeNot />} />
         <Route path="/view-admin" element={<Admin />} />
-        <Route path="/view-profile" element={<ProfileDetails />} />
+        <Route path="/view-profile" element={<YourProfile />} />
+        <Route path="/view-beneficiary" element={<BeneficiaryProfile />} />
+        <Route path="/view-volunteer" element={<VolunteerProfile />} />
         <Route path="/create-volunteer-profile" element={<VolunteerProfileCreation />} />
         <Route path="/create-beneficiary-profile" element={<BeneficiaryProfileCreation />} />
         <Route path="/view-profile-list" element={<Temp />} />
