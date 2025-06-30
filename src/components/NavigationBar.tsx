@@ -17,7 +17,7 @@ function NavigationBar(){
     return(
         <>
             { user && (
-            <div className="flex items-center justify-center p-4 fixed bottom-0 left-0  bg-[#254151] font-[Montserrat] font-bold text-white w-full border-t border-t-gray-400">
+            <div className="flex items-center justify-center p-4 fixed bottom-0 left-0  bg-[#254151] font-[Montserrat] font-bold text-white w-full border-t border-t-gray-400 shadow-[0px_-3px_20px] shadow-gray-500">
                 <div className="flex flex-row gap-3 md:gap-10">
                     { urls.map ((ur) => (
                         <NavLink to={ur.pldt}
