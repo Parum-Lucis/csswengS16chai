@@ -93,6 +93,17 @@ export function VolunteerProfileCreation() {
                 </select>
               </div>
               <div>
+                <label htmlFor="birthdate" className="text-white font-[Montserrat] font-semibold">
+                  Birth Date
+                </label>
+                <input
+                    id="birthdate"
+                    name="birthdate"
+                    type="date"
+                    className="input-text w-full"
+                />
+              </div>
+              <div>
                 <label htmlFor="email" className="text-white font-[Montserrat] font-semibold">
                   Email
                 </label>
@@ -273,6 +284,17 @@ export function BeneficiaryProfileCreation() {
                     id="idNum"
                     name="idNum"
                     type="number"
+                    className="input-text w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="birthdate" className="text-white font-[Montserrat] font-semibold">
+                  Birth Date
+                </label>
+                <input
+                    id="birthdate"
+                    name="birthdate"
+                    type="date"
                     className="input-text w-full"
                 />
               </div>
