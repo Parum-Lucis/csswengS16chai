@@ -6,6 +6,7 @@ import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Volunteer } from "../models/volunteerType.ts";
 import { createPortal } from 'react-dom';
+import { toast } from "react-toastify";
 
 export function YourProfile() {
     // const params = useParams()
@@ -49,6 +50,19 @@ export function YourProfile() {
         setDeleteModal(!showDeleteModal)
     }
 
+    const handleConfirm = async () => {
+        setDeleteModal(!showDeleteModal)
+        
+        const updateRef = doc(db, "volunteers", docID!)
+        console.log(volunteer)
+        await updateDoc(updateRef, {
+        ...volunteer,
+        time_to_live : (Date.now() + 2592000000)
+        })
+        toast.success("Account delete success!")
+        navigate("/")
+    }
+
     function handleEdit(){
         if (formState === false && originalVolunteer) {
             setVolunteer(originalVolunteer);
@@ -59,7 +73,7 @@ export function YourProfile() {
     const handleSave = 
     async () => {
         setForm(!formState)
-        if(!sex || !contact || email || address)
+        if(!sex || !contact || !email || !address)
         return
         if(sex != "M" && sex != "F")
         return
@@ -70,6 +84,8 @@ export function YourProfile() {
         ...volunteer
         })
         setOriginalVolunteer(volunteer)
+        toast.success("Account update success!")
+        location.reload();
     }
 
     return (
@@ -89,7 +105,7 @@ export function YourProfile() {
                             </button>
                             <button
                                 className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                onClick={handleDelete} // TODO: REPLACE
+                                onClick={handleConfirm} // TODO: REPLACE
                             >
                                 Confirm Delete
                             </button>

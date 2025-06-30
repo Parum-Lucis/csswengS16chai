@@ -57,8 +57,8 @@ export function VolunteerProfileCreation() {
           last_name: formData.get("lName") as string,
           is_admin: is_admin,
           birthdate: Timestamp.fromMillis(Date.parse(/*formData.get("") as string*/ "2000-01-01T00:00:00.001Z")),
-          address: /* formData.get("") as string */ "Earth",
-          sex: /* formData.get("") as string */ "M",
+          address: formData.get("address") as string,
+          sex: formData.get("SexDropdown") as string,
           role: role,
         });
 

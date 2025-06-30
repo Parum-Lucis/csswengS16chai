@@ -6,6 +6,7 @@ import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Volunteer } from "../models/volunteerType.ts";
 import { createPortal } from 'react-dom';
+import { toast } from "react-toastify";
 
 export function VolunteerProfile() {
     // const params = useParams()
@@ -49,6 +50,19 @@ export function VolunteerProfile() {
         setDeleteModal(!showDeleteModal)
     }
 
+    const handleConfirm = async () => {
+        setDeleteModal(!showDeleteModal)
+        
+        const updateRef = doc(db, "volunteers", docID!)
+        console.log(volunteer)
+        await updateDoc(updateRef, {
+        ...volunteer,
+        time_to_live : (Date.now() + 2592000000)
+        })
+        toast.success("Account delete success!")
+        navigate("/")
+    }
+
     function handleEdit(){
         if (formState === false && originalVolunteer) {
             setVolunteer(originalVolunteer);
@@ -89,7 +103,7 @@ export function VolunteerProfile() {
                             </button>
                             <button
                                 className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                onClick={handleDelete} // TODO: REPLACE
+                                onClick={handleConfirm} // TODO: REPLACE
                             >
                                 Confirm Delete
                             </button>
