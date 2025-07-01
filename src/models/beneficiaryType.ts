@@ -8,7 +8,6 @@ export interface Beneficiary {
   last_name: string;
   first_name: string;
   birthdate: Timestamp;
-  contact_number: number;
   address: string;
   sex: string;
   grade_level: number;
