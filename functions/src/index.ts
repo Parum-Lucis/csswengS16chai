@@ -7,8 +7,10 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import {setGlobalOptions} from "firebase-functions";
-import {onRequest} from "firebase-functions/https";
+import { initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import { setGlobalOptions } from "firebase-functions";
+import { onCall, onRequest } from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 
 // Start writing functions
@@ -26,7 +28,20 @@ import * as logger from "firebase-functions/logger";
 // this will be the maximum concurrent request count.
 setGlobalOptions({ maxInstances: 10 });
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+const app = initializeApp();
+const auth = getAuth(app);
+
+export const helloWorld = onRequest((request, response) => {
+    logger.info("Hello logs!", { structuredData: true });
+    response.send("Hello from Firebase!");
+});
+
+export const test = onCall((req) => {
+    logger.info(req.data);
+    logger.info("alsoHI!!")
+    return "hi!";
+})
+
+export const createVolunteerProfile = onCall((req) => {
+    // auth.createUser()
+})

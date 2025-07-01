@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 //import { getAnalytics } from "firebase/analytics";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -23,11 +24,13 @@ const app = initializeApp(firebaseConfig);
 //const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const func = getFunctions(app);
 
 // only sync up with emulators if running in dev mode (npx vite) and VITE_OVERRIDE_EMULATOR (.env variable) is not "true"
 if (import.meta.env.DEV && import.meta.env.VITE_OVERRIDE_EMULATOR !== "true") {
     connectAuthEmulator(auth, "http://localhost:9099");
     connectFirestoreEmulator(db, 'localhost', 8080);
+    connectFunctionsEmulator(func, 'localhost', 5001)
 }
 
-export { auth, db }
+export { auth, db, func }
