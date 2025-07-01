@@ -36,7 +36,9 @@ export function VolunteerProfileCreation() {
 
     const password = GenPass()
 
-    const emailRegEx = new RegExp(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g);
+    const emailRegEx = new RegExp(
+      /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+    ); // from https://emailregex.com/
     if (!err) {
       if (!emailRegEx.test(formData.get("email") as string)) {
         toast.error("Please input a proper email.");
@@ -56,7 +58,7 @@ export function VolunteerProfileCreation() {
           first_name: formData.get("fName") as string,
           last_name: formData.get("lName") as string,
           is_admin: is_admin,
-          birthdate: Timestamp.fromMillis(Date.parse(/*formData.get("") as string*/ "2000-01-01T00:00:00.001Z")),
+          birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
           address: formData.get("address") as string,
           sex: formData.get("SexDropdown") as string,
           role: role,

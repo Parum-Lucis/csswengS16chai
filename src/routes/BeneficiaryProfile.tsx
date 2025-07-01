@@ -9,6 +9,7 @@ import type { Beneficiary } from "../models/beneficiaryType.ts";
 import GuardianCard from "../components/GuardianCard.tsx";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
+import type { Guardian } from "../models/guardianType.ts";
 
 export function BeneficiaryProfile() {
     // const params = useParams()
@@ -22,24 +23,27 @@ export function BeneficiaryProfile() {
     //formState = 1, 1 guardian
     //formState = 2, 2 guardian
     //formState = 3, 3 guardian
-    const [guardianState, setGuardian] = useState(1)
+    const [guardians, setGuardians] = useState<Guardian[]>([])
     const [minimizeState, setMinimize] = useState(false)
     const [showDeleteModal, setDeleteModal] = useState(false)
     const [docID, setDocID] = useState(beneficiary?.docID)
 
     useEffect(() =>  {
         const fetchBeneficiary = async () => {
-        const getQuery = doc(db, "beneficiaries", "test-1")
+        const getQuery = doc(db, "beneficiaries", "SRlWXRPnbM73GFXqa6wl") // note: hardcoded beneficiary
         const beneficiariesSnap = await getDoc(getQuery)
         if(beneficiariesSnap.exists())
             setBeneficiary(beneficiariesSnap.data() as Beneficiary)
             setOriginalBeneficiary(beneficiariesSnap.data() as Beneficiary)
+            setGuardians((beneficiariesSnap.data() as Beneficiary).guardians)
+            console.log((beneficiariesSnap.data() as Beneficiary))
             setDocID(beneficiariesSnap.id)
             setForm(true)
         }
         fetchBeneficiary()
     }, [setBeneficiary])
     console.log(beneficiary)
+    console.log(guardians)
     const navigate = useNavigate();
     const usertest = useContext(UserContext);
     const { sex, grade_level : level, address} = beneficiary || {}
@@ -71,20 +75,28 @@ export function BeneficiaryProfile() {
     }
 
     function handleAdd(){
-        if (guardianState+1 <= 3){
-          setGuardian(guardianState+1)
+        if (guardians.length+1 <= 3){
+          setGuardians([...guardians, {
+            name: '',
+            relation: '',
+            email: '',
+            contact_number: ''
+          }])
         }
         else
           toast.error("Cannot add more than 3 guardians!")
       }
     
-      function handleSub(){
-        if (guardianState-1 >= 1){
-          setGuardian(guardianState-1)
+    function handleSub(){
+        if (guardians.length-1 >= 1){
+            const reducedGuardians = guardians
+            reducedGuardians.pop()
+            setGuardians(reducedGuardians)
+            setBeneficiary({ ...beneficiary as Beneficiary, guardians: reducedGuardians })
         }
         else
-          toast.error("Cannot have 0 guardians!")
-      }
+            toast.error("Cannot have 0 guardians!")
+    }
 
     function handleDelete(){
         setDeleteModal(!showDeleteModal)
@@ -95,29 +107,73 @@ export function BeneficiaryProfile() {
         
         const updateRef = doc(db, "beneficiaries", docID!)
         console.log(beneficiary)
-        await updateDoc(updateRef, {
-        ...beneficiary,
-        time_to_live : (Date.now() + 2592000000)
-        })
-        toast.success("Account delete success!")
-        navigate("/")
+        try {
+            await updateDoc(updateRef, {
+            ...beneficiary,
+            time_to_live : (Date.now() + 2592000000)
+            })
+            toast.success("Account delete success!")
+            navigate("/")
+        }
+        catch {
+            toast.error("Something went wrong")
+        }
     }
 
     const handleSave = 
     async () => {
-        if(!sex || !level)
-        return
+        if(!sex || !level || !address || !birthdate)
+            return
         if(sex != "M" && sex != "F")
-        return
+            return
         if(level > 12 || level < 1)
-        return 
-
+            return 
         const updateRef = doc(db, "beneficiaries", docID!)
         console.log(beneficiary)
-        await updateDoc(updateRef, {
-        ...beneficiary
-        })
-        setOriginalBeneficiary(beneficiary)
+        
+        const emailRegEx = new RegExp(
+            /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+        ); // from https://emailregex.com/
+        let test = false
+        guardians.forEach((guardian, i) => {
+            Object.values(guardian).forEach((val, _) => {
+                if(!val) {
+                    toast.error("Please fill up all fields for Guardian " + (i+1));
+                    test = true
+                    return
+                }
+            })
+            if(test)
+                return
+            else if (!emailRegEx.test(guardian.email)) {
+                console.log(guardian.email)
+                toast.error("Please input a proper email for Guardian " + (i+1));
+                test = true
+                return
+            }
+            else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
+                toast.error("Please input a proper contact number for Guardian " + (i+1));
+                test = true
+                return
+            }
+
+        });
+        if(test)
+            return
+        try {
+            await updateDoc(updateRef, {
+                ...beneficiary,
+                guardians: guardians
+            })
+            setOriginalBeneficiary({...beneficiary as Beneficiary, guardians: guardians})
+            toast.success("Account update success!")
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
+        } catch {
+            toast.error("Something went wrong")
+        }
+        
 
     }
 
@@ -282,11 +338,11 @@ export function BeneficiaryProfile() {
                     <div className={` overflow-auto transition-all duration-300 ease-in-out ${minimizeState ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}>
                       <div className="w-full rounded-b-sm text-white border border-[#254151] bg-[#3EA08D] p-3">
                         {Array.from(
-                          {length: guardianState},
+                          {length: guardians.length},
                           (_, i) => (
                             <div className="pb-4">
                               <h3 className="font-[Montserrat] mb-2">Guardian {i + 1}</h3>
-                              {/*<GuardianCard formState={false} /> TODO: Change this (use beneficiary profile creation as reference*/}
+                              <GuardianCard formState={false} index={i} guardians={guardians} setGuardians={setGuardians} />
                             </div>
                           )
                         )}
