@@ -176,7 +176,7 @@ export function BeneficiaryList() {
                 key={`${sort}-${index}`}
                 onClick={() => {
                   console.log(`Profile clicked: ${profile.first_name} ${profile.last_name} (${profile.docId})`);
-                  navigate(`/beneficiary/${profile.docId}`);
+                  navigate(`/view-beneficiary/${profile.docId}`);
                 }}
                 className="flex items-center bg-[#45B29D] text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
               >
@@ -368,7 +368,7 @@ export function VolunteerList() {
               <div
                 key={`${sort}-${index}`}
                 onClick={() => {
-                  navigate(`/volunteer/${profile.docId}`);
+                  navigate(`/view-volunteer/${profile.docId}`);
                 }}
                 className="flex items-center bg-[#45B29D] text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
               >
