@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom';
 import type { Guardian } from "../models/guardianType.ts";
 
 export function BeneficiaryProfile() {
-    // const params = useParams()
+    const params = useParams()
     const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null)
     const [originalBenificiary, setOriginalBeneficiary] = useState<Beneficiary | null>(null)
     //formState = null, all disabled
@@ -30,7 +30,7 @@ export function BeneficiaryProfile() {
 
     useEffect(() =>  {
         const fetchBeneficiary = async () => {
-        const getQuery = doc(db, "beneficiaries", "SRlWXRPnbM73GFXqa6wl") // note: hardcoded beneficiary
+        const getQuery = doc(db, "beneficiaries", params.docId as string)
         const beneficiariesSnap = await getDoc(getQuery)
         if(beneficiariesSnap.exists())
             setBeneficiary(beneficiariesSnap.data() as Beneficiary)
@@ -66,6 +66,11 @@ export function BeneficiaryProfile() {
     function handleEdit(){
         if (formState === false && originalBenificiary) {
             setBeneficiary(originalBenificiary);
+            
+            // if guardians were modified, return to original
+            if (guardians.length != originalBenificiary.guardians.length) {
+                setGuardians(originalBenificiary.guardians);
+            }
         }
         setForm(!formState)
     }
@@ -265,7 +270,7 @@ export function BeneficiaryProfile() {
                         id="bDate"
                         className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                         readOnly={formState ?? true}
-                        onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, birthdate : Timestamp.fromDate(birthdate)})}
+                        onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, birthdate : Timestamp.fromDate((new Date (e.target.value)))})}
                         value={birthdate?.toISOString().substring(0,10)}/>
                     </div>
 
