@@ -192,7 +192,13 @@ export function BeneficiaryProfileCreation() {
   //formState = 1, 1 guardian
   //formState = 2, 2 guardian
   //formState = 3, 3 guardian
-  const [guardianState, setGuardian] = useState(1)
+  const [guardianState, setGuardianState] = useState(1)
+  const [guardians, setGuardians] = useState<Guardian[]>([{
+    name: '',
+    relation: '',
+    email: '',
+    contact_number: ''
+  }])
   const [minimizeState, setMinimize] = useState(false)
 
   function handleMinimize(){
@@ -225,22 +231,15 @@ export function BeneficiaryProfileCreation() {
             formData.get("cNum")?.toString.length
         );
       } else {
-        const role = formData.get("dropdown") as string
-        const guardianEx: Guardian[] = [{
-            name: "string",
-            relation: "string",
-            email: "string@string.com",
-            contact_number: "09876543210"
-        }] // temp
         const addRef = await addDoc(collection(db, "beneficiaries"), {
           accredited_id: Number(formData.get("idNum") as string) || NaN,
           first_name: formData.get("fName") as string,
           last_name: formData.get("lName") as string,
           address: formData.get("address") as string,
-          birthdate: Timestamp.fromMillis(Date.parse(/*formData.get("") as string*/ "2000-01-01T00:00:00.001Z")),
+          birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
           grade_level: Number(formData.get("gradelevel") as string),
           is_waitlisted: is_waitlisted,
-          guardians: guardianEx,
+          guardians: guardians,
         });
 
         if(addRef) {
@@ -254,7 +253,13 @@ export function BeneficiaryProfileCreation() {
 
   function handleAdd(){
     if (guardianState+1 <= 3){
-      setGuardian(guardianState+1)
+      setGuardianState(guardianState+1)
+      setGuardians([...guardians, {
+        name: '',
+        relation: '',
+        email: '',
+        contact_number: ''
+      }])
     }
     else
       toast.error("Cannot add more than 3 guardians!")
@@ -262,7 +267,10 @@ export function BeneficiaryProfileCreation() {
 
   function handleSub(){
     if (guardianState-1 >= 1){
-      setGuardian(guardianState-1)
+      setGuardianState(guardianState-1)
+      const reducedGuardians = guardians
+      reducedGuardians.pop()
+      setGuardians(reducedGuardians)
     }
     else
       toast.error("Cannot have 0 guardians!")
@@ -388,7 +396,7 @@ export function BeneficiaryProfileCreation() {
                           (_, i) => (
                             <div className="pb-4">
                               <h3 className="font-[Montserrat] mb-2">Guardian {i + 1}</h3>
-                              <GuardianCard formState={false} />
+                              <GuardianCard formState={false} index={i} guardians={guardians} setGuardians={setGuardians} />
                             </div>
                           )
                         )}
