@@ -27,6 +27,8 @@ export function BeneficiaryProfile() {
     const [minimizeState, setMinimize] = useState(false)
     const [showDeleteModal, setDeleteModal] = useState(false)
     const [docID, setDocID] = useState(beneficiary?.docID)
+    const [gradeLevel, setGradeLevel] = useState<string>("");
+
 
     useEffect(() =>  {
         const fetchBeneficiary = async () => {
@@ -38,6 +40,7 @@ export function BeneficiaryProfile() {
             setGuardians((beneficiariesSnap.data() as Beneficiary).guardians)
             console.log((beneficiariesSnap.data() as Beneficiary))
             setDocID(beneficiariesSnap.id)
+            setGradeLevel((beneficiariesSnap.data() as Beneficiary).grade_level.toString()) // see commit desc re: this change
             setForm(true)
         }
         fetchBeneficiary()
@@ -66,7 +69,7 @@ export function BeneficiaryProfile() {
     function handleEdit(){
         if (formState === false && originalBenificiary) {
             setBeneficiary(originalBenificiary);
-            
+            setGradeLevel(originalBenificiary.grade_level.toString());
             // if guardians were modified, return to original
             if (guardians.length != originalBenificiary.guardians.length) {
                 setGuardians(originalBenificiary.guardians);
@@ -127,11 +130,14 @@ export function BeneficiaryProfile() {
 
     const handleSave = 
     async () => {
-        if(!sex || !level || !address || !birthdate){
+        // convert string input to number, if valid
+        const gradeLevelNum = Number(gradeLevel);
+
+        if(!sex || !gradeLevel || !address || !birthdate){
             toast.error("Please fill up all fields!")
             return
         }
-        if(level > 12 || level < 1){
+        if(gradeLevelNum > 12 || gradeLevelNum < 1 || isNaN(gradeLevelNum)){
             toast.error("Please put a valid Grade Number")
             return 
         }
@@ -170,9 +176,10 @@ export function BeneficiaryProfile() {
         try {
             await updateDoc(updateRef, {
                 ...beneficiary,
-                guardians: guardians
+                guardians: guardians,
+                grade_level: gradeLevelNum
             })
-            setOriginalBeneficiary({...beneficiary as Beneficiary, guardians: guardians})
+            setOriginalBeneficiary({...beneficiary as Beneficiary, grade_level: gradeLevelNum,guardians: guardians})
             toast.success("Account update success!")
             setTimeout(function() {
                 location.reload();
@@ -300,8 +307,9 @@ export function BeneficiaryProfile() {
                     id="gLevel"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                     readOnly={formState ?? true}
-                    onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, grade_level : Number(e.target.value)})}
-                    value={level}/>
+                    onChange={(e) => setGradeLevel(e.target.value)}
+                    value={gradeLevel}
+                />
                 </div>
                 <div className="flex flex-col">
                     <label
