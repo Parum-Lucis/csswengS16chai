@@ -27,8 +27,8 @@ function App() {
         <Route path="/forget-password" element={<ForgetMeNot />} />
         <Route path="/view-admin" element={<Admin />} />
         <Route path="/view-profile" element={<YourProfile />} />
-        <Route path="/view-beneficiary" element={<BeneficiaryProfile />} />
-        <Route path="/view-volunteer" element={<VolunteerProfile />} />
+        <Route path="/view-beneficiary/:docId" element={<BeneficiaryProfile />} />
+        <Route path="/view-volunteer/:docId" element={<VolunteerProfile />} />
         <Route path="/create-volunteer-profile" element={<VolunteerProfileCreation />} />
         <Route path="/create-beneficiary-profile" element={<BeneficiaryProfileCreation />} />
         <Route path="/view-profile-list" element={<Temp />} />
