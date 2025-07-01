@@ -1,6 +1,12 @@
 @import url("https://cdn-uicons.flaticon.com/3.0.0/uicons-solid-straight/css/uicons-solid-straight.css");
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+
+@config "../../tailwind.config.js";
 @import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 .input-text {
   @apply w-full font-[Montserrat] text-white border-solid border border-[#254151] bg-[#3EA08D] rounded-[5px] p-1.5;
