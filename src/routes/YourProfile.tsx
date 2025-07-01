@@ -73,21 +73,24 @@ export function YourProfile() {
     const handleSave = 
     async () => {
         setForm(!formState)
-        if(!sex || !contact || !email || !address)
-        return
-        if(sex != "M" && sex != "F")
-        return
-
+        if(!sex || !contact || !email || !address) {
+            toast.error("Please fill up all fields!")
+            return
+        }
         const updateRef = doc(db, "volunteers", docID!)
         console.log(volunteer)
-        await updateDoc(updateRef, {
-        ...volunteer
-        })
-        setOriginalVolunteer(volunteer)
-        toast.success("Account update success!")
-        setTimeout(function() {
-            location.reload();
-        }, 1000);
+        try {
+            await updateDoc(updateRef, {
+            ...volunteer
+            })
+            setOriginalVolunteer(volunteer)
+            toast.success("Account update success!")
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
+        } catch {
+            toast.error("Something went wrong")
+        }
     }
 
     return (

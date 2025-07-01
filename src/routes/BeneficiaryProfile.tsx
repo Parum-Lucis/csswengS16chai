@@ -122,12 +122,14 @@ export function BeneficiaryProfile() {
 
     const handleSave = 
     async () => {
-        if(!sex || !level || !address || !birthdate)
+        if(!sex || !level || !address || !birthdate){
+            toast.error("Please fill up all fields!")
             return
-        if(sex != "M" && sex != "F")
-            return
-        if(level > 12 || level < 1)
+        }
+        if(level > 12 || level < 1){
+            toast.error("Please put a valid Grade Number")
             return 
+        }
         const updateRef = doc(db, "beneficiaries", docID!)
         console.log(beneficiary)
         
