@@ -192,7 +192,6 @@ export function BeneficiaryProfileCreation() {
   //formState = 1, 1 guardian
   //formState = 2, 2 guardian
   //formState = 3, 3 guardian
-  const [guardianState, setGuardianState] = useState(1)
   const [guardians, setGuardians] = useState<Guardian[]>([{
     name: '',
     relation: '',
@@ -252,8 +251,7 @@ export function BeneficiaryProfileCreation() {
   };
 
   function handleAdd(){
-    if (guardianState+1 <= 3){
-      setGuardianState(guardianState+1)
+    if (guardians.length+1 <= 3){
       setGuardians([...guardians, {
         name: '',
         relation: '',
@@ -266,8 +264,7 @@ export function BeneficiaryProfileCreation() {
   }
 
   function handleSub(){
-    if (guardianState-1 >= 1){
-      setGuardianState(guardianState-1)
+    if (guardians.length-1 >= 1){
       const reducedGuardians = guardians
       reducedGuardians.pop()
       setGuardians(reducedGuardians)
@@ -392,7 +389,7 @@ export function BeneficiaryProfileCreation() {
                     <div className={`overflow-auto transition-all duration-300 ease-in-out ${minimizeState ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}>
                       <div className="w-full rounded-b-sm text-white border border-[#254151] bg-[#3EA08D] p-3">
                         {Array.from(
-                          {length: guardianState},
+                          {length: guardians.length},
                           (_, i) => (
                             <div className="pb-4">
                               <h3 className="font-[Montserrat] mb-2">Guardian {i + 1}</h3>

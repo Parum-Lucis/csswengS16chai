@@ -273,7 +273,7 @@ export function BeneficiaryProfile() {
                           (_, i) => (
                             <div className="pb-4">
                               <h3 className="font-[Montserrat] mb-2">Guardian {i + 1}</h3>
-                              <GuardianCard formState={false} />
+                              {/*<GuardianCard formState={false} /> TODO: Change this (use beneficiary profile creation as reference*/}
                             </div>
                           )
                         )}
