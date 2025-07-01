@@ -279,7 +279,7 @@ export function BeneficiaryProfileCreation() {
       <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 bg-[#254151]">
         <div className="relative w-full max-w-2xl flex flex-col items-center rounded-[5px] p-4 sm:p-6">
           <div className="absolute top-0 sm:top-0 z-10 w-28 h-28 sm:w-36 sm:h-36 overflow-hidden bg-gray-500 border-4 border-[#45B29D] rounded-full flex items-center justify-center">
-            <i className="text-[6rem] sm:text-[7rem] text-gray-300 fi fi-ss-circle-user"></i>
+            <i className="flex text-[6rem] sm:text-[7rem] text-gray-300 fi fi-ss-circle-user"></i>
           </div>
           <div className="flex w-full flex-col bg-[#45B29D] rounded-[5px] p-4 pt-20">
             <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
