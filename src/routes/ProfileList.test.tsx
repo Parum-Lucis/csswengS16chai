@@ -114,7 +114,7 @@ describe('Beneficiary List Page', () => {
     expect(screen.queryByText(/Test/i)).not.toBeInTheDocument();
   });
 
-  test('sorts profiles by first name', async () => {
+  test('sorts beneficiaries by first name', async () => {
     renderWithUser({ email: 'user@test.com' });
 
     await waitFor(() => screen.getByText(/Test/i));
@@ -130,7 +130,7 @@ describe('Beneficiary List Page', () => {
     expect(firstNames[1]).toBe('test');
   });
 
-  test('sorts profiles by last name', async () => {
+  test('sorts beneficiaries by last name', async () => {
     renderWithUser({ email: 'user@test.com' });
 
     await waitFor(() => screen.getByText(/Another/i));
@@ -149,7 +149,7 @@ describe('Beneficiary List Page', () => {
     expect(names[1]).toContain('user, test');
   });
 
-  test('sorts profiles by age', async () => {
+  test('sorts beneficiaries by age', async () => {
     renderWithUser({ email: 'user@test.com' });
 
     await waitFor(() => screen.getByText(/Test/i));
@@ -166,7 +166,7 @@ describe('Beneficiary List Page', () => {
     expect(namesInOrder[1]).toContain('test');
   });
 
-  test('searches profiles by name substring', async () => {
+  test('searches beneficiaries by name substring', async () => {
     renderWithUser({ email: 'user@test.com' });
 
     await waitFor(() => screen.getByText(/Test/i));
