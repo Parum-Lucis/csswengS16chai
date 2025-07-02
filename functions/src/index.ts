@@ -10,9 +10,12 @@
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { setGlobalOptions } from "firebase-functions";
-import { onCall, onRequest } from "firebase-functions/https";
+import { onCall } from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 
+// import type { Volunteer } from "../../src/models/volunteerType"
+// import { generateRandomPassword } from "./util/generatePassword";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -26,22 +29,49 @@ import * as logger from "firebase-functions/logger";
 // functions should each use functions.runWith({ maxInstances: 10 }) instead.
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
+
+export interface Volunteer {
+    docID?: string;
+    last_name: string;
+    first_name: string;
+    contact_number: string;
+    email: string;
+    role: string;
+    is_admin: boolean;
+    sex: string;
+    address: string;
+    birthdate: Timestamp;
+}
+
 setGlobalOptions({ maxInstances: 10 });
+
+function generateRandomPassword(pass_length: number) {
+    const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    return Array.from(crypto.getRandomValues(new Uint32Array(pass_length)))
+        .map((x) => chars[x % chars.length])
+        .join('')
+}
 
 const app = initializeApp();
 const auth = getAuth(app);
+const firestore = getFirestore(app);
 
-export const helloWorld = onRequest((request, response) => {
-    logger.info("Hello logs!", { structuredData: true });
-    response.send("Hello from Firebase!");
-});
+export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
+    const { email, is_admin } = req.data;
+    try {
 
-export const test = onCall((req) => {
-    logger.info(req.data);
-    logger.info("alsoHI!!")
-    return "hi!";
-})
+        const { uid } = await auth.createUser({
+            email,
+            password: generateRandomPassword(10),
+        })
 
-export const createVolunteerProfile = onCall((req) => {
-    // auth.createUser()
+        await auth.setCustomUserClaims(uid, { is_admin })
+        await firestore.doc(`volunteers/${uid}`).create(req.data)
+        return true;
+
+    } catch (error) {
+        logger.log(error)
+        return false;
+    }
+
 })

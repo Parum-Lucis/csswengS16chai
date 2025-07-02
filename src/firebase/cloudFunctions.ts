@@ -1,4 +1,5 @@
 import { httpsCallable } from "firebase/functions";
 import { func } from "./firebaseConfig";
+import type { Volunteer } from "../models/volunteerType";
 
-export const callTest = httpsCallable(func, 'test')
+export const callCreateVolunteerProfile = httpsCallable<Volunteer>(func, 'createVolunteerProfile');
