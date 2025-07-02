@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "module": "NodeNext",
     "esModuleInterop": true,
     "moduleResolution": "nodenext",
@@ -8,10 +9,16 @@
     "outDir": "lib",
     "sourceMap": true,
     "strict": true,
-    "target": "es2017"
+    "target": "es2017",
+    "paths": {
+      "@models/*": [
+        "../models/*"
+      ]
+    }
   },
   "compileOnSave": true,
   "include": [
-    "src"
+    "src/**/*.ts",
+    "../models/*.ts"
   ]
 }

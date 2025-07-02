@@ -2,15 +2,15 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { db } from "../firebase/firebaseConfig"
 import {
-  collection, doc, addDoc,/*, Timestamp*/
+  collection, addDoc,/*, Timestamp*/
   Timestamp
 } from "firebase/firestore"
 import React from "react";
 import { useState } from "react";
-import type { Guardian } from "../models/guardianType";
+import type { Guardian } from "@models/guardianType";
 import GuardianCard from "../components/GuardianCard.tsx";
 import { callCreateVolunteerProfile } from "../firebase/cloudFunctions.ts";
-import type { Volunteer } from "../models/volunteerType.ts";
+import type { Volunteer } from "@models/volunteerType.ts";
 
 
 export function VolunteerProfileCreation() {
@@ -20,12 +20,6 @@ export function VolunteerProfileCreation() {
     e.preventDefault();
 
     const formData = new FormData(e.target as HTMLFormElement);
-
-    let err = false;
-    for (const [, value] of formData.entries()) {
-      console.log(value.toString(), err);
-      if (!value) err = true;
-    }
 
     const data: Volunteer = {
       contact_number: formData.get("cNum") as string,
@@ -38,48 +32,40 @@ export function VolunteerProfileCreation() {
       sex: formData.get("SexDropdown") as string,
       role: formData.get("dropdown") as string,
     }
+
+    let err = false;
+    for (const [, value] of formData.entries()) {
+      console.log(value.toString(), err);
+      if (!value) err = true;
+    }
+
+    if (err) {
+      toast.error("Please fill up all fields!");
+      return;
+    }
+
+    const emailRegEx = new RegExp(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g);
+    if (!emailRegEx.test(data.email)) {
+      toast.error("Please input a proper email.");
+      return;
+    }
+
+    if (data.contact_number.length != 11 ||
+      formData.get("cNum")?.slice(0, 2) != "09") {
+      toast.error("Please input a valid phone number.");
+      return
+    }
+
+
+
     const res = await callCreateVolunteerProfile(data);
-    console.log(res);
-    // const password = GenPass()
 
-    // const emailRegEx = new RegExp(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g);
-    // if (err) {
-    //   toast.error("Please fill up all fields!");
-    //   return;
-    // }
-
-    // if (!emailRegEx.test(formData.get("email") as string)) {
-    //   toast.error("Please input a proper email.");
-    //   return;
-    // }
-    // if ((formData.get("cNum") as string).length != 11 ||
-    //   formData.get("cNum")?.slice(0, 2) != "09") {
-    //   toast.error("Please input a valid phone number.");
-    //   return
-    // }
-
-
-    // const role = formData.get("dropdown") as string
-    // const is_admin = (role == "Admin" ? true : false)
-    // const addRef = await addDoc(collection(db, "volunteers"), {
-    //   contact_number: formData.get("cNum") as string,
-    //   email: formData.get("email") as string,
-    //   first_name: formData.get("fName") as string,
-    //   last_name: formData.get("lName") as string,
-    //   is_admin: is_admin,
-    //   birthdate: Timestamp.fromMillis(Date.parse(/*formData.get("") as string*/ "2000-01-01T00:00:00.001Z")),
-    //   address: formData.get("address") as string,
-    //   sex: formData.get("SexDropdown") as string,
-    //   role: role,
-    // });
-
-    // if (addRef) {
-    //   toast.success("Success!");
-    //   navigate("/view-profile");
-    // }
-    // else toast.error("Submission failed.");
-
-
+    if (res) {
+      toast.success("Success!");
+      navigate("/view-profile");
+    } else {
+      toast.error("Couldn't create profile.");
+    }
   };
 
   return (

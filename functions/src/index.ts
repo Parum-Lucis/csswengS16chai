@@ -13,9 +13,10 @@ import { setGlobalOptions } from "firebase-functions";
 import { onCall } from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 
-// import type { Volunteer } from "../../src/models/volunteerType"
+import { Volunteer } from "@models/volunteerType";
 // import { generateRandomPassword } from "./util/generatePassword";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
+import { generateRandomPassword } from "./utils/generatePassword";
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -30,27 +31,9 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
 
-export interface Volunteer {
-    docID?: string;
-    last_name: string;
-    first_name: string;
-    contact_number: string;
-    email: string;
-    role: string;
-    is_admin: boolean;
-    sex: string;
-    address: string;
-    birthdate: Timestamp;
-}
-
 setGlobalOptions({ maxInstances: 10 });
 
-function generateRandomPassword(pass_length: number) {
-    const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-    return Array.from(crypto.getRandomValues(new Uint32Array(pass_length)))
-        .map((x) => chars[x % chars.length])
-        .join('')
-}
+
 
 const app = initializeApp();
 const auth = getAuth(app);
@@ -65,12 +48,15 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
             password: generateRandomPassword(10),
         })
 
-        await auth.setCustomUserClaims(uid, { is_admin })
-        await firestore.doc(`volunteers/${uid}`).create(req.data)
+        await Promise.all([
+            auth.setCustomUserClaims(uid, { is_admin }),
+            firestore.doc(`volunteers/${uid}`).create(req.data)
+        ])
+
         return true;
 
     } catch (error) {
-        logger.log(error)
+        logger.error(error)
         return false;
     }
 

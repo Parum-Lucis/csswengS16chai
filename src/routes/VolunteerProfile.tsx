@@ -4,7 +4,7 @@ import { UserContext } from "../context/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
-import type { Volunteer } from "../models/volunteerType";
+import type { Volunteer } from "@models/volunteerType";
 import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
 

@@ -5,7 +5,7 @@ import { UserContext } from "../context/userContext.ts";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
-import type { Beneficiary } from "../models/beneficiaryType.ts";
+import type { Beneficiary } from "@models/beneficiaryType.ts";
 import GuardianCard from "../components/GuardianCard.tsx";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
