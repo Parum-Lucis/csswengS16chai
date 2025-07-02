@@ -5,3 +5,7 @@
 .input-text {
   @apply w-full font-[Montserrat] text-white border-solid border border-[#254151] bg-[#3EA08D] rounded-[5px] p-1.5;
 }
+
+.firebase-emulator-warning {
+  display: none !important;
+}
