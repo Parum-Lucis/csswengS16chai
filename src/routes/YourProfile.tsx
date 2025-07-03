@@ -7,6 +7,7 @@ import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Volunteer } from "@models/volunteerType";
 import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
+import { callDeleteVolunteerProfile } from "../firebase/cloudFunctions";
 
 export function YourProfile() {
 
@@ -59,16 +60,24 @@ export function YourProfile() {
     }
 
     const handleConfirm = async () => {
-        setDeleteModal(!showDeleteModal)
 
-        const updateRef = doc(db, "volunteers", docID!)
-        console.log(volunteer)
-        await updateDoc(updateRef, {
-            ...volunteer,
-            time_to_live: (Date.now() + 2592000000)
-        })
-        toast.success("Account delete success!")
-        navigate("/")
+        try {
+
+            const res = await callDeleteVolunteerProfile(volunteer?.docID);
+
+            if (!res.data) {
+                toast.error("Couldn't delete your profile.")
+            } else {
+                setDeleteModal(!showDeleteModal)
+                toast.success("Account delete success!")
+                navigate("/")
+            }
+
+        } catch (error) {
+            console.log(error)
+            toast.error("Couldn't delete your profile.");
+        }
+
     }
 
     function handleEdit() {

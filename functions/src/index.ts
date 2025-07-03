@@ -71,7 +71,7 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
     const uid = req.data;
     try {
 
-        await firestore.doc(`volunteers/${uid}`).update({ time_to_live: 1000 * 60 * 60 * 24 * 30 })
+        await firestore.doc(`volunteers/${uid}`).update({ time_to_live: Date.now() + 1000 * 60 * 60 * 24 * 30 }) // 30 days
         return true;
 
     } catch (error) {
