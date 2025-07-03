@@ -63,7 +63,8 @@ export function YourProfile() {
 
         try {
 
-            const res = await callDeleteVolunteerProfile(volunteer?.docID);
+            const res = await callDeleteVolunteerProfile(docID);
+            console.log(res);
 
             if (!res.data) {
                 toast.error("Couldn't delete your profile.")

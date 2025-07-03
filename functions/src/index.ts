@@ -18,6 +18,7 @@ import { Volunteer } from "@models/volunteerType";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { generateRandomPassword } from "./utils/generatePassword";
 import { onSchedule } from "firebase-functions/scheduler";
+import { createTimestampFromNow } from "./utils/time";
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -71,7 +72,9 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
     const uid = req.data;
     try {
 
-        await firestore.doc(`volunteers/${uid}`).update({ time_to_live: Date.now() + 1000 * 60 * 60 * 24 * 30 }) // 30 days
+        await firestore.doc(`volunteers/${uid}`).update(
+            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
+        )
         return true;
 
     } catch (error) {
@@ -82,15 +85,24 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
 
 export const cronCleaner = onSchedule("every 1 minutes", async () => {
     try {
-        const snapshot = await firestore.collection("beneficiaries").where("time_to_live", "<=", Timestamp.now()).get();
+        const snapshot = await firestore.collection("volunteers")
+            .where("time_to_live", "<=", Timestamp.now())
+            .get();
 
-        const batch = firestore.batch();
-        snapshot.forEach(doc => {
+        if (snapshot.size === 0) {
+            logger.log("No one to kill sadj");
+            return
+        }
+
+        snapshot.forEach(async doc => {
             logger.info(`Deleting ${doc.id}`);
-            batch.delete(doc.ref);
+            await Promise.all([
+                auth.deleteUser(doc.id),
+                firestore.doc(`volunteers/${doc.id}`).delete()
+            ])
+            logger.info(`Successfully deleted ${doc.id}`);
         })
 
-        await batch.commit();
         logger.info("Successfully deleted a bunch of guys! Count: " + snapshot.size)
 
     } catch (error) {
