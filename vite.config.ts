@@ -12,6 +12,11 @@ export default defineConfig({
     tailwindcss(),
     qrcode() // only applies in dev mode
   ],
+  server: {
+    watch: {
+      ignored: ["**/emulator-data", "**/functions/**/*.ts"]
+    }
+  },
   resolve: {
     alias: {
       '@models': path.resolve(__dirname, '../models'),
