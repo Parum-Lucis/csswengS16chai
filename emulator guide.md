@@ -87,6 +87,6 @@ You might be left with the Java shell still. After closing the other terminal, f
 
 The emulator will attempt to save your emulator's data into `/emulator-data`. There is a high chance it will not succeed.
 
-It usually fails by **deleting** the folder `/emulator-data` and **creating** a new one called `/firebase-export-{randomHash}`. Simply **rename** this back to `/emulator-data`. If this doesn't work, then honestly just revert it back. It's just not worth it.
+It usually fails by **deleting** the folder `/emulator-data` and **creating** a new one called `/firebase-export-{randomHash}`. Simply **rename** this back to `/emulator-data`. If this doesn't work, then honestly just revert it back. It's just not worth it. **NOTE:** This error is possibly caused by vite. It tracks the folder and stops anything from deleting it. 
 
 I will create a solution for this in the future.

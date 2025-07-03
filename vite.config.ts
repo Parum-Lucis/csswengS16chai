@@ -14,7 +14,7 @@ export default defineConfig({
   ],
   server: {
     watch: {
-      ignored: ["**/emulator-data", "**/functions/**/*.ts"]
+      ignored: ["**/emulator-data", "**/functions/**/*.ts, **/firebase-export-*"]
     }
   },
   resolve: {
