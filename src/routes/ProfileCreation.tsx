@@ -60,7 +60,7 @@ export function VolunteerProfileCreation() {
 
     const res = await callCreateVolunteerProfile(data);
 
-    if (res) {
+    if (res.data) {
       toast.success("Success!");
       navigate("/view-profile");
     } else {
