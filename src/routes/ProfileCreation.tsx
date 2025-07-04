@@ -67,7 +67,7 @@ export function VolunteerProfileCreation() {
         return
       } else {
         const role = formData.get("dropdown") as string
-        const is_admin = (role == "Admin" ? true : false )
+        const is_admin = (role == "Admin")
         const addRef = await addDoc(collection(db, "volunteers"), {
           contact_number: formData.get("cNum") as string,
           email: formData.get("email") as string,
@@ -206,10 +206,6 @@ export function VolunteerProfileCreation() {
 
 export function BeneficiaryProfileCreation() {
   const navigate = useNavigate();
-  //formState = 0, 0 guardian (just because lol)
-  //formState = 1, 1 guardian
-  //formState = 2, 2 guardian
-  //formState = 3, 3 guardian
   const [guardians, setGuardians] = useState<Guardian[]>([{
     name: '',
     relation: '',
@@ -313,9 +309,10 @@ export function BeneficiaryProfileCreation() {
       Possible Solution:
       const reducedGuardians = guardians.slice(0, -1);
       setGuardians(reducedGuardians);
+
+      // noted, applied solution
       */
-      const reducedGuardians = guardians
-      reducedGuardians.pop()
+      const reducedGuardians = guardians.slice(0, -1);
       setGuardians(reducedGuardians)
     }
     else
