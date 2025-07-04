@@ -133,7 +133,7 @@ export function BeneficiaryProfile() {
         // convert string input to number, if valid
         const gradeLevelNum = Number(gradeLevel);
 
-        if(!sex || !gradeLevel || !address || !birthdate){
+        if(!(sex!.toString().trim()) || !gradeLevel || gradeLevelNum != 0 || !(address!.toString().trim()) || !birthdate){
             toast.error("Please fill up all fields!")
             return
         }
@@ -150,7 +150,7 @@ export function BeneficiaryProfile() {
         let test = false
         guardians.forEach((guardian, i) => {
             Object.values(guardian).forEach((val, _) => {
-                if(!val) {
+                if(!(val.toString().trim())) {
                     toast.error("Please fill up all fields for Guardian " + (i+1));
                     test = true
                     return

@@ -31,7 +31,7 @@ export function VolunteerProfileCreation() {
     let err = false;
     for (const [, value] of formData.entries()) {
       console.log(value.toString(), err);
-      if (!value) err = true;
+      if (!(value.toString().trim())) err = true;
     }
 
     const password = GenPass()
@@ -211,25 +211,44 @@ export function BeneficiaryProfileCreation() {
     let is_waitlisted = false;
     for (const [key, value] of formData.entries()) {
       console.log(value.toString(), err);
-      if (!value)
+      if (!(value.toString().trim()))
         key == "idNum" ? is_waitlisted = true : err = true
     }
 
     const emailRegEx = new RegExp(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g);
     if (!err) {
-      if (!emailRegEx.test(formData.get("email") as string)) {
-        toast.error("Please input a proper email.");
-      } else if (
-        (formData.get("ParentcNum") as string).length != 11 ||
-        formData.get("ParentcNum")?.slice(0, 2) != "09"
-      ) {
-        toast.error(
-          "Please input a valid phone number." +
-            formData.get("cNum")?.toString.length
-        );
-      } else {
+      const emailRegEx = new RegExp(
+        /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+      ); // from https://emailregex.com/
+      let test = false
+      guardians.forEach((guardian, i) => {
+          Object.values(guardian).forEach((val, _) => {
+              if(!(val.toString().trim())) {
+                  toast.error("Please fill up all fields for Guardian " + (i+1));
+                  test = true
+                  return
+              }
+          })
+          if(test)
+              return
+          else if (!emailRegEx.test(guardian.email)) {
+              console.log(guardian.email)
+              toast.error("Please input a proper email for Guardian " + (i+1));
+              test = true
+              return
+          }
+          else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
+              toast.error("Please input a proper contact number for Guardian " + (i+1));
+              test = true
+              return
+          }
+        });
+        if(test)
+            return 
+        else {
+        const accredited_id = Number((formData.get("idNum") as string).trim())
         const addRef = await addDoc(collection(db, "beneficiaries"), {
-          accredited_id: Number(formData.get("idNum") as string) || NaN,
+          accredited_id: accredited_id == 0 ? accredited_id : NaN,
           first_name: formData.get("fName") as string,
           last_name: formData.get("lName") as string,
           address: formData.get("address") as string,
