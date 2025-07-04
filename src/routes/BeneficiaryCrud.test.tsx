@@ -8,10 +8,11 @@ import { db } from '../firebase/firebaseConfig';
 import { auth } from '../firebase/firebaseConfig'
 import { ToastContainer } from 'react-toastify';
 
+// Mock Firebase
 jest.mock('firebase/firestore', () => ({
-  collection: jest.fn(() => ({})),
+  collection: jest.fn(() => ({})), // Return a mock object
   addDoc: jest.fn(),
-  doc: jest.fn(() => ({})),
+  doc: jest.fn(() => ({})), // Return a mock object
   getDoc: jest.fn(),
   updateDoc: jest.fn(),
   Timestamp: {
@@ -33,7 +34,7 @@ jest.mock('../firebase/firebaseConfig', () => ({
   auth: {
     signOut: jest.fn(),
     onAuthStateChanged: jest.fn(callback => {
-        callback({ uid: 'test-uid', email: 'test@example.com' });
+        callback({ uid: 'test-uid', email: 'test@example.com' }); // Simulate logged-in user
         return jest.fn();
     }),
   },
@@ -94,6 +95,29 @@ describe('Beneficiary Creation', () => {
     await waitFor(() => {
       expect(screen.getByText(/Please fill up all fields!/i)).toBeInTheDocument();
     });
+  });
+
+    test('shows error if a required field contains only whitespace', async () => {
+        renderBeneficiaryProfileCreation();
+
+        fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: '  ' } });
+        // Fill other fields...
+        fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: 'Doe' } });
+        fireEvent.change(screen.getByLabelText(/Birth Date/i), { target: { value: '2010-01-01' } });
+        fireEvent.change(screen.getByLabelText(/Address/i), { target: { value: '123 Main St' } });
+        fireEvent.change(screen.getByLabelText(/Grade Level/i), { target: { value: '5' } });
+        const guardian1Card = screen.getByText(/Guardian 1/i).closest('div');
+        fireEvent.change(within(guardian1Card!).getByLabelText(/Name:/i), { target: { value: 'Jane Doe' } });
+        fireEvent.change(within(guardian1Card!).getByLabelText(/Relation:/i), { target: { value: 'Mother' } });
+        fireEvent.change(within(guardian1Card!).getByLabelText(/Email:/i), { target: { value: 'jane@example.com' } });
+        fireEvent.change(within(guardian1Card!).getByLabelText(/Contact Number:/i), { target: { value: '09123456789' } });
+
+
+        fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+
+        await waitFor(() => {
+        expect(screen.getByText(/Please fill up all fields!/i)).toBeInTheDocument();
+        });
   });
 
   test('successfully creates a beneficiary with one guardian', async () => {
@@ -169,7 +193,7 @@ describe('Beneficiary Creation', () => {
 
   test('shows error for invalid email format for guardian', async () => {
     renderBeneficiaryProfileCreation();
-  
+
     fireEvent.change(screen.getByLabelText(/ID no./i), { target: { value: '123' } });
     fireEvent.change(screen.getByLabelText(/Birth Date/i), { target: { value: '2010-01-01' } });
     fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: 'John' } });
@@ -177,17 +201,17 @@ describe('Beneficiary Creation', () => {
     fireEvent.change(screen.getByLabelText(/Sex/i), { target: { value: 'Male' } });
     fireEvent.change(screen.getByLabelText(/Grade Level/i), { target: { value: '5' } });
     fireEvent.change(screen.getByLabelText(/Address/i), { target: { value: '123 Main St' } });
-  
+
     const guardian1Card = screen.getByText(/Guardian 1/i).closest('div');
     expect(guardian1Card).not.toBeNull();
-  
+
     fireEvent.change(within(guardian1Card!).getByLabelText(/Name:/i), { target: { value: 'Jane Doe' } });
     fireEvent.change(within(guardian1Card!).getByLabelText(/Relation:/i), { target: { value: 'Mother' } });
     fireEvent.change(within(guardian1Card!).getByLabelText(/Email:/i), { target: { value: 'invalid-email' } });
     fireEvent.change(within(guardian1Card!).getByLabelText(/Contact Number:/i), { target: { value: '09123456789' } });
-  
+
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
-  
+
     await waitFor(() => {
       expect(screen.getByText(/Please input a proper email/i)).toBeInTheDocument();
     });
@@ -240,25 +264,25 @@ describe('Beneficiary Creation', () => {
 
   test('should allow removing guardians down to 1', async () => {
     renderBeneficiaryProfileCreation();
-  
+
     const addButton = screen.getByRole('button', { name: '+' });
     const subtractButton = screen.getByRole('button', { name: '-' });
-  
+
     fireEvent.click(addButton);
     fireEvent.click(addButton);
-  
+
     await screen.findByText(/Guardian 3/i);
-  
+
     fireEvent.click(subtractButton);
     await waitFor(() => {
       expect(screen.queryByText(/Guardian 3/i)).not.toBeInTheDocument();
     });
-  
+
     fireEvent.click(subtractButton);
     await waitFor(() => {
       expect(screen.queryByText(/Guardian 2/i)).not.toBeInTheDocument();
     });
-  
+
     fireEvent.click(subtractButton);
     await waitFor(() => {
       expect(screen.getByText(/Cannot have 0 guardians!/i)).toBeInTheDocument();
@@ -302,7 +326,7 @@ describe('Retrieve Beneficiary Profile', () => {
 
     test('displays beneficiary information after fetching', async () => {
         renderBeneficiaryProfile();
-      
+
         await waitFor(() => {
           expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument();
           expect(screen.getByDisplayValue('123')).toBeInTheDocument();
@@ -310,10 +334,10 @@ describe('Retrieve Beneficiary Profile', () => {
           expect(screen.getByDisplayValue('Female')).toBeInTheDocument();
           expect(screen.getByDisplayValue('3')).toBeInTheDocument();
           expect(screen.getByDisplayValue('456 Test Ave')).toBeInTheDocument();
-          
+
           const guardian1Card = screen.getByText(/Guardian 1/i).closest('div');
           expect(guardian1Card).not.toBeNull();
-      
+
           expect(within(guardian1Card!).getByDisplayValue('Parent One')).toBeInTheDocument();
           expect(within(guardian1Card!).getByDisplayValue('Father')).toBeInTheDocument();
           expect(within(guardian1Card!).getByDisplayValue('parent1@example.com')).toBeInTheDocument();
@@ -398,17 +422,17 @@ describe('Beneficiary Update', () => {
 
     test('allows adding and saving new guardian information', async () => {
         renderBeneficiaryProfile();
-    
+
         await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
-    
+
         fireEvent.click(screen.getByRole('button', { name: /edit/i }));
         fireEvent.click(screen.getByRole('button', { name: '+' }));
-    
+
         const guardian2Container = await screen.findByText(/Guardian 2/i);
         const guardian2Card = guardian2Container.closest('div');
         expect(guardian2Card).not.toBeNull();
-    
-        // use querySelector to avoid issues with duplicate IDs
+
+        // Use querySelector to avoid issues with duplicate IDs
         const nameInput = guardian2Card!.querySelector('input[name="ParentName"]');
         const relationInput = guardian2Card!.querySelector('input[name="Relation"]');
         const emailInput = guardian2Card!.querySelector('input[name="email"]');
@@ -423,9 +447,9 @@ describe('Beneficiary Update', () => {
         fireEvent.change(relationInput!, { target: { value: 'Aunt' } });
         fireEvent.change(emailInput!, { target: { value: 'new@example.com' } });
         fireEvent.change(contactInput!, { target: { value: '09987654321' } });
-    
+
         fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-    
+
         await waitFor(() => {
           expect(updateDoc).toHaveBeenCalledWith(
             expect.anything(),
@@ -441,16 +465,16 @@ describe('Beneficiary Update', () => {
 
       test('shows error if guardian fields are incomplete during update', async () => {
         renderBeneficiaryProfile();
-    
+
         await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
-    
+
         fireEvent.click(screen.getByRole('button', { name: /edit/i }));
         fireEvent.click(screen.getByRole('button', { name: '+' }));
-    
+
         const guardian2Container = await screen.findByText(/Guardian 2/i);
         const guardian2Card = guardian2Container.closest('div');
         expect(guardian2Card).not.toBeNull();
-    
+
         const nameInput = guardian2Card!.querySelector('input[name="ParentName"]');
         const relationInput = guardian2Card!.querySelector('input[name="Relation"]');
         const contactInput = guardian2Card!.querySelector('input[name="ParentcNum"]');
@@ -458,54 +482,74 @@ describe('Beneficiary Update', () => {
         fireEvent.change(nameInput!, { target: { value: 'New Guardian' } });
         fireEvent.change(relationInput!, { target: { value: 'Aunt' } });
         fireEvent.change(contactInput!, { target: { value: '09987654321' } });
-    
+
         fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-    
+
         await waitFor(() => {
           expect(screen.getByText(/Please fill up all fields for Guardian 2/i)).toBeInTheDocument();
         });
       });
-    
+
+      test('shows error for invalid guardian contact number during update', async () => {
+        renderBeneficiaryProfile();
+
+        await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+
+        const guardianCard = screen.getByText(/Guardian 1/i).closest('div');
+        const contactInput = guardianCard!.querySelector('input[name="ParentcNum"]');
+
+        fireEvent.change(contactInput!, { target: { value: '12345' } }); // Invalid number
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        await waitFor(() => {
+          expect(screen.getByText(/Please input a proper contact number for Guardian 1/i)).toBeInTheDocument();
+        });
+      });
+
+
       test('allows discarding changes to beneficiary profile', async () => {
         renderBeneficiaryProfile();
-    
+
         await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
-    
+
         fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-    
+
         const addressInput = screen.getByLabelText(/Address:/i);
         fireEvent.change(addressInput, { target: { value: 'Temp Address' } });
-    
+
         fireEvent.click(screen.getByRole('button', { name: /discard/i }));
-    
+
         await waitFor(() => {
           expect(addressInput).toHaveValue('456 Test Ave');
           expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
         });
       });
-    
+
       test('opens and closes delete confirmation modal', async () => {
         renderBeneficiaryProfile();
-    
+
         await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
-    
+
         fireEvent.click(screen.getByRole('button', { name: /delete account/i }));
         expect(screen.getByText(/Confirm Deletion/i)).toBeInTheDocument();
-    
+
         fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
         await waitFor(() => {
             expect(screen.queryByText(/Confirm Deletion/i)).not.toBeInTheDocument();
         })
       });
-    
+
       test('confirms account deletion and navigates to login', async () => {
         renderBeneficiaryProfile();
-    
+
         await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
-    
+
         fireEvent.click(screen.getByRole('button', { name: /delete account/i }));
         fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
-    
+
         await waitFor(() => {
           expect(updateDoc).toHaveBeenCalledWith(
             expect.anything(),
@@ -517,19 +561,37 @@ describe('Beneficiary Update', () => {
           expect(mockedNavigate).toHaveBeenCalledWith('/');
         });
       });
-    
-      test('shows error for invalid grade level during update', async () => {
+
+      test('shows error for invalid grade level (too high) during update', async () => {
         renderBeneficiaryProfile();
-    
+
         await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
-    
+
         fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-    
+
         const gradeLevelInput = screen.getByLabelText(/Grade Level:/i);
         fireEvent.change(gradeLevelInput, { target: { value: '13' } });
-    
+
         fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-    
+
+        await waitFor(() => {
+          expect(screen.getByText(/Please put a valid Grade Number/i)).toBeInTheDocument();
+          expect(updateDoc).not.toHaveBeenCalled();
+        });
+      });
+
+      test('shows error for invalid grade level (zero) during update', async () => {
+        renderBeneficiaryProfile();
+
+        await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+
+        const gradeLevelInput = screen.getByLabelText(/Grade Level:/i);
+        fireEvent.change(gradeLevelInput, { target: { value: '0' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
         await waitFor(() => {
           expect(screen.getByText(/Please put a valid Grade Number/i)).toBeInTheDocument();
           expect(updateDoc).not.toHaveBeenCalled();
