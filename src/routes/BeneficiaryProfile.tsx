@@ -97,9 +97,8 @@ export function BeneficiaryProfile() {
     
     function handleSub(){
         if (guardians.length-1 >= 1){
-            /* same here */
-            const reducedGuardians = guardians
-            reducedGuardians.pop()
+            // applied
+            const reducedGuardians = guardians.slice(0, -1);
             setGuardians(reducedGuardians)
             setBeneficiary({ ...beneficiary as Beneficiary, guardians: reducedGuardians })
         }
