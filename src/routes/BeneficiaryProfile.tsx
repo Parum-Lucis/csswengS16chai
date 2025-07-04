@@ -1,15 +1,15 @@
-import EventCard from "../components/EventCard.tsx";
+import EventCard from "../components/EventCard";
 import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../context/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
-import type { Beneficiary } from "../models/beneficiaryType.ts";
-import GuardianCard from "../components/GuardianCard.tsx";
+import type { Beneficiary } from "../models/beneficiaryType";
+import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
-import type { Guardian } from "../models/guardianType.ts";
+import type { Guardian } from "../models/guardianType";
 
 export function BeneficiaryProfile() {
     const params = useParams()
@@ -97,6 +97,7 @@ export function BeneficiaryProfile() {
     
     function handleSub(){
         if (guardians.length-1 >= 1){
+            /* same here */
             const reducedGuardians = guardians
             reducedGuardians.pop()
             setGuardians(reducedGuardians)

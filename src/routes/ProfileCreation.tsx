@@ -6,7 +6,7 @@ Timestamp} from "firebase/firestore"
 import React from "react";
 import { useState } from "react";
 import type { Guardian } from "../models/guardianType";
-import GuardianCard from "../components/GuardianCard.tsx";
+import GuardianCard from "../components/GuardianCard";
 
 //password generator
 function GenPass(){
@@ -267,6 +267,16 @@ export function BeneficiaryProfileCreation() {
 
   function handleSub(){
     if (guardians.length-1 >= 1){
+      /* 
+      Error: 
+      remember that arrays are references? so we need to create a new copy instead
+      when reducedGuardians.pop() is called, it modifies the original one
+      for some reason according to Gemini, React doesn't see the update if ^^, so it doesn't re-render the component
+
+      Possible Solution:
+      const reducedGuardians = guardians.slice(0, -1);
+      setGuardians(reducedGuardians);
+      */
       const reducedGuardians = guardians
       reducedGuardians.pop()
       setGuardians(reducedGuardians)
