@@ -28,6 +28,22 @@ export function VolunteerProfileCreation() {
 
     const formData = new FormData(e.target as HTMLFormElement);
 
+    /*
+    Error:
+    whitespaces are allowed in the form
+
+    Possibile Solution:
+    let err = false;
+    for (const [, value] of formData.entries()) {
+      // Trim the value if it's a string before checking
+      if (typeof value === 'string' && !value.trim()) {
+        err = true;
+      } else if (!value) {
+        err = true;
+      }
+    }
+    */
+
     let err = false;
     for (const [, value] of formData.entries()) {
       console.log(value.toString(), err);
@@ -206,6 +222,27 @@ export function BeneficiaryProfileCreation() {
     e.preventDefault();
 
     const formData = new FormData(e.target as HTMLFormElement);
+
+    /*
+    Error:
+    whitespaces are allowed in the form
+
+    Possibile Solution:
+    let err = false;
+    let is_waitlisted = false;
+    for (const [key, value] of formData.entries()) {
+      // Trim the value if it's a string
+      const processedValue = typeof value === 'string' ? value.trim() : value;
+
+      if (!processedValue) {
+        if (key === "idNum") {
+          is_waitlisted = true;
+        } else {
+          err = true;
+        }
+      }
+    }
+    */
 
     let err = false;
     let is_waitlisted = false;
