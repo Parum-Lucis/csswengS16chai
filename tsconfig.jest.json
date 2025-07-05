@@ -10,7 +10,11 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "lib": ["es2020", "dom"],
-    "types": ["node", "jest", "@testing-library/jest-dom"]
+    "types": ["node", "jest", "@testing-library/jest-dom"],
+    "baseUrl": ".", 
+    "paths": {
+      "@models/*": ["models/*"]
+    }
   },
   "include": ["src", "jest.setup.ts"]
 }

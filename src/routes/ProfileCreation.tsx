@@ -8,9 +8,9 @@ import {
 import React from "react";
 import { useState } from "react";
 import type { Guardian } from "@models/guardianType";
-import GuardianCard from "../components/GuardianCard.tsx";
-import { callCreateVolunteerProfile } from "../firebase/cloudFunctions.ts";
-import type { Volunteer } from "@models/volunteerType.ts";
+import GuardianCard from "../components/GuardianCard";
+import { callCreateVolunteerProfile } from "../firebase/cloudFunctions";
+import type { Volunteer } from "@models/volunteerType";
 
 
 export function VolunteerProfileCreation() {
