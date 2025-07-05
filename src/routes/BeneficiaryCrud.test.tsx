@@ -239,7 +239,7 @@ describe('Beneficiary Creation', () => {
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Please input a valid phone number/i)).toBeInTheDocument();
+      expect(screen.getByText(/Please input a proper contact number for Guardian 1/i)).toBeInTheDocument();
     });
   });
 
