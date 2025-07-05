@@ -1,17 +1,18 @@
-import EventCard from "../components/EventCard.tsx";
+import EventCard from "../components/EventCard";
 import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../context/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
-import type { Beneficiary } from "../models/beneficiaryType.ts";
-import GuardianCard from "../components/GuardianCard.tsx";
+import type { Beneficiary } from "../models/beneficiaryType";
+import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
+import type { Guardian } from "../models/guardianType";
 
 export function BeneficiaryProfile() {
-    // const params = useParams()
+    const params = useParams()
     const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null)
     const [originalBenificiary, setOriginalBeneficiary] = useState<Beneficiary | null>(null)
     //formState = null, all disabled
@@ -22,24 +23,30 @@ export function BeneficiaryProfile() {
     //formState = 1, 1 guardian
     //formState = 2, 2 guardian
     //formState = 3, 3 guardian
-    const [guardianState, setGuardian] = useState(1)
+    const [guardians, setGuardians] = useState<Guardian[]>([])
     const [minimizeState, setMinimize] = useState(false)
     const [showDeleteModal, setDeleteModal] = useState(false)
     const [docID, setDocID] = useState(beneficiary?.docID)
+    const [gradeLevel, setGradeLevel] = useState<string>("");
+
 
     useEffect(() =>  {
         const fetchBeneficiary = async () => {
-        const getQuery = doc(db, "beneficiaries", "test-1")
+        const getQuery = doc(db, "beneficiaries", params.docId as string)
         const beneficiariesSnap = await getDoc(getQuery)
         if(beneficiariesSnap.exists())
             setBeneficiary(beneficiariesSnap.data() as Beneficiary)
             setOriginalBeneficiary(beneficiariesSnap.data() as Beneficiary)
+            setGuardians((beneficiariesSnap.data() as Beneficiary).guardians)
+            console.log((beneficiariesSnap.data() as Beneficiary))
             setDocID(beneficiariesSnap.id)
+            setGradeLevel((beneficiariesSnap.data() as Beneficiary).grade_level.toString()) // see commit desc re: this change
             setForm(true)
         }
         fetchBeneficiary()
     }, [setBeneficiary])
     console.log(beneficiary)
+    console.log(guardians)
     const navigate = useNavigate();
     const usertest = useContext(UserContext);
     const { sex, grade_level : level, address} = beneficiary || {}
@@ -62,6 +69,11 @@ export function BeneficiaryProfile() {
     function handleEdit(){
         if (formState === false && originalBenificiary) {
             setBeneficiary(originalBenificiary);
+            setGradeLevel(originalBenificiary.grade_level.toString());
+            // if guardians were modified, return to original
+            if (guardians.length != originalBenificiary.guardians.length) {
+                setGuardians(originalBenificiary.guardians);
+            }
         }
         setForm(!formState)
     }
@@ -71,40 +83,117 @@ export function BeneficiaryProfile() {
     }
 
     function handleAdd(){
-        if (guardianState+1 <= 3){
-          setGuardian(guardianState+1)
+        if (guardians.length+1 <= 3){
+          setGuardians([...guardians, {
+            name: '',
+            relation: '',
+            email: '',
+            contact_number: ''
+          }])
         }
         else
           toast.error("Cannot add more than 3 guardians!")
       }
     
-      function handleSub(){
-        if (guardianState-1 >= 1){
-          setGuardian(guardianState-1)
+    function handleSub(){
+        if (guardians.length-1 >= 1){
+            // applied
+            const reducedGuardians = guardians.slice(0, -1);
+            setGuardians(reducedGuardians)
+            setBeneficiary({ ...beneficiary as Beneficiary, guardians: reducedGuardians })
         }
         else
-          toast.error("Cannot have 0 guardians!")
-      }
+            toast.error("Cannot have 0 guardians!")
+    }
 
     function handleDelete(){
         setDeleteModal(!showDeleteModal)
     }
 
-    const handleSave = 
-    async () => {
-        if(!sex || !level)
-        return
-        if(sex != "M" && sex != "F")
-        return
-        if(level > 12 || level < 1)
-        return 
-
+    const handleConfirm = async () => {
+        setDeleteModal(!showDeleteModal)
+        
         const updateRef = doc(db, "beneficiaries", docID!)
         console.log(beneficiary)
-        await updateDoc(updateRef, {
-        ...beneficiary
-        })
-        setOriginalBeneficiary(beneficiary)
+        try {
+            await updateDoc(updateRef, {
+            ...beneficiary,
+            time_to_live : (Date.now() + 2592000000)
+            })
+            toast.success("Account delete success!")
+            navigate("/")
+        }
+        catch {
+            toast.error("Something went wrong")
+        }
+    }
+
+    const handleSave = 
+    async () => {
+        // convert string input to number, if valid
+        const gradeLevelNum = Number(gradeLevel);
+
+        /* changed */
+        // gradeLevelNum != 0 will only be true if gradeLevelNum is 0
+        // modified others rin, it still checks for empty strings/whitespaces
+        /*if(!(sex!.toString().trim()) || !gradeLevel || gradeLevelNum != 0 || !(address!.toString().trim()) || !birthdate){*/
+        if (!sex?.trim() || !gradeLevel.trim() || !address?.trim() || !birthdate) {
+            toast.error("Please fill up all fields!")
+            return
+        }       
+        /* end of change */
+
+        if(gradeLevelNum > 12 || gradeLevelNum < 1 || isNaN(gradeLevelNum)){
+            toast.error("Please put a valid Grade Number")
+            return 
+        }
+        const updateRef = doc(db, "beneficiaries", docID!)
+        console.log(beneficiary)
+        
+        const emailRegEx = new RegExp(
+            /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+        ); // from https://emailregex.com/
+        let test = false
+        guardians.forEach((guardian, i) => {
+            Object.values(guardian).forEach((val, _) => {
+                if(!(val.toString().trim())) {
+                    toast.error("Please fill up all fields for Guardian " + (i+1));
+                    test = true
+                    return
+                }
+            })
+            if(test)
+                return
+            else if (!emailRegEx.test(guardian.email)) {
+                console.log(guardian.email)
+                toast.error("Please input a proper email for Guardian " + (i+1));
+                test = true
+                return
+            }
+            else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
+                toast.error("Please input a proper contact number for Guardian " + (i+1));
+                test = true
+                return
+            }
+
+        });
+        if(test)
+            return
+        try {
+            await updateDoc(updateRef, {
+                ...beneficiary,
+                guardians: guardians,
+                grade_level: gradeLevelNum
+            })
+            setOriginalBeneficiary({...beneficiary as Beneficiary, grade_level: gradeLevelNum,guardians: guardians})
+            toast.success("Account update success!")
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
+        } catch {
+            toast.error("Something went wrong")
+        }
+        
 
     }
 
@@ -136,7 +225,7 @@ export function BeneficiaryProfile() {
                             </button>
                             <button
                                 className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                onClick={handleDelete} // TODO: REPLACE
+                                onClick={handleConfirm}
                             >
                                 Confirm Delete
                             </button>
@@ -148,7 +237,7 @@ export function BeneficiaryProfile() {
             )}
             <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6 overflow-hidden">
             <div className="-top-5 sm:-top-20 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[5px] border-[#45B29D] rounded-full flex items-center justify-center mb-1">
-                <i className="text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
+                <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
             </div>
 
             <button
@@ -194,7 +283,7 @@ export function BeneficiaryProfile() {
                         id="bDate"
                         className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                         readOnly={formState ?? true}
-                        onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, birthdate : Timestamp.fromDate(birthdate)})}
+                        onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, birthdate : Timestamp.fromDate((new Date (e.target.value)))})}
                         value={birthdate?.toISOString().substring(0,10)}/>
                     </div>
 
@@ -224,8 +313,9 @@ export function BeneficiaryProfile() {
                     id="gLevel"
                     className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                     readOnly={formState ?? true}
-                    onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, grade_level : Number(e.target.value)})}
-                    value={level}/>
+                    onChange={(e) => setGradeLevel(e.target.value)}
+                    value={gradeLevel}
+                />
                 </div>
                 <div className="flex flex-col">
                     <label
@@ -269,11 +359,11 @@ export function BeneficiaryProfile() {
                     <div className={` overflow-auto transition-all duration-300 ease-in-out ${minimizeState ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}>
                       <div className="w-full rounded-b-sm text-white border border-[#254151] bg-[#3EA08D] p-3">
                         {Array.from(
-                          {length: guardianState},
+                          {length: guardians.length},
                           (_, i) => (
                             <div className="pb-4">
                               <h3 className="font-[Montserrat] mb-2">Guardian {i + 1}</h3>
-                              <GuardianCard formState={false} />
+                              <GuardianCard formState={false} index={i} guardians={guardians} setGuardians={setGuardians} />
                             </div>
                           )
                         )}

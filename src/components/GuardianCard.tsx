@@ -1,4 +1,20 @@
-function GuardianCard({formState=false}: {formState : (boolean | null);}){
+import type { Guardian } from "../models/guardianType";
+
+function GuardianCard(
+    {formState=false, 
+        index, 
+        guardians, 
+        setGuardians}: 
+    {formState : (boolean | null),
+        index: number,
+        guardians: Guardian[],
+        setGuardians: React.Dispatch<React.SetStateAction<Guardian[]>>
+}){
+    const changeField = (field: string, val: string) => {
+        const upd = [...guardians]
+        upd[index] = { ...upd[index], [field]: val }
+        setGuardians(upd)
+    }
     return (
         <>
         <div className="flex flex-row items-center w-full text-white border-x border-t rounded-t-sm border-[#254151] bg-[#3EA08D] px-3">
@@ -9,6 +25,8 @@ function GuardianCard({formState=false}: {formState : (boolean | null);}){
             id="ParentName"
             className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
             readOnly={formState ?? true}
+            value={guardians[index].name}
+            onChange={e => changeField('name', e.target.value)}
             />
         </div>
         <div className="flex flex-row items-center w-full text-white border-x border-[#254151] bg-[#3EA08D] px-3">
@@ -19,6 +37,8 @@ function GuardianCard({formState=false}: {formState : (boolean | null);}){
             id="Relation"
             className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
             readOnly={formState ?? true}
+            value={guardians[index].relation}
+            onChange={e => changeField('relation', e.target.value)}
             />
         </div>
         <div className="flex flex-row items-center w-full text-white border-x border-[#254151] bg-[#3EA08D] px-3">
@@ -29,6 +49,8 @@ function GuardianCard({formState=false}: {formState : (boolean | null);}){
             id="email"
             className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
             readOnly={formState ?? true}
+            value={guardians[index].email}
+            onChange={e => changeField('email', e.target.value)}
             />
         </div>
         <div className="flex flex-row items-center w-full text-white border-b border-x rounded-b-sm border-[#254151] bg-[#3EA08D] px-3">
@@ -39,6 +61,8 @@ function GuardianCard({formState=false}: {formState : (boolean | null);}){
             id="ParentcNum"
             className="w-full bg-[#3e907f] text-white px-3 py-2 font-[Montserrat] border border-[#254151] m-1 rounded-sm"
             readOnly={formState ?? true}
+            value={guardians[index].contact_number}
+            onChange={e => changeField('contact_number', e.target.value)}
             />
         </div>
         </>

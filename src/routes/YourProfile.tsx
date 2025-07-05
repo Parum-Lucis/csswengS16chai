@@ -73,21 +73,31 @@ export function YourProfile() {
     const handleSave = 
     async () => {
         setForm(!formState)
-        if(!sex || !contact || !email || !address)
-        return
-        if(sex != "M" && sex != "F")
-        return
-
+        if(!(sex!.toString().trim()) || !(contact!.toString().trim()) || !(email!.toString().trim()) || !(address!.toString().trim())) {
+            toast.error("Please fill up all fields!")
+            return
+        }
+        const emailRegEx = new RegExp(
+            /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+        ); // from https://emailregex.com/
+        if (!emailRegEx.test(email!)) {
+            toast.error("Please input a proper email!");
+            return
+        }
         const updateRef = doc(db, "volunteers", docID!)
         console.log(volunteer)
-        await updateDoc(updateRef, {
-        ...volunteer
-        })
-        setOriginalVolunteer(volunteer)
-        toast.success("Account update success!")
-        setTimeout(function() {
-            location.reload();
-        }, 1000);
+        try {
+            await updateDoc(updateRef, {
+            ...volunteer
+            })
+            setOriginalVolunteer(volunteer)
+            toast.success("Account update success!")
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
+        } catch {
+            toast.error("Something went wrong")
+        }
     }
 
     return (
@@ -119,7 +129,7 @@ export function YourProfile() {
             )}
             <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6 overflow-hidden">
                 <div className="-top-5 sm:-top-20 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[5px] border-[#45B29D] rounded-full flex items-center justify-center mb-1">
-                    <i className="text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
+                    <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
                 </div>
 
             <button
@@ -151,7 +161,7 @@ export function YourProfile() {
                         id="bDate"
                         className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
                         readOnly={formState ?? true}
-                        onChange={(e) => setVolunteer({...volunteer as Volunteer, birthdate : Timestamp.fromDate(birthdate)})}
+                        onChange={(e) => setVolunteer({...volunteer as Volunteer, birthdate : Timestamp.fromMillis(Date.parse(e.target.value))})}
                         value={birthdate?.toISOString().substring(0,10)}/>
                     </div>
 
