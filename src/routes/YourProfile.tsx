@@ -8,6 +8,7 @@ import type { Volunteer } from "@models/volunteerType";
 import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
 import { callDeleteVolunteerProfile } from "../firebase/cloudFunctions";
+import { signOut } from "firebase/auth";
 
 export function YourProfile() {
 
@@ -71,6 +72,7 @@ export function YourProfile() {
             } else {
                 setDeleteModal(!showDeleteModal)
                 toast.success("Account delete success!")
+                signOut(auth)
                 navigate("/")
             }
 
