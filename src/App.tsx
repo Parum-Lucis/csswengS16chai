@@ -12,6 +12,7 @@ import NavigationBar from "./components/NavigationBar.tsx";
 import Temp from "./components/Temp.tsx";
 import ForgetMeNot from "./routes/ForgetMeNot.tsx";
 import Admin from "./routes/Admin.tsx"
+import { VolunteerList, BeneficiaryList } from "./routes/ProfileList.tsx";
 
 
 function App() {
@@ -32,6 +33,8 @@ function App() {
         <Route path="/create-volunteer-profile" element={<VolunteerProfileCreation />} />
         <Route path="/create-beneficiary-profile" element={<BeneficiaryProfileCreation />} />
         <Route path="/view-profile-list" element={<Temp />} />
+        <Route path="/view-beneficiary-list" element={<BeneficiaryList />} />
+        <Route path="/view-volunteer-list" element={<VolunteerList />} />
         <Route path="/view-calendar" element={<Temp />} />
         <Route path="/view-event-list" element={<Temp />} />
       </Routes>
