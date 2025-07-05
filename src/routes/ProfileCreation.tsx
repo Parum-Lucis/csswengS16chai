@@ -223,34 +223,37 @@ export function BeneficiaryProfileCreation() {
 
     const formData = new FormData(e.target as HTMLFormElement);
 
+    let err = false;
+    let is_waitlisted = false;
+
+    /* changed */
     /*
-    Error:
-    whitespaces are allowed in the form
-
-    Possibile Solution:
-    let err = false;
-    let is_waitlisted = false;
-    for (const [key, value] of formData.entries()) {
-      // Trim the value if it's a string
-      const processedValue = typeof value === 'string' ? value.trim() : value;
-
-      if (!processedValue) {
-        if (key === "idNum") {
-          is_waitlisted = true;
-        } else {
-          err = true;
-        }
-      }
-    }
-    */
-
-    let err = false;
-    let is_waitlisted = false;
     for (const [key, value] of formData.entries()) {
       console.log(value.toString(), err);
       if (!(value.toString().trim()))
         key == "idNum" ? is_waitlisted = true : err = true
     }
+    */
+
+    // gemini suggested this, better logic daw
+    const formValues: { [key: string]: any } = {};
+    for (const [key, value] of formData.entries()) {
+      formValues[key] = value;
+    }
+
+    for (const key in formValues) {
+      const value = formValues[key];
+      if (typeof value === 'string' && !value.trim()) {
+        if (key === "idNum") {
+          is_waitlisted = true;
+        } else {
+          err = true;
+        }
+      } else if (!value && key !== "idNum") {
+          err = true;
+      }
+    }
+    /* end of change */
 
     if (!err) {
       const emailRegEx = new RegExp(
@@ -282,9 +285,17 @@ export function BeneficiaryProfileCreation() {
         if(test)
             return 
         else {
+        /* changed */
+        /*
         const accredited_id = Number((formData.get("idNum") as string).trim())
         const addRef = await addDoc(collection(db, "beneficiaries"), {
-          accredited_id: accredited_id == 0 ? accredited_id : NaN,
+        */
+        const idNumValue = (formData.get("idNum") as string);
+        const accredited_id = idNumValue.trim() ? Number(idNumValue) : NaN;
+        /* end of change */
+        const addRef = await addDoc(collection(db, "beneficiaries"), {
+          /* accredited_id: accredited_id == 0 ? accredited_id : NaN,*/ // already converts an empty string to NaN
+          accredited_id: accredited_id,
           first_name: formData.get("fName") as string,
           last_name: formData.get("lName") as string,
           address: formData.get("address") as string,
@@ -292,6 +303,7 @@ export function BeneficiaryProfileCreation() {
           grade_level: Number(formData.get("gradelevel") as string),
           is_waitlisted: is_waitlisted,
           guardians: guardians,
+          sex: formData.get("SexDropdown") as string, /* this was missing pala? */
         });
 
         if(addRef) {

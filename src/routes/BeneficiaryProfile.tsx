@@ -133,10 +133,16 @@ export function BeneficiaryProfile() {
         // convert string input to number, if valid
         const gradeLevelNum = Number(gradeLevel);
 
-        if(!(sex!.toString().trim()) || !gradeLevel || gradeLevelNum != 0 || !(address!.toString().trim()) || !birthdate){
+        /* changed */
+        // gradeLevelNum != 0 will only be true if gradeLevelNum is 0
+        // modified others rin, it still checks for empty strings/whitespaces
+        /*if(!(sex!.toString().trim()) || !gradeLevel || gradeLevelNum != 0 || !(address!.toString().trim()) || !birthdate){*/
+        if (!sex?.trim() || !gradeLevel.trim() || !address?.trim() || !birthdate) {
             toast.error("Please fill up all fields!")
             return
-        }
+        }       
+        /* end of change */
+
         if(gradeLevelNum > 12 || gradeLevelNum < 1 || isNaN(gradeLevelNum)){
             toast.error("Please put a valid Grade Number")
             return 
