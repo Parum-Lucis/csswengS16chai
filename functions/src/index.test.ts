@@ -2,11 +2,14 @@ import functionsTest from "firebase-functions-test";
 
 const mockCreateUser = jest.fn();
 const mockSetCustomUserClaims = jest.fn();
+const mockDeleteUser = jest.fn();
+const mockDeleteDoc = jest.fn();
 
 jest.mock("firebase-admin/auth", () => ({
   getAuth: jest.fn(() => ({
     createUser: mockCreateUser,
     setCustomUserClaims: mockSetCustomUserClaims,
+    deleteUser: mockDeleteUser,
   })),
 }));
 
@@ -18,19 +21,23 @@ jest.mock("firebase-admin/firestore", () => {
   const mockDoc = {
     create: mockDocCreate,
     update: mockDocUpdate,
+    delete: mockDeleteDoc,
+  };
+
+  const mockGet = jest.fn(async () => ({
+    size: 1,
+    forEach: (cb: Function) => {
+      cb({ id: "uid123" });
+    },
+  }));
+
+  const mockCollection = {
+    where: jest.fn(() => ({ get: mockGet })),
   };
 
   const mockFirestore = {
-    doc: jest.fn(() => {
-      console.log("🔍 firestore.doc() called");
-      return mockDoc;
-    }),
-    collection: jest.fn(() => ({
-      doc: jest.fn(() => {
-        console.log("📁 firestore.collection().doc() called");
-        return mockDoc;
-      }),
-    })),
+    doc: jest.fn(() => mockDoc),
+    collection: jest.fn(() => mockCollection),
   };
 
   return {
@@ -38,7 +45,6 @@ jest.mock("firebase-admin/firestore", () => {
     Timestamp: {
       now: jest.fn(() => mockTimestamp),
     },
-    
     __mockDocCreate: mockDocCreate,
     __mockDocUpdate: mockDocUpdate,
   };
@@ -52,13 +58,18 @@ jest.mock("./utils/generatePassword", () => ({
   generateRandomPassword: jest.fn(() => "password123"),
 }));
 
-// Dynamically import functions after mocks are in place
+jest.mock("./utils/time", () => ({
+  createTimestampFromNow: jest.fn(() => "mock-timestamp"),
+}));
+
 let createVolunteerProfile: any;
 let deleteVolunteerProfile: any;
+let cronCleaner: any;
 beforeAll(async () => {
   const mod = await import("./index");
   createVolunteerProfile = mod.createVolunteerProfile;
   deleteVolunteerProfile = mod.deleteVolunteerProfile;
+  cronCleaner = mod.cronCleaner;
 });
 
 const testEnv = functionsTest();
@@ -158,7 +169,7 @@ describe("Delete Volunteer Profile", () => {
     expect(result).toBe(false);
   });
 
-  it("updates volunteer document with time_to_live", async () => { //Only test that fails for now
+  it("updates volunteer document with time_to_live", async () => {
     mockDocUpdate.mockResolvedValue(true);
     const wrapped = testEnv.wrap(deleteVolunteerProfile);
     const result = await wrapped({
@@ -179,5 +190,14 @@ describe("Delete Volunteer Profile", () => {
       auth: mockAuth(true),
     });
     expect(result).toBe(false);
+  });
+});
+
+describe("cronCleaner", () => {
+  it("deletes expired volunteer accounts", async () => {
+    const wrapped = (cronCleaner as any).run;
+    await wrapped({});
+    expect(mockDeleteUser).toHaveBeenCalledWith("uid123");
+    expect(mockDeleteDoc).toHaveBeenCalled();
   });
 });
