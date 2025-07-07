@@ -83,27 +83,62 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
     }
 })
 
+export const deleteBeneficiaryProfile = onCall<string>(async (req) => {
+    if (!req.auth) return false;
+
+    const uid = req.data;
+    try {
+        await firestore.doc(`beneficiaries/${uid}`).update(
+            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
+        )
+        return true;
+
+    } catch (error) {
+        logger.error(error)
+        return false;
+    }
+})
+
 export const cronCleaner = onSchedule("every 1 minutes", async () => {
     try {
+        logger.log("Cleanup running!")
+        // Clean volunteers
         const snapshot = await firestore.collection("volunteers")
             .where("time_to_live", "<=", Timestamp.now())
             .get();
 
         if (snapshot.size === 0) {
-            logger.log("No one to kill sadj");
-            return
+            logger.log("No volunteers to kill sadj");
+        } else {
+            snapshot.forEach(async doc => {
+                logger.info(`Deleting volunteer ${doc.id}`);
+                await Promise.all([
+                    auth.deleteUser(doc.id),
+                    firestore.doc(`volunteers/${doc.id}`).delete()
+                ])
+                logger.info(`Successfully deleted volunteer ${doc.id}`);
+            })
+
+            logger.info("Successfully deleted a bunch of volunteers! Count: " + snapshot.size)
         }
 
-        snapshot.forEach(async doc => {
-            logger.info(`Deleting ${doc.id}`);
-            await Promise.all([
-                auth.deleteUser(doc.id),
-                firestore.doc(`volunteers/${doc.id}`).delete()
-            ])
-            logger.info(`Successfully deleted ${doc.id}`);
+        // Clean beneficiaries
+        const beneficiarySnapshot = await firestore.collection("beneficiaries")
+            .where("time_to_live", "<=", Timestamp.now())
+            .get();
+
+        if (beneficiarySnapshot.size === 0) {
+            logger.log("No expired beneficiaries.");
+            return;
+        }
+
+        beneficiarySnapshot.forEach(async doc => {
+            logger.info(`Deleting beneficiary ${doc.id}`);
+            await firestore.doc(`beneficiaries/${doc.id}`).delete()
+            logger.info(`Successfully deleted beneficiary ${doc.id}`);
         })
 
-        logger.info("Successfully deleted a bunch of guys! Count: " + snapshot.size)
+        logger.info("Successfully deleted beneficiaries! Count:" + beneficiarySnapshot.size)
 
     } catch (error) {
         logger.error(error)

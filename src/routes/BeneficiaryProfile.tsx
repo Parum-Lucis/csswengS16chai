@@ -9,6 +9,8 @@ import type { Beneficiary } from "@models/beneficiaryType.ts";
 import GuardianCard from "../components/GuardianCard.tsx";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
+import { callDeleteBeneficiaryProfile } from "../firebase/cloudFunctions";
+
 
 export function BeneficiaryProfile() {
     // const params = useParams()
@@ -89,6 +91,30 @@ export function BeneficiaryProfile() {
     function handleDelete(){
         setDeleteModal(!showDeleteModal)
     }
+    
+    // THIS WILL CONFLICT. keep the other handleConfirm from profile-creation branch if ever
+    // and let me know when I could fix it. ideally will be worked on when merged to main
+    const handleConfirm = async () => {
+    
+            try {
+    
+                const res = await callDeleteBeneficiaryProfile(docID);
+                console.log(res);
+    
+                if (!res.data) {
+                    toast.error("Couldn't delete this beneficiary profile.")
+                } else {
+                    setDeleteModal(!showDeleteModal)
+                    toast.success("Beneficiary delete success!")
+                    navigate("/") // TODO: navigate to beneficiary list
+                }
+    
+            } catch (error) {
+                console.log(error)
+                toast.error("Couldn't delete this beneficiary profile.");
+            }
+    
+        }
 
     const handleSave = 
     async () => {
@@ -136,7 +162,7 @@ export function BeneficiaryProfile() {
                             </button>
                             <button
                                 className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                onClick={handleDelete} // TODO: REPLACE
+                                onClick={handleConfirm} 
                             >
                                 Confirm Delete
                             </button>
