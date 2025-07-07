@@ -9,7 +9,7 @@
     "strict": true,
     "noEmit": true,
     "resolveJsonModule": true,
-    "lib": ["es2020", "dom"],
+    "lib": ["es2020", "dom", "DOM.Iterable"],
     "types": ["node", "jest", "@testing-library/jest-dom"],
     "baseUrl": ".", 
     "paths": {

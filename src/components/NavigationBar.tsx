@@ -9,6 +9,7 @@ function NavigationBar() {
     const urls = [
         { name: "Admin", pldt: "/view-admin" },
         { name: "Search", pldt: "/view-profile-list" },
+        {  name: "Beneficiaries", pldt: "/view-beneficiary-list"},
         { name: "You", pldt: "/view-profile" },
         { name: "Events", pldt: "/view-event-list" },
         { name: "Calendar", pldt: "/view-calendar" }
