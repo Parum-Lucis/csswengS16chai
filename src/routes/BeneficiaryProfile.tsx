@@ -5,11 +5,12 @@ import { UserContext } from "../context/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
-import type { Beneficiary } from "@models/beneficiaryType.ts";
-import GuardianCard from "../components/GuardianCard.tsx";
+import type { Beneficiary } from "@models/beneficiaryType";
+import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
 import { callDeleteBeneficiaryProfile } from "../firebase/cloudFunctions";
+import type { Guardian } from "@models/guardianType";
 
 
 export function BeneficiaryProfile() {
@@ -113,27 +114,27 @@ export function BeneficiaryProfile() {
     
     // THIS WILL CONFLICT. keep the other handleConfirm from profile-creation branch if ever
     // and let me know when I could fix it. ideally will be worked on when merged to main
-    const handleConfirm = async () => {
+    // const handleConfirm = async () => {
     
-            try {
+    //         try {
     
-                const res = await callDeleteBeneficiaryProfile(docID);
-                console.log(res);
+    //             const res = await callDeleteBeneficiaryProfile(docID);
+    //             console.log(res);
     
-                if (!res.data) {
-                    toast.error("Couldn't delete this beneficiary profile.")
-                } else {
-                    setDeleteModal(!showDeleteModal)
-                    toast.success("Beneficiary delete success!")
-                    navigate("/") // TODO: navigate to beneficiary list
-                }
+    //             if (!res.data) {
+    //                 toast.error("Couldn't delete this beneficiary profile.")
+    //             } else {
+    //                 setDeleteModal(!showDeleteModal)
+    //                 toast.success("Beneficiary delete success!")
+    //                 navigate("/") // TODO: navigate to beneficiary list
+    //             }
     
-            } catch (error) {
-                console.log(error)
-                toast.error("Couldn't delete this beneficiary profile.");
-            }
+    //         } catch (error) {
+    //             console.log(error)
+    //             toast.error("Couldn't delete this beneficiary profile.");
+    //         }
     
-        }
+    //     }
 
     const handleConfirm = async () => {
         setDeleteModal(!showDeleteModal)

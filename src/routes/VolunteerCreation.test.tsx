@@ -67,31 +67,46 @@ describe("Volunteer Creation Page", () => {
   });
 
   it("shows error for invalid email", async () => {
-    Object.defineProperty(global, "FormData", {
-      value: class extends FormData {
-        entries(): IterableIterator<[string, FormDataEntryValue]> {
-          const fields: [string, FormDataEntryValue][] = [
-            ["dropdown", "Volunteer"],
-            ["birthdate", "2000-01-01"],
-            ["email", "invalid-email"],
-            ["fName", "John"],
-            ["lName", "Doe"],
-            ["SexDropdown", "Male"],
-            ["address", "123 Street"],
-            ["cNum", "09123456789"],
-          ];
-          return fields[Symbol.iterator]();
-        }
-      },
-    });
+    const toast = require("react-toastify").toast;
 
     renderWithRouter(<VolunteerProfileCreation />);
+
+    fireEvent.change(screen.getByLabelText(/Role/i), {
+      target: { value: "Admin" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Birth Date/i), {
+      target: { value: "2025-07-04" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Email/i), {
+      target: { value: "wwwww@w" }, // INVALID
+    });
+
+    fireEvent.change(screen.getByLabelText(/First Name/i), {
+      target: { value: "Two" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Last Name/i), {
+      target: { value: "Test" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/^Sex$/i), {
+      target: { value: "Male" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Address/i), {
+      target: { value: "Test Address" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Contact No./i), {
+      target: { value: "09789067589" },
+    });
+
     fireEvent.click(screen.getByText(/Create Account/i));
 
     await waitFor(() => {
-      expect(require("react-toastify").toast.error).toHaveBeenCalledWith(
-        "Please input a proper email."
-      );
+      expect(toast.error).toHaveBeenCalledWith("Please input a proper email.");
     });
   });
 

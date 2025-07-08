@@ -24,20 +24,32 @@ jest.mock("firebase-admin/firestore", () => {
     delete: mockDeleteDoc,
   };
 
-  const mockGet = jest.fn(async () => ({
+  const mockGetVolunteers = jest.fn(async () => ({
     size: 1,
     forEach: (cb: Function) => {
       cb({ id: "uid123" });
     },
   }));
 
-  const mockCollection = {
-    where: jest.fn(() => ({ get: mockGet })),
-  };
+  const mockGetBeneficiaries = jest.fn(async () => ({
+    size: 1,
+    forEach: (cb: Function) => {
+      cb({ id: "beneficiary456" });
+    },
+  }));
+
+  const mockCollection = jest.fn((collectionName: string) => ({
+    where: jest.fn(() => ({
+      get:
+        collectionName === "volunteers"
+          ? mockGetVolunteers
+          : mockGetBeneficiaries,
+    })),
+  }));
 
   const mockFirestore = {
     doc: jest.fn(() => mockDoc),
-    collection: jest.fn(() => mockCollection),
+    collection: mockCollection,
   };
 
   return {
@@ -64,11 +76,13 @@ jest.mock("./utils/time", () => ({
 
 let createVolunteerProfile: any;
 let deleteVolunteerProfile: any;
+let deleteBeneficiaryProfile: any;
 let cronCleaner: any;
 beforeAll(async () => {
   const mod = await import("./index");
   createVolunteerProfile = mod.createVolunteerProfile;
   deleteVolunteerProfile = mod.deleteVolunteerProfile;
+  deleteBeneficiaryProfile = mod.deleteBeneficiaryProfile;
   cronCleaner = mod.cronCleaner;
 });
 
@@ -193,11 +207,60 @@ describe("Delete Volunteer Profile", () => {
   });
 });
 
+describe("Delete Beneficiary Profile", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("returns false if not authenticated", async () => {
+    const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
+    const result = await wrapped({
+      ...mockBaseRequest,
+      data: "uid123",
+    });
+    expect(result).toBe(false);
+  });
+
+  it("updates beneficiary document with time_to_live", async () => {
+    mockDocUpdate.mockResolvedValue(true);
+    const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
+    const result = await wrapped({
+      ...mockBaseRequest,
+      data: "uid123",
+      auth: mockAuth(true),
+    });
+    expect(mockDocUpdate).toHaveBeenCalled();
+    expect(result).toBe(true);
+  });
+
+  it("returns false on error", async () => {
+    mockDocUpdate.mockRejectedValue(new Error("error"));
+    const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
+    const result = await wrapped({
+      ...mockBaseRequest,
+      data: "uid123",
+      auth: mockAuth(true),
+    });
+    expect(result).toBe(false);
+  });
+});
+
 describe("cronCleaner", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("deletes expired volunteer accounts", async () => {
     const wrapped = (cronCleaner as any).run;
     await wrapped({});
     expect(mockDeleteUser).toHaveBeenCalledWith("uid123");
     expect(mockDeleteDoc).toHaveBeenCalled();
+  });
+
+  it("deletes expired beneficiary accounts", async () => {
+    const wrapped = (cronCleaner as any).run;
+    await wrapped({});
+    expect(mockDeleteDoc).toHaveBeenCalledWith(); 
+    expect(mockDeleteDoc).toHaveBeenCalledTimes(2); 
   });
 });

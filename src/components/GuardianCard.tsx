@@ -1,4 +1,4 @@
-import type { Guardian } from "../models/guardianType";
+import type { Guardian } from "@models/guardianType";
 
 function GuardianCard(
     {formState=false, 
