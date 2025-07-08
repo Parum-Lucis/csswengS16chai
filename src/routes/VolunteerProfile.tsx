@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../context/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
@@ -70,6 +70,7 @@ export function VolunteerProfile() {
         setForm(!formState)
     }
 
+    /* Modified this function
     const handleSave = 
     async () => {
         setForm(!formState)
@@ -84,6 +85,43 @@ export function VolunteerProfile() {
             toast.error("Please input a proper email!");
             return
         }
+        const updateRef = doc(db, "volunteers", docID!)
+        console.log(volunteer)
+        try {
+            await updateDoc(updateRef, {
+            ...volunteer
+            })
+            setOriginalVolunteer(volunteer)
+            toast.success("Account update success!")
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
+        } catch {
+            toast.error("Something went wrong")
+        }
+    }*/
+
+    const handleSave = 
+    async () => {
+        if(!(sex?.toString().trim()) || !(contact?.toString().trim()) || !(email?.toString().trim()) || !(address?.toString().trim())) {
+            toast.error("Please fill up all fields!")
+            setForm(!formState)
+            return
+        }
+        if (sex.toUpperCase() !== 'M' && sex.toUpperCase() !== 'F') {
+            toast.error("Invalid sex input. Please use 'M' or 'F'.");
+            setForm(!formState)
+            return;
+        }
+        const emailRegEx = new RegExp(
+            /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+        ); // from https://emailregex.com/
+        if (!emailRegEx.test(email!)) {
+            toast.error("Please input a proper email!");
+            setForm(!formState)
+            return
+        }
+        setForm(!formState)
         const updateRef = doc(db, "volunteers", docID!)
         console.log(volunteer)
         try {
