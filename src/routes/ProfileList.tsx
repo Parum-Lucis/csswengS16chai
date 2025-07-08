@@ -161,7 +161,7 @@ export function BeneficiaryList() {
         />
       </div>
 
-      <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
+      <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg mb-15">
         <div className="flex flex-col gap-4">
           {loading ? (
             // display loading while fetching from database.
