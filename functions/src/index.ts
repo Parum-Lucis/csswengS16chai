@@ -99,7 +99,7 @@ export const deleteBeneficiaryProfile = onCall<string>(async (req) => {
     }
 })
 
-export const cronCleaner = onSchedule("every 1 minutes", async () => {
+export const cronCleaner = onSchedule("every day 00:00", async () => {
     try {
         logger.log("Cleanup running!")
         // Clean volunteers
