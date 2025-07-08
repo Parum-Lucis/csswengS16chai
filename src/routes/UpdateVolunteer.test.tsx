@@ -10,6 +10,7 @@ import { VolunteerProfile } from './VolunteerProfile';
 import { YourProfile } from './YourProfile';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebaseConfig';
+import { callDeleteVolunteerProfile } from '../firebase/cloudFunctions';
 
 jest.mock('firebase/firestore', () => ({
   ...jest.requireActual('firebase/firestore'),
@@ -30,6 +31,13 @@ jest.mock('../firebase/firebaseConfig', () => ({
   },
   db: {},
 }));
+
+jest.mock('../firebase/cloudFunctions', () => ({
+    callDeleteVolunteerProfile: jest.fn(),
+}));
+
+// had to put as unknown because it cause errors
+const mockedCallDelete = callDeleteVolunteerProfile as unknown as jest.Mock;
 
 const mockedNavigate = jest.fn();
 jest.mock('react-router', () => ({
@@ -128,65 +136,100 @@ describe('Update Volunteer Profile', () => {
         });
     });
 
-    describe('Input Validation', () => {
-        test('does not save if address is empty', async () => {
-            renderVolunteerProfile({ uid: 'test-uid' });
-    
-            await waitFor(() => {
-                expect(screen.getByRole('heading', { name: /Doe, John/i })).toBeInTheDocument();
-            });
-    
-            fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-    
-            const addressInput = screen.getByLabelText(/address/i);
-            fireEvent.change(addressInput, { target: { value: '' } });
-    
-            fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-    
-            await waitFor(() => {
-                expect(updateDoc).not.toHaveBeenCalled();
-            });
+    test('does not save if address is empty', async () => {
+        renderVolunteerProfile({ uid: 'test-uid' });
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: /Doe, John/i })).toBeInTheDocument();
         });
 
-        test('does not save if email is empty', async () => {
-            renderVolunteerProfile({ uid: 'test-uid' });
-            await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
-            fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-            fireEvent.change(screen.getByLabelText(/email/i), { target: { value: '' } });
-            fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-            await waitFor(() => {
-                expect(updateDoc).not.toHaveBeenCalled();
-            });
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+
+        const addressInput = screen.getByLabelText(/address/i);
+        fireEvent.change(addressInput, { target: { value: '' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if a field contains only white spaces', async () => {
+        renderVolunteerProfile({ uid: 'test-uid' });
+        await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
+
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+
+        const addressInput = screen.getByLabelText(/address/i);
+        fireEvent.change(addressInput, { target: { value: '   ' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if email is empty', async () => {
+        renderVolunteerProfile({ uid: 'test-uid' });
+        await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: '' } });
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if email format is invalid', async () => {
+        renderVolunteerProfile({ uid: 'test-uid' });
+        await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
+
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'invalid-email-format' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please input a proper email/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if contact number is empty', async () => {
+        renderVolunteerProfile({ uid: 'test-uid' });
+        await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+        fireEvent.change(screen.getByLabelText(/contact no/i), { target: { value: '' } });
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if sex is invalid', async () => {
+        renderVolunteerProfile({ uid: 'test-uid' });
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: /Doe, John/i })).toBeInTheDocument();
         });
 
-        test('does not save if contact number is empty', async () => {
-            renderVolunteerProfile({ uid: 'test-uid' });
-            await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
-            fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-            fireEvent.change(screen.getByLabelText(/contact no/i), { target: { value: '' } });
-            fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-            await waitFor(() => {
-                expect(updateDoc).not.toHaveBeenCalled();
-            });
-        });
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
 
-        test('does not save if sex is invalid', async () => {
-            renderVolunteerProfile({ uid: 'test-uid' });
-    
-            await waitFor(() => {
-                expect(screen.getByRole('heading', { name: /Doe, John/i })).toBeInTheDocument();
-            });
-    
-            fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-    
-            const sexInput = screen.getByLabelText(/sex/i);
-            fireEvent.change(sexInput, { target: { value: 'X' } });
-    
-            fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-    
-            await waitFor(() => {
-                expect(updateDoc).not.toHaveBeenCalled();
-            });
+        const sexInput = screen.getByLabelText(/sex/i);
+        fireEvent.change(sexInput, { target: { value: 'X' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/invalid sex input/i)).toBeInTheDocument();
         });
     });
   });
@@ -236,7 +279,8 @@ describe('Update Volunteer Profile', () => {
       });
 
       test('shows delete confirmation and deletes account', async () => {
-        renderYourProfile({ uid: 'test-uid' });
+        mockedCallDelete.mockResolvedValue({ data: true });
+        renderYourProfile({ uid: 'test-vol-1' });
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: /Doe, John/i })).toBeInTheDocument();
@@ -249,74 +293,107 @@ describe('Update Volunteer Profile', () => {
         fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
 
         await waitFor(() => {
-          expect(updateDoc).toHaveBeenCalledWith(mockDocRef, expect.objectContaining({
-            time_to_live: expect.any(Number)
-          }));
+          expect(mockedCallDelete).toHaveBeenCalledWith('test-vol-1');
           expect(screen.getByText(/account delete success/i)).toBeInTheDocument();
           expect(mockedNavigate).toHaveBeenCalledWith('/');
         });
       });
 
-      describe('Input Validation', () => {
-        test('does not save if address is empty', async () => {
-            renderYourProfile({ uid: 'test-uid' });
-    
-            await waitFor(() => {
-                expect(screen.getByRole('heading', { name: /Doe, John/i })).toBeInTheDocument();
-            });
-    
-            fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-    
-            const addressInput = screen.getByLabelText(/address/i);
-            fireEvent.change(addressInput, { target: { value: '' } });
-    
-            fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-    
-            await waitFor(() => {
-                expect(updateDoc).not.toHaveBeenCalled();
-            });
+    test('does not save if address is empty', async () => {
+        renderYourProfile({ uid: 'test-uid' });
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: /Doe, John/i })).toBeInTheDocument();
         });
 
-        test('does not save if email is empty', async () => {
-            renderYourProfile({ uid: 'test-uid' });
-            await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
-            fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-            fireEvent.change(screen.getByLabelText(/email/i), { target: { value: '' } });
-            fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-            await waitFor(() => {
-                expect(updateDoc).not.toHaveBeenCalled();
-            });
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+
+        const addressInput = screen.getByLabelText(/address/i);
+        fireEvent.change(addressInput, { target: { value: '' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if a field contains only white spaces', async () => {
+        renderYourProfile({ uid: 'test-uid' });
+        await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
+
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+
+        const addressInput = screen.getByLabelText(/address/i);
+        fireEvent.change(addressInput, { target: { value: '   ' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if email is empty', async () => {
+        renderYourProfile({ uid: 'test-uid' });
+        await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: '' } });
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if email format is invalid', async () => {
+        renderYourProfile({ uid: 'test-uid' });
+        await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
+
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'another-invalid-email' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please input a proper email/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if contact number is empty', async () => {
+        renderYourProfile({ uid: 'test-uid' });
+        await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+        fireEvent.change(screen.getByLabelText(/contact no/i), { target: { value: '' } });
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
+        });
+    });
+
+    test('does not save if sex is invalid', async () => {
+        renderYourProfile({ uid: 'test-uid' });
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: /Doe, John/i })).toBeInTheDocument();
         });
 
-        test('does not save if contact number is empty', async () => {
-            renderYourProfile({ uid: 'test-uid' });
-            await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
-            fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-            fireEvent.change(screen.getByLabelText(/contact no/i), { target: { value: '' } });
-            fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-            await waitFor(() => {
-                expect(updateDoc).not.toHaveBeenCalled();
-            });
-        });
+        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
 
-        test('does not save if sex is invalid', async () => {
-            renderYourProfile({ uid: 'test-uid' });
-    
-            await waitFor(() => {
-                expect(screen.getByRole('heading', { name: /Doe, John/i })).toBeInTheDocument();
-            });
-    
-            fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-    
-            const sexInput = screen.getByLabelText(/sex/i);
-            fireEvent.change(sexInput, { target: { value: 'X' } });
-    
-            fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-    
-            await waitFor(() => {
-                expect(updateDoc).not.toHaveBeenCalled();
-            });
+        const sexInput = screen.getByLabelText(/sex/i);
+        fireEvent.change(sexInput, { target: { value: 'X' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        await waitFor(() => {
+            expect(updateDoc).not.toHaveBeenCalled();
+            expect(screen.getByText(/invalid sex input/i)).toBeInTheDocument();
         });
-      });
+    });
   });
 });
