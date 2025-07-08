@@ -2,17 +2,17 @@ import Login from "./routes/Login";
 import { Routes, Route } from "react-router";
 import "./css/styles.css";
 import { VolunteerProfileCreation, BeneficiaryProfileCreation } from "./routes/ProfileCreation";
-import { YourProfile } from "./routes/YourProfile.tsx";
-import { BeneficiaryProfile } from "./routes/BeneficiaryProfile.tsx";
-import { VolunteerProfile } from "./routes/VolunteerProfile.tsx";
+import { YourProfile } from "./routes/YourProfile";
+import { BeneficiaryProfile } from "./routes/BeneficiaryProfile";
+import { VolunteerProfile } from "./routes/VolunteerProfile";
 import { useState } from "react";
 import { auth } from "./firebase/firebaseConfig";
-import { UserContext, type UserStateType } from "./context/userContext.ts";
-import NavigationBar from "./components/NavigationBar.tsx";
-import Temp from "./components/Temp.tsx";
-import ForgetMeNot from "./routes/ForgetMeNot.tsx";
-import Admin from "./routes/Admin.tsx"
-import { VolunteerList, BeneficiaryList } from "./routes/ProfileList.tsx";
+import { UserContext, type UserStateType } from "./context/userContext";
+import NavigationBar from "./components/NavigationBar";
+import Temp from "./components/Temp";
+import ForgetMeNot from "./routes/ForgetMeNot";
+import Admin from "./routes/Admin"
+import { VolunteerList, BeneficiaryList } from "./routes/ProfileList";
 
 
 function App() {
