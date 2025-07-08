@@ -50,6 +50,9 @@ function Login() {
           // Firebase has email enumeration protection. So we can't know if their email is valid or not.
           // This is the best we can do.
           toast.error("Something is wrong with your email or password.");
+        } else if (error.code === "auth/wrong-password") {
+          // will only happen in emulator
+          toast.error("wrong password bro.");
         }
       } else {
         toast.error("Something went wrong. Please try again.");

@@ -5,11 +5,13 @@ import { UserContext } from "../context/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
-import type { Beneficiary } from "../models/beneficiaryType";
+import type { Beneficiary } from "@models/beneficiaryType";
 import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
-import type { Guardian } from "../models/guardianType";
+import { callDeleteBeneficiaryProfile } from "../firebase/cloudFunctions";
+import type { Guardian } from "@models/guardianType";
+
 
 export function BeneficiaryProfile() {
     const params = useParams()
@@ -109,6 +111,30 @@ export function BeneficiaryProfile() {
     function handleDelete(){
         setDeleteModal(!showDeleteModal)
     }
+    
+    // THIS WILL CONFLICT. keep the other handleConfirm from profile-creation branch if ever
+    // and let me know when I could fix it. ideally will be worked on when merged to main
+    // const handleConfirm = async () => {
+    
+    //         try {
+    
+    //             const res = await callDeleteBeneficiaryProfile(docID);
+    //             console.log(res);
+    
+    //             if (!res.data) {
+    //                 toast.error("Couldn't delete this beneficiary profile.")
+    //             } else {
+    //                 setDeleteModal(!showDeleteModal)
+    //                 toast.success("Beneficiary delete success!")
+    //                 navigate("/") // TODO: navigate to beneficiary list
+    //             }
+    
+    //         } catch (error) {
+    //             console.log(error)
+    //             toast.error("Couldn't delete this beneficiary profile.");
+    //         }
+    
+    //     }
 
     const handleConfirm = async () => {
         setDeleteModal(!showDeleteModal)
@@ -225,7 +251,7 @@ export function BeneficiaryProfile() {
                             </button>
                             <button
                                 className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                onClick={handleConfirm}
+                                onClick={handleConfirm} 
                             >
                                 Confirm Delete
                             </button>
