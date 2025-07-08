@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../context/userContext.ts";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
