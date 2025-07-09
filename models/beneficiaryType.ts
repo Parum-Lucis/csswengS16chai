@@ -1,5 +1,5 @@
 import type { Timestamp } from "firebase/firestore";
-import type { AttendedEvents } from "./attendedEventsType.js";
+import type { AttendedEvents } from "./attendees.js";
 import type { Guardian } from "./guardianType.js";
 
 export interface Beneficiary {
