@@ -1,4 +1,4 @@
-import type { Attendees } from "./attendees";
+import type { AttendedEvents } from "./attendedEventsType";
 
 export interface Event {
   docID: string;
@@ -6,5 +6,5 @@ export interface Event {
   description: string;
   start_date: Date;
   end_date: Date;
-  attendees: Attendees
+  attendees: AttendedEvents[];
 }
