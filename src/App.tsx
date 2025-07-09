@@ -13,7 +13,7 @@ import Temp from "./components/Temp";
 import ForgetMeNot from "./routes/ForgetMeNot";
 import Admin from "./routes/Admin"
 import { VolunteerList, BeneficiaryList } from "./routes/ProfileList";
-
+import EventList from "./routes/EventList";
 
 function App() {
   const [user, setUser] = useState<UserStateType>(undefined);
@@ -36,7 +36,7 @@ function App() {
         <Route path="/view-beneficiary-list" element={<BeneficiaryList />} />
         <Route path="/view-volunteer-list" element={<VolunteerList />} />
         <Route path="/view-calendar" element={<Temp />} />
-        <Route path="/view-event-list" element={<Temp />} />
+        <Route path="/view-event-list" element={<EventList />} />
       </Routes>
       <NavigationBar/>
     </UserContext>
