@@ -1,28 +1,51 @@
 import { useState, useEffect, type ReactHTMLElement } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
-import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, query, where, documentId, DocumentReference } from "firebase/firestore"
 import type { Event } from "@models/eventType"
 import { toast } from "react-toastify";
+import type { AttendedEvents } from "@models/attendedEventsType";
+import type { Beneficiary } from "@models/beneficiaryType";
 
 export function EventPage() {
     const params = useParams()
     const [event, setEvent] = useState<Event| null>(null)
     const [originalEvent, setOriginalEvent] = useState<Event| null>(null)
+    const [attendees, setAttendees] = useState<AttendedEvents[]>([])
+    const [beneficiaryList, setBeneficiaryList] = useState<Beneficiary[]>([])
     const [docID, setDocID] = useState(event?.docID)
 
     useEffect(() =>  {
         const fetchBeneficiary = async () => {
         const getQuery = doc(db, "events", params.docId as string)
+        const attendeeQuery = collection(db, "events", params.docId as string, "attendees")
         const eventsSnap = await getDoc(getQuery)
+        const attendeesList = await getDocs(attendeeQuery)
         if(eventsSnap.exists())
             setEvent(eventsSnap.data() as Event)
             setOriginalEvent(eventsSnap.data() as Event)
+            const beneficiaryID: string[] = []
+            attendeesList.forEach((att) => {
+                setAttendees([...attendees, att.data() as AttendedEvents])
+                beneficiaryID.push((att.data() as AttendedEvents).docID)
+                console.log(att.data())
+                console.log((att.data() as AttendedEvents).docID as DocumentReference)
+            })
+            const beneficiaryQuery = query(
+                collection(db, "beneficiaries"),
+                where(documentId(), "in", beneficiaryID)
+            )
+            const beneficiaryRef = await getDocs(beneficiaryQuery)
+            console.log(beneficiaryRef.size)
+            beneficiaryRef.forEach((bene) => {
+                setBeneficiaryList([...beneficiaryList, bene.data() as Beneficiary])
+            })
             console.log((eventsSnap.data() as Event))
+            console.log(beneficiaryList)
             setDocID(eventsSnap.id)
         }
         fetchBeneficiary()
-    }, [setEvent])
+    }, [setEvent, setAttendees, setBeneficiaryList, params.docId])
 
     const { name, description } = event || {}
 
