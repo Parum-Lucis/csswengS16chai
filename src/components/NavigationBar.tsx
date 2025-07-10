@@ -1,7 +1,7 @@
 import "../css/styles.css";
 import { NavLink } from "react-router";
 import { useContext } from "react";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../util/userContext.ts";
 
 
 function NavigationBar() {
@@ -9,7 +9,7 @@ function NavigationBar() {
     const urls = [
         { name: "Admin", pldt: "/view-admin" },
         { name: "Search", pldt: "/view-profile-list" },
-        {  name: "Beneficiaries", pldt: "/view-beneficiary-list"},
+        { name: "Beneficiaries", pldt: "/view-beneficiary-list" },
         { name: "You", pldt: "/view-profile" },
         { name: "Events", pldt: "/view-event-list" },
         { name: "Calendar", pldt: "/view-calendar" }

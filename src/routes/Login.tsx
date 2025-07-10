@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { useContext, useEffect } from "react";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 
 function Login() {
   const navigate = useNavigate();
@@ -104,7 +104,7 @@ function Login() {
               Remember Me
             </label>
             <a
-              onClick={() => {navigate("/forget-password")}}
+              onClick={() => { navigate("/forget-password") }}
               className="font-[Montserrat] text-sm text-[#45B29D] hover:underline"
             >
               Forgot Password?

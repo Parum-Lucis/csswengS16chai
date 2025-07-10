@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import "../css/styles.css";
 import ProfileCard from "../components/ProfileCard";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
@@ -252,7 +252,7 @@ export function VolunteerList() {
             const age = birthDate ? differenceInYears(new Date(), birthDate) : "N/A";
             const sex = data.sex === "M" || data.sex === "F" ? data.sex : "N/A";
             const type = data.is_admin ? "admin" : "volunteer";
-            
+
             // Skip if name missing
             if (!data.first_name || !data.last_name) {
               flag = true;

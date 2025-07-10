@@ -11,6 +11,7 @@ import type { Guardian } from "@models/guardianType";
 import GuardianCard from "../components/GuardianCard";
 import { callCreateVolunteerProfile } from "../firebase/cloudFunctions";
 import type { Volunteer } from "@models/volunteerType";
+import { emailRegex } from "../util/emailRegex";
 
 
 export function VolunteerProfileCreation() {
@@ -59,10 +60,8 @@ export function VolunteerProfileCreation() {
       return;
     }
 
-    const emailRegEx = new RegExp(
-      /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-    );
-    if (!emailRegEx.test(data.email)) {
+
+    if (!emailRegex.test(data.email)) {
       toast.error("Please input a proper email.");
       return;
     }
@@ -232,7 +231,7 @@ export function BeneficiaryProfileCreation() {
     */
 
     // gemini suggested this, better logic daw
-    const formValues: { [key: string]: any } = {};
+    const formValues: { [key: string]: FormDataEntryValue } = {};
     for (const [key, value] of formData.entries()) {
       formValues[key] = value;
     }
@@ -246,41 +245,39 @@ export function BeneficiaryProfileCreation() {
           err = true;
         }
       } else if (!value && key !== "idNum") {
-          err = true;
+        err = true;
       }
     }
     /* end of change */
 
     if (!err) {
-      const emailRegEx = new RegExp(
-        /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-      ); // from https://emailregex.com/
+
       let test = false
       guardians.forEach((guardian, i) => {
-          Object.values(guardian).forEach((val, _) => {
-              if(!(val.toString().trim())) {
-                  toast.error("Please fill up all fields for Guardian " + (i+1));
-                  test = true
-                  return
-              }
-          })
-          if(test)
-              return
-          else if (!emailRegEx.test(guardian.email)) {
-              console.log(guardian.email)
-              toast.error("Please input a proper email for Guardian " + (i+1));
-              test = true
-              return
+        Object.values(guardian).forEach((val) => {
+          if (!(val.toString().trim())) {
+            toast.error("Please fill up all fields for Guardian " + (i + 1));
+            test = true
+            return
           }
-          else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
-              toast.error("Please input a proper contact number for Guardian " + (i+1));
-              test = true
-              return
-          }
-        });
-        if(test)
-            return 
-        else {
+        })
+        if (test)
+          return
+        else if (!emailRegex.test(guardian.email)) {
+          console.log(guardian.email)
+          toast.error("Please input a proper email for Guardian " + (i + 1));
+          test = true
+          return
+        }
+        else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
+          toast.error("Please input a proper contact number for Guardian " + (i + 1));
+          test = true
+          return
+        }
+      });
+      if (test)
+        return
+      else {
         /* changed */
         /*
         const accredited_id = Number((formData.get("idNum") as string).trim())
@@ -311,8 +308,8 @@ export function BeneficiaryProfileCreation() {
     } else toast.error("Please fill up all fields!");
   };
 
-  function handleAdd(){
-    if (guardians.length+1 <= 3){
+  function handleAdd() {
+    if (guardians.length + 1 <= 3) {
       setGuardians([...guardians, {
         name: '',
         relation: '',
@@ -324,8 +321,8 @@ export function BeneficiaryProfileCreation() {
       toast.error("Cannot add more than 3 guardians!")
   }
 
-  function handleSub(){
-    if (guardians.length-1 >= 1){
+  function handleSub() {
+    if (guardians.length - 1 >= 1) {
       /* 
       Error: 
       remember that arrays are references? so we need to create a new copy instead
@@ -461,7 +458,7 @@ export function BeneficiaryProfileCreation() {
               <div className={`overflow-auto transition-all duration-300 ease-in-out ${minimizeState ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}>
                 <div className="w-full rounded-b-sm text-white border border-[#254151] bg-[#3EA08D] p-3">
                   {Array.from(
-                    {length: guardians.length},
+                    { length: guardians.length },
                     (_, i) => (
                       <div className="pb-4">
                         <h3 className="font-[Montserrat] mb-2">Guardian {i + 1}</h3>

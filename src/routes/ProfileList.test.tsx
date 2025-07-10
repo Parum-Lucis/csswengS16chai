@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'; 
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { BeneficiaryList } from './ProfileList';
-import { UserContext } from '../context/userContext';
+import { UserContext } from '../util/userContext';
 import { collection, getDocs } from 'firebase/firestore';
 import { VolunteerList } from './ProfileList';
 
@@ -12,7 +12,7 @@ jest.mock('firebase/firestore', () => ({
 }));
 
 jest.mock('../firebase/firebaseConfig', () => ({
-  db: {}, 
+  db: {},
 }));
 
 jest.mock('react-router', () => ({
@@ -82,7 +82,7 @@ describe('Beneficiary List Page', () => {
     await waitFor(() => {
       expect(screen.getByText(/Test/i)).toBeInTheDocument();
       expect(screen.getByText(/User/i)).toBeInTheDocument();
-      
+
       const matches = screen.getAllByText(/Student/i);
       expect(matches.length).toBeGreaterThan(0);
     });
@@ -181,20 +181,24 @@ describe('Beneficiary List Page', () => {
 
 describe('Volunteer List Page', () => {
   const mockVolunteers = [
-    { id: '1', data: () => ({
-      first_name: 'Another',
-      last_name: 'Admin',
-      birthdate: new Date('2015-01-01'),
-      sex: 'F',
-      is_admin: true
-    })},
-    { id: '2', data: () => ({
-      first_name: 'Test',
-      last_name: 'Volunteer',
-      birthdate: new Date('2010-01-01'),
-      sex: 'M',
-      is_admin: false
-    })}
+    {
+      id: '1', data: () => ({
+        first_name: 'Another',
+        last_name: 'Admin',
+        birthdate: new Date('2015-01-01'),
+        sex: 'F',
+        is_admin: true
+      })
+    },
+    {
+      id: '2', data: () => ({
+        first_name: 'Test',
+        last_name: 'Volunteer',
+        birthdate: new Date('2010-01-01'),
+        sex: 'M',
+        is_admin: false
+      })
+    }
   ];
 
   beforeEach(() => {

@@ -7,7 +7,7 @@ import { BeneficiaryProfile } from "./routes/BeneficiaryProfile.tsx";
 import { VolunteerProfile } from "./routes/VolunteerProfile.tsx";
 import { useState } from "react";
 import { auth } from "./firebase/firebaseConfig";
-import { UserContext, type UserStateType } from "./context/userContext.ts";
+import { UserContext, type UserStateType } from "./util/userContext.ts";
 import NavigationBar from "./components/NavigationBar.tsx";
 import Temp from "./components/Temp.tsx";
 import ForgetMeNot from "./routes/ForgetMeNot.tsx";
@@ -38,7 +38,7 @@ function App() {
         <Route path="/view-calendar" element={<Temp />} />
         <Route path="/view-event-list" element={<Temp />} />
       </Routes>
-      <NavigationBar/>
+      <NavigationBar />
     </UserContext>
   );
 }
