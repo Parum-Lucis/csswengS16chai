@@ -37,6 +37,8 @@ export function EventPage() {
 
     const handleSave = async () => {
         try {
+            start_date.setMinutes(start_date.getMinutes() + start_date.getTimezoneOffset())
+            end_date.setMinutes(end_date.getMinutes() + end_date.getTimezoneOffset())
             const updateRef = doc(db, "events", docID!)
             await updateDoc(updateRef, {
                 ...event
@@ -54,7 +56,7 @@ export function EventPage() {
 
     return (
         <form onSubmit={handleSave}>
-            <label htmlFor="name" className="text-white font-[Montserrat] font-semibold">
+            <label htmlFor="name" className="text-black font-[Montserrat] font-semibold">
                 Name:
               </label>
               <input
@@ -64,7 +66,7 @@ export function EventPage() {
                 className="input-text w-full"
                 value={name}
               />
-              <label htmlFor="description" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="description" className="text-black font-[Montserrat] font-semibold">
                 Description:
               </label>
               <textarea
@@ -73,7 +75,7 @@ export function EventPage() {
                 className="input-text w-full"
                 value={description}
               />
-              <label htmlFor="startdate" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="startdate" className="text-black font-[Montserrat] font-semibold">
                 Start:
               </label>
               <input
@@ -85,7 +87,7 @@ export function EventPage() {
                 value={start_date.toISOString().substring(0,19)}
                 onChange={e => setEvent({...event as Event, start_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
               />
-              <label htmlFor="enddate" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="enddate" className="text-black font-[Montserrat] font-semibold">
                 End:
               </label>
               <input
