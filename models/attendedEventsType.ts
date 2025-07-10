@@ -1,5 +1,5 @@
 export interface AttendedEvents {
-  beneficiaryID: string;
+  docID: string;
   attended?: boolean;
   who_attended: string;
 }
