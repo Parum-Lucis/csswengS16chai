@@ -3,7 +3,7 @@ import "../css/styles.css";
 import ProfileCard from "../components/ProfileCard";
 import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
@@ -48,7 +48,7 @@ export function BeneficiaryList() {
     } else {
       const fetchProfiles = async () => {
         setLoading(true); // display "fetching..."
-        const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
+        const beneficiarySnap = await getDocs(query(collection(db, "beneficiaries"), where("time_to_live", "==", null)));
         const profiles: any[] = [];
         let flag: boolean = false;
 
@@ -245,7 +245,7 @@ export function VolunteerList() {
 
         // TODO: use db models when pulled in main
         // validate doc fields (allow N/A for now)
-        volunteerSnap.docs.forEach(doc => {
+        volunteerSnap.forEach(doc => {
           try {
             const data = doc.data();
             const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;

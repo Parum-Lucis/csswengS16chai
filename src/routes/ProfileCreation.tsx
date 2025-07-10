@@ -296,6 +296,7 @@ export function BeneficiaryProfileCreation() {
           grade_level: Number(formData.get("gradelevel") as string),
           is_waitlisted: is_waitlisted,
           guardians: guardians,
+          time_to_live: null,
           sex: formData.get("SexDropdown") as string, /* this was missing pala? */
         });
 

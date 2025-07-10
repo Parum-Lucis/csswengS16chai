@@ -147,7 +147,7 @@ export function BeneficiaryProfile() {
                 time_to_live: (Date.now() + 2592000000)
             })
             toast.success("Account delete success!")
-            navigate("/")
+            navigate("/view-beneficiary-list")
         }
         catch {
             toast.error("Something went wrong")
