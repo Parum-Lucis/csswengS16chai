@@ -53,6 +53,8 @@ function Login() {
         } else if (error.code === "auth/wrong-password") {
           // will only happen in emulator
           toast.error("wrong password bro.");
+        } else if (error.code === "auth/user-disabled") {
+          toast.error("Cannot your account is currently disabled or deleted.")
         }
       } else {
         toast.error("Something went wrong. Please try again.");
