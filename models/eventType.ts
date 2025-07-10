@@ -1,7 +1,11 @@
+import type { Timestamp } from "firebase/firestore";
+import type { AttendedEvents } from "./attendedEventsType";
+
 export interface Event {
   docID: string;
-  event_name: string;
+  name: string;
   description: string;
-  date: Date;
-  is_recurring: boolean;
+  start_date: Timestamp;
+  end_date: Timestamp;
+  attendees: AttendedEvents[];
 }
