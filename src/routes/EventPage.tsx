@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactHTMLElement } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
@@ -35,7 +35,9 @@ export function EventPage() {
     const max_date = start_date.toISOString().substring(0,11) + "23:59"
     console.log(max_date, start_date.toISOString().substring(0,16))
 
-    const handleSave = async () => {
+    const handleSave = async (e: React.MouseEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        
         try {
             start_date.setMinutes(start_date.getMinutes() + start_date.getTimezoneOffset())
             end_date.setMinutes(end_date.getMinutes() + end_date.getTimezoneOffset())
@@ -44,11 +46,11 @@ export function EventPage() {
                 ...event
             })
             setOriginalEvent(event)
-            toast.success("Account update success!")
+            toast.success("Update success!")
             console.log(event)
-            // setTimeout(function() {
-            //     location.reload();
-            // }, 1000);
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
         } catch {
             toast.error("Something went wrong")
         }
@@ -65,6 +67,7 @@ export function EventPage() {
                 type="string"
                 className="input-text w-full"
                 value={name}
+                onChange={e => setEvent({...event as Event, name : e.target.value})}
               />
               <label htmlFor="description" className="text-black font-[Montserrat] font-semibold">
                 Description:
@@ -74,6 +77,7 @@ export function EventPage() {
                 name="description"
                 className="input-text w-full"
                 value={description}
+                onChange={e => setEvent({...event as Event, description : e.target.value})}
               />
               <label htmlFor="startdate" className="text-black font-[Montserrat] font-semibold">
                 Start:
