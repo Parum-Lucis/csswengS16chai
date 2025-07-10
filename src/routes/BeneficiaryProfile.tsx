@@ -9,8 +9,8 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
-import { callDeleteBeneficiaryProfile } from "../firebase/cloudFunctions";
 import type { Guardian } from "@models/guardianType";
+import { emailRegex } from "../util/emailRegex";
 
 
 export function BeneficiaryProfile() {
@@ -51,7 +51,7 @@ export function BeneficiaryProfile() {
     console.log(guardians)
     const navigate = useNavigate();
     const usertest = useContext(UserContext);
-    const { sex, grade_level: level, address } = beneficiary || {}
+    const { sex, address } = beneficiary || {}
 
     const birthdate = new Date((beneficiary?.birthdate.seconds ?? 0) * 1000)
 
@@ -176,12 +176,9 @@ export function BeneficiaryProfile() {
             const updateRef = doc(db, "beneficiaries", docID!)
             console.log(beneficiary)
 
-            const emailRegEx = new RegExp(
-                /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-            ); // from https://emailregex.com/
             let test = false
             guardians.forEach((guardian, i) => {
-                Object.values(guardian).forEach((val, _) => {
+                Object.values(guardian).forEach((val) => {
                     if (!(val.toString().trim())) {
                         toast.error("Please fill up all fields for Guardian " + (i + 1));
                         test = true
@@ -190,7 +187,7 @@ export function BeneficiaryProfile() {
                 })
                 if (test)
                     return
-                else if (!emailRegEx.test(guardian.email)) {
+                else if (!emailRegex.test(guardian.email)) {
                     console.log(guardian.email)
                     toast.error("Please input a proper email for Guardian " + (i + 1));
                     test = true

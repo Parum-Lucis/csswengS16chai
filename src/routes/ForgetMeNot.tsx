@@ -2,8 +2,7 @@ import CHAI from "../assets/CHAI.jpg";
 import "../css/styles.css";
 import { useNavigate } from "react-router";
 import { auth } from "../firebase/firebaseConfig";
-import { toast } from "react-toastify";
-import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { useContext, useEffect, useState, useRef } from "react";
 import { UserContext } from "../util/userContext";
@@ -74,15 +73,15 @@ function ForgetMeNot() {
                             type="email"
                             readOnly={formState >= 2 ? true : false}
                             className={`transition-all duration-500 border-solid border-3 rounded-[5px] p-1.5 ${formState >= 2
-                                    ? "bg-gray-300"
-                                    : "bg-transparent"
+                                ? "bg-gray-300"
+                                : "bg-transparent"
                                 }`}
                         />
                     </div>
                     <div
                         className={`flex flex-col transition-all duration-500 ease-in-out ${formState >= 2
-                                ? "opacity-100 translate-x-0 h-[8vh]"
-                                : "opacity-0 -translate-x-5 pointer-events-none h-0"
+                            ? "opacity-100 translate-x-0 h-[8vh]"
+                            : "opacity-0 -translate-x-5 pointer-events-none h-0"
                             }`}
                     >
                         <label htmlFor="code" className="font-[Montserrat] font-semibold">
@@ -94,15 +93,15 @@ function ForgetMeNot() {
                             type="text"
                             readOnly={formState >= 3}
                             className={`transition-all duration-500 border-solid border-3 rounded-[5px] p-1.5 ${formState >= 3
-                                    ? "bg-gray-300"
-                                    : "bg-transparent"
+                                ? "bg-gray-300"
+                                : "bg-transparent"
                                 }`}
                         />
                     </div>
                     <div
                         className={`flex flex-col transition-all duration-500 ease-in-out ${formState >= 3
-                                ? "opacity-100 translate-x-0 h-[8vh]"
-                                : "opacity-0 -translate-x-5 pointer-events-none h-0"
+                            ? "opacity-100 translate-x-0 h-[8vh]"
+                            : "opacity-0 -translate-x-5 pointer-events-none h-0"
                             }`}
                     >
                         <label htmlFor="nPassword" className="font-[Montserrat] font-semibold">

@@ -7,9 +7,10 @@ import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Volunteer } from "@models/volunteerType";
 import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
+import { emailRegex } from "../util/emailRegex.ts";
 
 export function VolunteerProfile() {
-    // const params = useParams()
+    const params = useParams()
     const [volunteer, setVolunteer] = useState<Volunteer | null>(null)
     const [originalVolunteer, setOriginalVolunteer] = useState<Volunteer | null>(null)
     const [formState, setForm] = useState<boolean | null>(null);
@@ -18,7 +19,8 @@ export function VolunteerProfile() {
 
     useEffect(() => {
         const fetchBeneficiary = async () => {
-            const getQuery = doc(db, "volunteers", "test-vol-1")
+            if (!params.docId) return
+            const getQuery = doc(db, "volunteers", params.docId)
             const volunteerSnap = await getDoc(getQuery)
             if (volunteerSnap.exists())
                 setVolunteer(volunteerSnap.data() as Volunteer)
@@ -31,7 +33,7 @@ export function VolunteerProfile() {
     console.log(volunteer)
     const navigate = useNavigate();
     const usertest = useContext(UserContext);
-    const { sex, contact_number: contact, email, is_admin, address } = volunteer || {}
+    const { sex, contact_number: contact, email, address } = volunteer || {}
     const birthdate = new Date((volunteer?.birthdate.seconds ?? 0) * 1000)
 
     useEffect(() => {
@@ -77,10 +79,8 @@ export function VolunteerProfile() {
                 toast.error("Please fill up all fields!")
                 return
             }
-            const emailRegEx = new RegExp(
-                /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-            ); // from https://emailregex.com/
-            if (!emailRegEx.test(email!)) {
+
+            if (!emailRegex.test(email!)) {
                 toast.error("Please input a proper email!");
                 return
             }
