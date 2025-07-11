@@ -4,20 +4,21 @@ import { useNavigate, useParams } from "react-router";
 import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, query, where, documentId, DocumentReference } from "firebase/firestore"
 import type { Event } from "@models/eventType"
 import { toast } from "react-toastify";
+import { createPortal } from 'react-dom';
 import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
-// import { callDeleteEvent } from '../firebase/cloudFunctions';
-// callDeleteEvent(docId);
-
+import { callDeleteEvent } from '../firebase/cloudFunctions';
 
 export function EventPage() {
     const params = useParams()
+    const navigate = useNavigate();
     const [event, setEvent] = useState<Event| null>(null)
     const [originalEvent, setOriginalEvent] = useState<Event| null>(null)
     const [attendees, setAttendees] = useState<AttendedEvents[]>([])
     const [beneficiaryList, setBeneficiaryList] = useState<Beneficiary[]>([])
     const [docID, setDocID] = useState(event?.docID)
+    const [showDeleteModal, setDeleteModal] = useState(false)
 
     useEffect(() =>  {
       const fetchEvent = async () => {
@@ -49,6 +50,12 @@ export function EventPage() {
         }
         fetchEvent()
     }, [setEvent, setAttendees, setBeneficiaryList, params.docId])
+
+    useEffect(() =>{
+        document.body.style.overflow = showDeleteModal ? 'hidden': 'unset';
+    },[showDeleteModal ]);
+
+
     console.log(beneficiaryList)
     const { name, description } = event || {}
 
@@ -89,9 +96,51 @@ export function EventPage() {
       }
     }
 
+    function handleDelete(){
+        setDeleteModal(!showDeleteModal);
+    }
+
+    const handleConfirm = async () => {
+        setDeleteModal(!showDeleteModal)
+        
+        try {
+            callDeleteEvent(params.docId)
+            toast.success("Event delete success!")
+            navigate("/view-event-list");
+        }
+        catch {
+            toast.error("Something went wrong!")
+        }
+    }
+
     return (
       <>
         <div className="w-full min-h-screen bg-[#254151] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
+          {showDeleteModal &&(
+                          createPortal(
+                              <div className="fixed top-0 right-0 left-0 bottom-0 z-50 flex items-center justify-center bg-black/50">
+                                  <div className="bg-white rounded-sm p-6 w-full max-w-md">
+                                      <h2 className="text-lg font-bold text-[#254151] mb-4">Confirm Deletion</h2>
+                                      <p className="mb-6 text-[#254151]">Are you sure you want to delete this event? This action cannot be undone.</p>
+                                      <div className="flex justify-end gap-3">
+                                      <button
+                                          className="bg-gray-300 hover:bg-gray-400 text-[#254151] font-semibold px-4 py-2 rounded"
+                                          onClick={handleDelete}
+                                      >
+                                          Cancel
+                                      </button>
+                                      <button
+                                          className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
+                                          onClick={handleConfirm} 
+                                      >
+                                          Confirm Delete
+                                      </button>
+                                      </div>
+                                  </div>
+                              </div>,
+                              document.body
+                          )
+                      )}
           <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6 overflow-hidden"> 
             <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
               <form onSubmit={handleSave}>
@@ -177,9 +226,10 @@ export function EventPage() {
                   <button
                     type="submit"
                     className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                  >
+                    onClick={handleDelete}
+                    >
                     Delete
-                  </button>
+                    </button>
               </div>  
             </form>
           </div>
