@@ -88,68 +88,113 @@ export function EventPage() {
 
     return (
       <>
-        <form onSubmit={handleSave}>
-            <label htmlFor="name" className="text-black font-[Montserrat] font-semibold">
-                Name:
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="string"
-                className="input-text w-full"
-                value={name}
-                onChange={e => setEvent({...event as Event, name : e.target.value})}
-              />
-              <label htmlFor="description" className="text-black font-[Montserrat] font-semibold">
-                Description:
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                className="input-text w-full"
-                value={description}
-                onChange={e => setEvent({...event as Event, description : e.target.value})}
-              />
-              <label htmlFor="startdate" className="text-black font-[Montserrat] font-semibold">
-                Start:
-              </label>
-              <input
-                id="startdate"
-                name="startdate"
-                type="datetime-local"
-                className="input-text w-full"
-                step="1"
-                value={start_date.toISOString().substring(0,19)}
-                onChange={e => setEvent({...event as Event, start_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
-              />
-              <label htmlFor="enddate" className="text-black font-[Montserrat] font-semibold">
-                End:
-              </label>
-              <input
-                id="enddate"
-                name="enddate"
-                type="datetime-local"
-                className="input-text w-full"
-                step="1"
-                min={start_date.toISOString().substring(0,16)}
-                max={max_date}
-                value={end_date.toISOString().substring(0,19)}
-                onChange={e => setEvent({...event as Event, end_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
-              />
-              <button type="submit">Submit</button>
-        </form>
-        <div>
-          Attendees:
-          {Array.from(
-            {length: beneficiaryList.length},
-            (_, i) => (
-              <div className="pb-4">
-                <h3 className="font-[Montserrat] mb-2">Attendee {i + 1}</h3>
-                <AttendeesCard name={beneficiaryList[i].first_name + " " + beneficiaryList[i].last_name} who_attended={attendees[i].who_attended!} attendance={attendees[i].attended ?? false} />
-              </div>
-            )
-          )}
-        </div>
-      </>
-    )
+        <div className="w-full min-h-screen bg-[#254151] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
+          <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6 overflow-hidden"> 
+            <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
+              <form onSubmit={handleSave}>
+                  <h2 className="text-secondary text-2xl text-center font-bold font-sans">
+                    Event Name
+                  </h2>
+
+                  <div className="flex flex-col gap-4 mt-6">
+                      {/* <input
+                        id="name"
+                        name="name"
+                        type="string"
+                        className="input-text w-full"
+                        value={name}
+                        onChange={e => setEvent({...event as Event, name : e.target.value})}
+                      /> */}
+
+                    <div className="flex flex-col flex-1">
+                      <label 
+                        htmlFor="description" 
+                        className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                        Description:
+                      </label>
+
+                      <textarea
+                        id="description"
+                        name="description"
+                        className="input-text w-full"
+                        value={description}
+                        onChange={e => setEvent({...event as Event, description : e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex flex-col flex-1">
+                        <label 
+                          htmlFor="startdate" 
+                          className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                          Start:
+                        </label>
+
+                        <input
+                          id="startdate"
+                          name="startdate"
+                          type="datetime-local"
+                          className="input-text w-full"
+                          step="1"
+                          value={start_date.toISOString().substring(0,19)}
+                          onChange={e => setEvent({...event as Event, start_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
+                        />
+                      </div>
+
+                      <div className="flex flex-col flex-1">
+                        <label htmlFor="enddate" 
+                          className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                          End:
+                        </label>
+
+                        <input
+                          id="enddate"
+                          name="enddate"
+                          type="datetime-local"
+                          className="input-text w-full"
+                          step="1"
+                          min={start_date.toISOString().substring(0,16)}
+                          max={max_date}
+                          value={end_date.toISOString().substring(0,19)}
+                          onChange={e => setEvent({...event as Event, end_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
+                        />
+                      </div>
+                    </div>
+  
+                  <button
+                    type="submit"
+                    className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                    //  onClick={formState ? handleEdit : handleSave}
+                    //  disabled={formState===null}>
+                    //  {formState || formState === null ? "Edit" : "Save Changes"}</form>
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                  >
+                    Delete
+                  </button>
+              </div>  
+            </form>
+          </div>
+
+          <div>
+            <h2 className="text-primary text-2xl font-bold font-sans mb-4 mt-5">List of Attendees:</h2>
+            {Array.from(
+              {length: beneficiaryList.length},
+              (_, i) => (
+                <div className="pb-4">
+                  <h3 className="mt-2 w-full bg-primary text-secondary px-4 py-2 rounded font-semibold font-sans">Attendee {i + 1}</h3>
+                  <AttendeesCard name={beneficiaryList[i].first_name + " " + beneficiaryList[i].last_name} who_attended={attendees[i].who_attended!} attendance={attendees[i].attended ?? false} />
+                </div>
+              )
+            )}
+          </div>
+        </div>    
+      </div>
+    </>
+  )
 }
