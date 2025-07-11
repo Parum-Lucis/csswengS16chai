@@ -29,22 +29,24 @@ export function EventPage() {
         if(eventsSnap.exists())
           setEvent(eventsSnap.data() as Event)
           setOriginalEvent(eventsSnap.data() as Event)
-          const beneficiaryID: string[] = []
-          attendeesList.forEach((att) => {
-              setAttendees([...attendees, att.data() as AttendedEvents])
-              beneficiaryID.push((att.data() as AttendedEvents).docID)
-              console.log(att.data())
-              console.log((att.data() as AttendedEvents).docID)
-          })
-          const beneficiaryQuery = query(
-              collection(db, "beneficiaries"),
-              where(documentId(), "in", beneficiaryID)
-          )
-          const beneficiaryRef = await getDocs(beneficiaryQuery)
-          console.log(beneficiaryRef.size)
-          beneficiaryRef.forEach((bene) => {
-            setBeneficiaryList([...beneficiaryList, bene.data() as Beneficiary])
-          })
+          if(!attendeesList.empty) {
+            const beneficiaryID: string[] = []
+            attendeesList.forEach((att) => {
+                setAttendees([...attendees, att.data() as AttendedEvents])
+                beneficiaryID.push((att.data() as AttendedEvents).docID)
+                console.log(att.data())
+                console.log((att.data() as AttendedEvents).docID)
+            })
+            const beneficiaryQuery = query(
+                collection(db, "beneficiaries"),
+                where(documentId(), "in", beneficiaryID)
+            )
+            const beneficiaryRef = await getDocs(beneficiaryQuery)
+            console.log(beneficiaryRef.size)
+            beneficiaryRef.forEach((bene) => {
+              setBeneficiaryList([...beneficiaryList, bene.data() as Beneficiary])
+            })
+          }
           console.log((eventsSnap.data() as Event))
           setDocID(eventsSnap.id)
         }
@@ -236,7 +238,7 @@ export function EventPage() {
 
           <div>
             <h2 className="text-primary text-2xl font-bold font-sans mb-4 mt-5">List of Attendees:</h2>
-            {Array.from(
+            { beneficiaryList.length > 0 ? Array.from(
               {length: beneficiaryList.length},
               (_, i) => (
                 <div className="pb-4">
@@ -244,7 +246,7 @@ export function EventPage() {
                   <AttendeesCard name={beneficiaryList[i].first_name + " " + beneficiaryList[i].last_name} who_attended={attendees[i].who_attended!} attendance={attendees[i].attended ?? false} />
                 </div>
               )
-            )}
+            ) : "No attendees to show."}
           </div>
         </div>    
       </div>
