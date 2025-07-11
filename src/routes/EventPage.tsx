@@ -59,24 +59,31 @@ export function EventPage() {
     console.log(max_date, start_date.toISOString().substring(0,16))
 
     const handleSave = async (e: React.MouseEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        
-        try {
-            start_date.setMinutes(start_date.getMinutes() + start_date.getTimezoneOffset())
-            end_date.setMinutes(end_date.getMinutes() + end_date.getTimezoneOffset())
-            const updateRef = doc(db, "events", docID!)
-            await updateDoc(updateRef, {
-                ...event
-            })
-            setOriginalEvent(event)
-            toast.success("Update success!")
-            console.log(event)
-            setTimeout(function() {
-                location.reload();
-            }, 1000);
-        } catch {
-            toast.error("Something went wrong")
-        }
+      e.preventDefault()
+      if(!name?.trim() || !description?.trim() || !start_date || !end_date) {
+        toast.error("Please fill up all fields!")
+        return
+      }
+      if(start_date > end_date) {
+        toast.error("Start date cannot be greater than end date!")
+        return
+      }
+      try {
+        start_date.setMinutes(start_date.getMinutes() + start_date.getTimezoneOffset())
+        end_date.setMinutes(end_date.getMinutes() + end_date.getTimezoneOffset())
+        const updateRef = doc(db, "events", docID!)
+        await updateDoc(updateRef, {
+            ...event
+        })
+        setOriginalEvent(event)
+        toast.success("Update success!")
+        console.log(event)
+        setTimeout(function() {
+            location.reload();
+        }, 1000);
+      } catch {
+          toast.error("Something went wrong")
+      }
     }
 
     return (

@@ -67,7 +67,7 @@ export function EventList() {
                 <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
               </svg>
             </div>
-            <div>
+            <div onClick={() => navigate("/view-event/test-1" /* hardcoded for now */)}> 
               <div className="text-lg font-semibold">Feeding Program</div>
               <div className="text-sm">Date: August 10, 2025</div>
               <div className="text-sm">Place: Brgy. San Isidro, Makati City</div>
