@@ -23,28 +23,35 @@ export function EventCreation() {
       }
     }
 
-    // handle start date-time
-    const date = new Date(formData.get("date") as string);
-    const start_time = formData.get("time") as string;
-    let [hours, minutes] = start_time.split(":").map(Number);
-    date.setHours(hours, minutes, 0, 0);
-    const start_timestamp = Timestamp.fromDate(date);
+    var start_timestamp, end_timestamp;
+    try {
+      // handle start date-time
+      const date = new Date(formData.get("date") as string);
+      const start_time = formData.get("time") as string;
+      let [hours, minutes] = start_time.split(":").map(Number);
+      date.setHours(hours, minutes, 0, 0);
+      start_timestamp = Timestamp.fromDate(date);
 
-    // handle end date-time
-    const end_time = formData.get("time") as string; // TODO: change
-    [hours, minutes] = end_time.split(":").map(Number);
-    date.setHours(hours, minutes, 0, 0);
-    const end_timestamp = Timestamp.fromDate(date);
+      // handle end date-time
+      const end_time = formData.get("time") as string; // TODO: change
+      [hours, minutes] = end_time.split(":").map(Number);
+      date.setHours(hours, minutes, 0, 0);
+      end_timestamp = Timestamp.fromDate(date);
+    } catch (error) {
+      toast.error("Please provide a valid date!");
+      return;
+    }
 
     // create object and trim whitespaces
     // note: create attendees subcollection when we're actually adding attendees na 
-    const newEvent: Omit<Event, "attendees"> = {
+    var newEvent: Omit<Event, "attendees"> = {
       event_name: (formData.get("eventName") as string).trim(),
       description: (formData.get("description") as string).trim(),
-      start_date: start_timestamp, 
+      start_date: start_timestamp,
       end_date: end_timestamp,
       location: (formData.get("location") as string).trim(),
     };
+
 
     // add to database
     addDoc(collection(db, "events"), newEvent)
