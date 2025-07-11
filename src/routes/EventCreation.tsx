@@ -37,18 +37,16 @@ export function EventCreation() {
     const end_timestamp = Timestamp.fromDate(date);
 
     // create object and trim whitespaces
-    // TODO: insert time somewhere
-    const newEvent: Event = {
+    // note: create attendees subcollection when we're actually adding attendees na 
+    const newEvent: Omit<Event, "attendees"> = {
       event_name: (formData.get("eventName") as string).trim(),
       description: (formData.get("description") as string).trim(),
       start_date: start_timestamp, 
       end_date: end_timestamp,
-      attendees: [] as AttendedEvents[], /* TODO: change */
       location: (formData.get("location") as string).trim(),
     };
 
     // add to database
-    // TODO: change based on incoming change to ui and event model 
     addDoc(collection(db, "events"), newEvent)
       .then(() => {
         toast.success("Event created successfully!");
