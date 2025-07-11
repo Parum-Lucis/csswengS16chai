@@ -140,7 +140,7 @@ export function EventPage() {
                           className="input-text w-full"
                           step="1"
                           value={start_date.toISOString().substring(0,19)}
-                          onChange={e => setEvent({...event as Event, start_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
+                          onChange={e => setEvent({...event as Event, start_date : isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
                         />
                       </div>
 
@@ -159,7 +159,7 @@ export function EventPage() {
                           min={start_date.toISOString().substring(0,16)}
                           max={max_date}
                           value={end_date.toISOString().substring(0,19)}
-                          onChange={e => setEvent({...event as Event, end_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
+                          onChange={e => setEvent({...event as Event, end_date : isNaN(Date.parse(e.target.value)) ? originalEvent!.end_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
                         />
                       </div>
                     </div>
