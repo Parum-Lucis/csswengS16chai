@@ -107,8 +107,12 @@ export function EventPage() {
         
         try {
             callDeleteEvent(params.docId)
-            toast.success("Event delete success!")
-            navigate("/view-event-list");
+            .then((result) => {
+              if (result.data) {
+                toast.success("Event delete success!")
+                navigate("/view-event-list");
+              } else { toast.error("Could not delete the event (no auth or event not found)")}
+            })
         }
         catch {
             toast.error("Something went wrong!")
@@ -226,7 +230,7 @@ export function EventPage() {
                   </button>
 
                   <button
-                    type="submit"
+                    type="button"
                     className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                     onClick={handleDelete}
                     >
