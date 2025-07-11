@@ -7,6 +7,9 @@ import { toast } from "react-toastify";
 import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
+// import { callDeleteEvent } from '../firebase/cloudFunctions';
+// callDeleteEvent(docId);
+
 
 export function EventPage() {
     const params = useParams()
