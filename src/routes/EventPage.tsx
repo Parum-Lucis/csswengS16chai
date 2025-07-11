@@ -6,6 +6,7 @@ import type { Event } from "@models/eventType"
 import { toast } from "react-toastify";
 import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
+import AttendeesCard from "../components/AttendeesCard";
 
 export function EventPage() {
     const params = useParams()
@@ -16,37 +17,36 @@ export function EventPage() {
     const [docID, setDocID] = useState(event?.docID)
 
     useEffect(() =>  {
-        const fetchBeneficiary = async () => {
+      const fetchEvent = async () => {
         const getQuery = doc(db, "events", params.docId as string)
         const attendeeQuery = collection(db, "events", params.docId as string, "attendees")
         const eventsSnap = await getDoc(getQuery)
         const attendeesList = await getDocs(attendeeQuery)
         if(eventsSnap.exists())
-            setEvent(eventsSnap.data() as Event)
-            setOriginalEvent(eventsSnap.data() as Event)
-            const beneficiaryID: string[] = []
-            attendeesList.forEach((att) => {
-                setAttendees([...attendees, att.data() as AttendedEvents])
-                beneficiaryID.push((att.data() as AttendedEvents).docID)
-                console.log(att.data())
-                console.log((att.data() as AttendedEvents).docID as DocumentReference)
-            })
-            const beneficiaryQuery = query(
-                collection(db, "beneficiaries"),
-                where(documentId(), "in", beneficiaryID)
-            )
-            const beneficiaryRef = await getDocs(beneficiaryQuery)
-            console.log(beneficiaryRef.size)
-            beneficiaryRef.forEach((bene) => {
-                setBeneficiaryList([...beneficiaryList, bene.data() as Beneficiary])
-            })
-            console.log((eventsSnap.data() as Event))
-            console.log(beneficiaryList)
-            setDocID(eventsSnap.id)
+          setEvent(eventsSnap.data() as Event)
+          setOriginalEvent(eventsSnap.data() as Event)
+          const beneficiaryID: string[] = []
+          attendeesList.forEach((att) => {
+              setAttendees([...attendees, att.data() as AttendedEvents])
+              beneficiaryID.push((att.data() as AttendedEvents).docID)
+              console.log(att.data())
+              console.log((att.data() as AttendedEvents).docID)
+          })
+          const beneficiaryQuery = query(
+              collection(db, "beneficiaries"),
+              where(documentId(), "in", beneficiaryID)
+          )
+          const beneficiaryRef = await getDocs(beneficiaryQuery)
+          console.log(beneficiaryRef.size)
+          beneficiaryRef.forEach((bene) => {
+            setBeneficiaryList([...beneficiaryList, bene.data() as Beneficiary])
+          })
+          console.log((eventsSnap.data() as Event))
+          setDocID(eventsSnap.id)
         }
-        fetchBeneficiary()
+        fetchEvent()
     }, [setEvent, setAttendees, setBeneficiaryList, params.docId])
-
+    console.log(beneficiaryList)
     const { name, description } = event || {}
 
     const start_date = new Date((event?.start_date.seconds ?? 0)*1000)
@@ -80,6 +80,7 @@ export function EventPage() {
     }
 
     return (
+      <>
         <form onSubmit={handleSave}>
             <label htmlFor="name" className="text-black font-[Montserrat] font-semibold">
                 Name:
@@ -130,5 +131,18 @@ export function EventPage() {
               />
               <button type="submit">Submit</button>
         </form>
+        <div>
+          Attendees:
+          {Array.from(
+            {length: beneficiaryList.length},
+            (_, i) => (
+              <div className="pb-4">
+                <h3 className="font-[Montserrat] mb-2">Attendee {i + 1}</h3>
+                <AttendeesCard name={beneficiaryList[i].first_name + " " + beneficiaryList[i].last_name} who_attended={attendees[i].who_attended!} attendance={attendees[i].attended ?? false} />
+              </div>
+            )
+          )}
+        </div>
+      </>
     )
 }
