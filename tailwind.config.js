@@ -8,10 +8,10 @@ module.exports = {
         sans: ["Montserrat", "sans-serif"],
       },
       colors: {
-        primary: "#3EA08D",
-        secondary: "#254151",
-        text_1: "#254151",
-        text_2: "#ffffff",
+        primary: "#75C38B",
+        secondary: "#333333",
+        tertiary: "#64A876",
+        onhover: "#9BC1A5"
       },
     },
   },
