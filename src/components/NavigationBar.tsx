@@ -1,7 +1,7 @@
 import "../css/styles.css";
 import { NavLink } from "react-router";
 import { useContext } from "react";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../context/userContext";
 
 
 function NavigationBar() {
