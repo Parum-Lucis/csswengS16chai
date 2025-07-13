@@ -4,14 +4,23 @@ module.exports = {
   ],
   theme: {
     extend: {
+      keyframes: {
+        fade: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        fade: 'fade 0.4s ease-in-out forwards',
+      },
       fontFamily: {
         sans: ["Montserrat", "sans-serif"],
       },
       colors: {
-        primary: "#3EA08D",
-        secondary: "#254151",
-        text_1: "#254151",
-        text_2: "#ffffff",
+         primary: "#75C38B",
+        secondary: "#333333",
+        tertiary: "#64A876",
+        onhover: "#9BC1A5"
       },
     },
   },

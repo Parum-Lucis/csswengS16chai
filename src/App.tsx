@@ -5,6 +5,7 @@ import { VolunteerProfileCreation, BeneficiaryProfileCreation } from "./routes/P
 import { YourProfile } from "./routes/YourProfile";
 import { BeneficiaryProfile } from "./routes/BeneficiaryProfile";
 import { VolunteerProfile } from "./routes/VolunteerProfile";
+import { Calendar } from "./routes/Calendar";
 import { useState } from "react";
 import { auth } from "./firebase/firebaseConfig";
 import { UserContext, type UserStateType } from "./context/userContext";
@@ -35,7 +36,7 @@ function App() {
         <Route path="/view-profile-list" element={<Temp />} />
         <Route path="/view-beneficiary-list" element={<BeneficiaryList />} />
         <Route path="/view-volunteer-list" element={<VolunteerList />} />
-        <Route path="/view-calendar" element={<Temp />} />
+        <Route path="/view-calendar" element={<Calendar />} />
         <Route path="/view-event-list" element={<Temp />} />
       </Routes>
       <NavigationBar/>
