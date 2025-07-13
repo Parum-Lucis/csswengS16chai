@@ -44,7 +44,7 @@ const renderWithProviders = (ui: React.ReactNode, userValue: any, initialRoute =
 };
 
 describe("Navigation Bar", () => {
-  it("renders navigation links when user is present", () => {
+  test("renders navigation links when user is present", () => {
     renderWithProviders(<NavigationBar />, mockUser);
 
     const expectedLinks = [
@@ -61,18 +61,18 @@ describe("Navigation Bar", () => {
     });
   });
 
-  it("does not render anything when user is null", () => {
+  test("does not render anything when user is null", () => {
     renderWithProviders(<NavigationBar />, null);
     expect(screen.queryByText("Admin")).toBeNull();
   });
 
-  it("applies hover class styles", () => {
+  test("applies hover class styles", () => {
     renderWithProviders(<NavigationBar />, mockUser);
     const link = screen.getByText("Admin");
     expect(link.className).toMatch(/hover:translate-y-\[-5px\]/);
   });
 
-  it("navigates to correct route on click", async () => {
+  test("navigates to correct route on click", async () => {
     const user = userEvent.setup();
     render(
         <UserContext.Provider value={mockUser}>
