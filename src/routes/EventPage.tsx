@@ -36,12 +36,15 @@ export function EventPage() {
           setOriginalEvent(eventsSnap.data() as Event)
           if(!attendeesList.empty) {
             const beneficiaryID: string[] = []
+            const updAttendees: AttendedEvents[] = []
+            const updBene: Beneficiary[] = []
             attendeesList.forEach((att) => {
-                setAttendees([...attendees, att.data() as AttendedEvents])
+                updAttendees.push(att.data() as AttendedEvents)
                 beneficiaryID.push((att.data() as AttendedEvents).docID)
                 console.log(att.data())
                 console.log((att.data() as AttendedEvents).docID)
             })
+            setAttendees(updAttendees)
             const beneficiaryQuery = query(
                 collection(db, "beneficiaries"),
                 where(documentId(), "in", beneficiaryID)
@@ -49,8 +52,10 @@ export function EventPage() {
             const beneficiaryRef = await getDocs(beneficiaryQuery)
             console.log(beneficiaryRef.size)
             beneficiaryRef.forEach((bene) => {
-              setBeneficiaryList([...beneficiaryList, {...(bene.data() as Beneficiary), docID: bene.id}])
+              console.log("id is " + bene.id)
+              updBene.push({...(bene.data() as Beneficiary), docID: bene.id})
             })
+            setBeneficiaryList(updBene)
           }
           console.log((eventsSnap.data() as Event))
           setDocID(eventsSnap.id)
@@ -93,6 +98,7 @@ export function EventPage() {
 
     const max_date = start_date.toISOString().substring(0,11) + "23:59"
     console.log(max_date, start_date.toISOString().substring(0,16))
+    console.log("benlen is " + beneficiaryList.length)
 
     const handleSave = async (e: React.MouseEvent<HTMLFormElement>) => {
       e.preventDefault()
@@ -160,7 +166,7 @@ export function EventPage() {
           const updList: Beneficiary[] = []
           const updChecklist: boolean[] = []
           beneficiaryRefList.forEach((notAtt) => {
-            updList.push(notAtt.data() as Beneficiary)
+            updList.push({...(notAtt.data() as Beneficiary), docID: notAtt.id})
             updChecklist.push(false)
           })
           setNotAttendeeList(updList)
@@ -189,6 +195,7 @@ export function EventPage() {
           setTimeout(function() {
                 location.reload();
             }, 1000);
+          setRunQuery(true)
         }
         else {
           toast.success("Nothing to update")
@@ -378,13 +385,14 @@ export function EventPage() {
             </div>
 
           <div className="w-full max-w-2xl mt-3">
-            {
+            { 
               beneficiaryList.length > 0 ? attendees.map((att, i) => (
                 <AttendeesCard 
-                  name={beneficiaryList[i].first_name! + " " + beneficiaryList[i].last_name} 
+                  name={beneficiaryList[i].first_name + " " + beneficiaryList[i].last_name} 
                   attendance={att.attended ?? false} 
                   who_attended={att.who_attended ?? "None"} 
                 />
+                
               )) : "No data to show"
             }
           </div>
