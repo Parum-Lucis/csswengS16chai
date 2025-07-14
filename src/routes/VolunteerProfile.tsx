@@ -8,9 +8,12 @@ import type { Volunteer } from "@models/volunteerType";
 import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
 import { emailRegex } from "../util/emailRegex.ts";
+import { callDeleteVolunteerProfile, callPromoteVolunteerToAdmin } from "../firebase/cloudFunctions.ts";
+import { signOut } from "firebase/auth";
 
 export function VolunteerProfile() {
     const params = useParams()
+    const user = useContext(UserContext);
     const [volunteer, setVolunteer] = useState<Volunteer | null>(null)
     const [originalVolunteer, setOriginalVolunteer] = useState<Volunteer | null>(null)
     const [formState, setForm] = useState<boolean | null>(null);
@@ -55,14 +58,28 @@ export function VolunteerProfile() {
     const handleConfirm = async () => {
         setDeleteModal(!showDeleteModal)
 
-        const updateRef = doc(db, "volunteers", docID!)
-        console.log(volunteer)
-        await updateDoc(updateRef, {
-            ...volunteer,
-            time_to_live: (Date.now() + 2592000000)
-        })
-        toast.success("Account delete success!")
-        navigate("/")
+        try {
+
+            const res = await callDeleteVolunteerProfile(docID);
+            console.log(res);
+
+            if (!res.data) {
+                toast.error("Couldn't delete this profile.")
+            } else {
+                setDeleteModal(!showDeleteModal)
+                toast.success("Account delete success!")
+                if (user?.uid === params.docId) {
+                    signOut(auth);
+                    navigate("/");
+                }
+                else
+                    navigate('/view-volunteer-list')
+            }
+
+        } catch (error) {
+            console.log(error)
+            toast.error("Couldn't delete this profile.");
+        }
     }
 
     function handleEdit() {
@@ -100,6 +117,18 @@ export function VolunteerProfile() {
             }
         }
 
+    async function handlePromote() {
+        if (params.docId === null) return;
+
+        const res = await callPromoteVolunteerToAdmin(params.docId);
+        if (res) {
+            toast.info("Successfully promoted the Volunteer!");
+            location.reload();
+        } else {
+            toast.error("couldn't promote volunteer");
+        }
+    }
+
     return (
         <div className="w-full min-h-screen bg-[#254151] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
             {showDeleteModal && (
@@ -108,6 +137,9 @@ export function VolunteerProfile() {
                         <div className="bg-white rounded-sm p-6 w-full max-w-md">
                             <h2 className="text-lg font-bold text-[#254151] mb-4">Confirm Deletion</h2>
                             <p className="mb-6 text-[#254151]">Are you sure you want to delete this account? This action cannot be undone.</p>
+                            {
+                                user?.uid === params.docId &&
+                                <p className="mb-6 text-[#254151]">This is your own account. You will be <b>logged</b> out.</p>}
                             <div className="flex justify-end gap-3">
                                 <button
                                     className="bg-gray-300 hover:bg-gray-400 text-[#254151] font-semibold px-4 py-2 rounded"
@@ -131,12 +163,6 @@ export function VolunteerProfile() {
                 <div className="-top-5 sm:-top-20 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[5px] border-[#45B29D] rounded-full flex items-center justify-center mb-1">
                     <i className="text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
                 </div>
-
-                <button
-                    onClick={() => auth.signOut()}
-                    className="absolute left-4 top-8 bg-[#45B29D] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
-                    Sign Out
-                </button>
                 {(formState === null) && (
                     <h3
                         className="z-1 fixed right-4 bottom-15 bg-[#e7c438] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
@@ -248,6 +274,16 @@ export function VolunteerProfile() {
                             disabled={formState === null}>
                             Delete Account
                         </button>
+                        {
+                            !volunteer?.is_admin &&
+                            <button
+                                type="button"
+                                className="mt-2 w-full bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
+                                onClick={handlePromote}
+                                disabled={formState === null}>
+                                Promote account to Admin
+                            </button>
+                        }
                     </div>
                 </div>
             </div>

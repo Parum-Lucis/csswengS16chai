@@ -71,7 +71,7 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
 
     const uid = req.data;
     try {
-        
+
         await auth.updateUser(uid, {
             disabled: true
         })
@@ -147,3 +147,6 @@ export const cronCleaner = onSchedule("every day 00:00", async () => {
         logger.error(error)
     }
 })
+
+
+export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";  

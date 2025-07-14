@@ -5,3 +5,4 @@ import type { Volunteer } from "@models/volunteerType";
 export const callCreateVolunteerProfile = httpsCallable<Volunteer>(func, 'createVolunteerProfile');
 export const callDeleteVolunteerProfile = httpsCallable<string>(func, 'deleteVolunteerProfile');
 export const callDeleteBeneficiaryProfile = httpsCallable<string>(func, 'deleteBeneficiaryProfile');
+export const callPromoteVolunteerToAdmin = httpsCallable<string>(func, 'promoteVolunteerToAdmin');
