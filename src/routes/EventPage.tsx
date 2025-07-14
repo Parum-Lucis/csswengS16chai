@@ -1,7 +1,7 @@
 import { useState, useEffect, type ReactHTMLElement } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
-import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, query, where, documentId, DocumentReference } from "firebase/firestore"
+import { collection, doc, addDoc, getDoc, getDocs, Timestamp, updateDoc, query, where, documentId } from "firebase/firestore"
 import type { Event } from "@models/eventType"
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
@@ -20,6 +20,10 @@ export function EventPage() {
     const [docID, setDocID] = useState(event?.docID)
     const [showDeleteModal, setDeleteModal] = useState(false)
     const [showDropdown, setShowDropdown] = useState(false)
+    // for bene list
+    const [notAttendeeList, setNotAttendeeList] = useState<Beneficiary[]>([])
+    const [checklist, setChecklist] = useState<boolean[]>([])
+    const [runQuery, setRunQuery] = useState<boolean>(true)
 
     useEffect(() =>  {
       const fetchEvent = async () => {
@@ -45,11 +49,12 @@ export function EventPage() {
             const beneficiaryRef = await getDocs(beneficiaryQuery)
             console.log(beneficiaryRef.size)
             beneficiaryRef.forEach((bene) => {
-              setBeneficiaryList([...beneficiaryList, bene.data() as Beneficiary])
+              setBeneficiaryList([...beneficiaryList, {...(bene.data() as Beneficiary), docID: bene.id}])
             })
           }
           console.log((eventsSnap.data() as Event))
           setDocID(eventsSnap.id)
+          setRunQuery(true)
         }
         fetchEvent()
     }, [setEvent, setAttendees, setBeneficiaryList, params.docId])
@@ -138,6 +143,59 @@ export function EventPage() {
         }
     }
 
+    const showBeneficiaryList = async() => {
+      const beneficiaryID: string[] = []
+      setChecklist([])
+      
+      if(runQuery) {
+        attendees.forEach((att) => {
+          beneficiaryID.push(att.docID)
+        })
+        const fetchBeneficiaries = query(
+          collection(db, "beneficiaries"),
+          where(documentId(), "not-in", beneficiaryID))
+        const beneficiaryRefList = await getDocs(fetchBeneficiaries)
+        console.log("num" + beneficiaryRefList.size)
+        if(!beneficiaryRefList.empty) {
+          const updList: Beneficiary[] = []
+          const updChecklist: boolean[] = []
+          beneficiaryRefList.forEach((notAtt) => {
+            updList.push(notAtt.data() as Beneficiary)
+            updChecklist.push(false)
+          })
+          setNotAttendeeList(updList)
+          setChecklist(updChecklist)
+        }
+      }
+      setRunQuery(false)
+    }
+
+    const handleUpdate = async() => {
+      for (let i = 0; i < checklist.length; i++) {
+        let upd = false
+        if(checklist[i]) {
+          const addRef = await addDoc(collection(db, 'events/'+docID+"/attendees"), {
+            attendance: false,
+            who_attended: "Beneficiary", // temp
+            docID: notAttendeeList[i].docID
+          });
+          if (addRef) {
+            upd = true
+          }
+          else toast.error("Submission failed.");
+        }
+        if(upd) {
+          toast.success("Success!");
+          setTimeout(function() {
+                location.reload();
+            }, 1000);
+        }
+        else {
+          toast.success("Nothing to update")
+        }
+      }
+    }
+
     return (
         <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative pb-60">
           {showDeleteModal &&(
@@ -169,7 +227,7 @@ export function EventPage() {
             <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
               <form onSubmit={handleSave}>
                   <h2 className="text-secondary text-2xl text-center font-bold font-sans">
-                    Event Name
+                    {name ?? "Event Name"}
                   </h2>
 
                   <div className="flex flex-col gap-4 mt-6">
@@ -263,7 +321,10 @@ export function EventPage() {
             <div className="flex justify-end">
               <button  
                 className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
-                onClick={() => setShowDropdown(!showDropdown)}
+                onClick={() => {
+                  setShowDropdown(!showDropdown)
+                  showBeneficiaryList()
+                }}
                 data-dropdown-toggle="dropdownSearch"
                 >
                   Edit List
@@ -279,22 +340,33 @@ export function EventPage() {
                     placeholder="Search"
                     className="w-full px-4 py-2 mb-3 text-gray border border-gray rounded-md"
                   />
-
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {/* TO DO: Display Beneficiary List */}
-                    <label className="flex items-center px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white mr-3"
-                      />
-                      <span className="font-semibold text-md text-white">DELA CRUZ, Juan</span>
-                    </label>
-                  </div>
-
+                  {
+                  notAttendeeList.length > 0 ? (
+                      notAttendeeList.map((notAtt, i) => (
+                        <div className="space-y-2 max-h-64 overflow-y-auto" key={i}>
+                          <label className="flex items-center px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white mr-3"
+                              onChange={() => {
+                                const updChecklist = checklist
+                                updChecklist[i] = !checklist[i]
+                                setChecklist(updChecklist)
+                                console.log(checklist)
+                                console.log("len" + notAttendeeList.length)
+                              }}
+                            />
+                            <span className="font-semibold text-md text-white">{notAtt.first_name + " " + notAtt.last_name}</span>
+                          </label>
+                        </div>
+                        ))
+                      ) : "No beneficiaries to show"
+                    }
                   <div className="mt-4 text-right">
                     <button
                       className="text-secondary font-semibold hover:underline cursor-pointer"
                       type="button"
+                      onClick={handleUpdate}
                     >
                       Update List
                     </button>
@@ -306,8 +378,15 @@ export function EventPage() {
             </div>
 
           <div className="w-full max-w-2xl mt-3">
-            {/* To Do: Display Attendees*/}
-            <AttendeesCard attendees={attendees} beneficiaryList={beneficiaryList}/> 
+            {
+              beneficiaryList.length > 0 ? attendees.map((att, i) => (
+                <AttendeesCard 
+                  name={beneficiaryList[i].first_name! + " " + beneficiaryList[i].last_name} 
+                  attendance={att.attended ?? false} 
+                  who_attended={att.who_attended ?? "None"} 
+                />
+              )) : "No data to show"
+            }
           </div>
         </div>
       </div>
