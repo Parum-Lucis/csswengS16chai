@@ -111,21 +111,36 @@ return (
               id="date"
               name="date"
               type="date"
-              className="input-text w-full"
+              className="appearance-none input-text w-full"
               required
             />
           </div>
-          <div>
-            <label htmlFor="time" className="text-white font-[Montserrat] font-semibold">
-              Time
-            </label>
-            <input
-              id="time"
-              name="time"
-              type="time"
-              className="input-text w-full"
-              required
-            />
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col w-full sm:w-1/2">
+              <label htmlFor="time" className="text-white font-[Montserrat] font-semibold">
+                Start Time
+              </label>
+              <input
+                id="time"
+                name="time"
+                type="time"
+                className="appearance-none input-text w-full"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col w-full sm:w-1/2">
+              <label htmlFor="time" className="text-white font-[Montserrat] font-semibold size-1/2">
+                End Time
+              </label>
+              <input
+                id="time"
+                name="time"
+                type="time"
+                className="appearance-none input-text w-full"
+                required
+              />
+            </div>
           </div>
           <div>
             <label htmlFor="location" className="text-white font-[Montserrat] font-semibold">
