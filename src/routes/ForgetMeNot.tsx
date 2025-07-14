@@ -57,7 +57,7 @@ function ForgetMeNot() {
             alt="Logo"
             className="w-24 h-24 sm:w-32 sm:h-32 p-1 mt-10 mb-6 rounded-full border-2 border-solid border-[#E3E3E3]"
         />
-        <h2 className="font-[Montserrat] text-center font-bold text-[1.2rem] sm:text-[1.3rem]">
+        <h2 className="font-sans text-center font-bold text-[1.2rem] sm:text-[1.3rem]">
             Forgot Password
         </h2>
             <div className="w-full max-w-md flex justify-center items-center mb-6 mt-4">
@@ -65,7 +65,7 @@ function ForgetMeNot() {
                     <div
                         className="flex flex-col transition-all duration-500 ease-in-out"
                     >
-                        <label htmlFor="username" className="font-[Montserrat] font-semibold">
+                        <label htmlFor="username" className="font-sans font-semibold">
                             Enter Email
                         </label>
                         <input
@@ -87,7 +87,7 @@ function ForgetMeNot() {
                             : "opacity-0 -translate-x-5 pointer-events-none h-0"
                         }`}
                     >
-                        <label htmlFor="code" className="font-[Montserrat] font-semibold">
+                        <label htmlFor="code" className="font-sans font-semibold">
                         Enter Confirmation Code
                         </label>
                         <input
@@ -109,7 +109,7 @@ function ForgetMeNot() {
                             : "opacity-0 -translate-x-5 pointer-events-none h-0"
                         }`}
                     >
-                        <label htmlFor="nPassword" className="font-[Montserrat] font-semibold">
+                        <label htmlFor="nPassword" className="font-sans font-semibold">
                             Enter new Password
                         </label>
                         <input
@@ -122,14 +122,14 @@ function ForgetMeNot() {
                     <button
                         ref={buttonRef}
                         type="submit"
-                        className="bg-[#45B29D] text-white mt-2 p-1.5 rounded-[5px] w-full m-auto font-semibold cursor-pointer duration-200 transition-all
+                        className="bg-primary text-white mt-2 p-1.5 rounded-[5px] w-full m-auto font-semibold cursor-pointer duration-200 transition-all
                         hover:opacity-50 focus:opacity-50"
                     >
                         {formState <=2 ? "Continue" : "Change Password"}
                     </button>
                     <a
                         onClick={() => {navigate("/")}}
-                        className="text-center border-1 border-black text-black mt-2 p-1.5 rounded-[5px] w-full m-auto font-semibold duration-200 transition-all cursor-pointer
+                        className="text-center border-2 border-white text-white mt-2 p-1.5 rounded-[5px] w-full m-auto font-semibold duration-200 transition-all cursor-pointer
                         hover:opacity-50 focus:opacity-50"
                     >
                         Back to Login
