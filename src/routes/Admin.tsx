@@ -11,6 +11,7 @@ function Admin() {
     const urls = [
         { name: "Create Volunteer Profile", pldt: "/create-volunteer-profile" },
         { name: "Create Beneficiary Profile", pldt: "/create-beneficiary-profile" },
+        { name: "View Volunteers", pldt: "/view-volunteer-list" },
     ];
 
     useEffect(() => {
@@ -25,7 +26,7 @@ function Admin() {
             {(
                 <div className="flex wrap-anywhere p-9 gap-4 font-[Montserrat] font-bold w-full max-w-5xl text-white">
                     {urls.map((ur) => (
-                        <NavLink to={ur.pldt}
+                        <NavLink to={ur.pldt} key={ur.name}
                             className="flex duration-100 bg-[#45B29D] rounded-md text-2xl text-center p-6 hover:bg-[#45b29c8a]"> {ur.name}</NavLink>
                     ))
                     }

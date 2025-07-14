@@ -28,10 +28,11 @@ export function VolunteerProfileCreation() {
       first_name: formData.get("fName") as string,
       last_name: formData.get("lName") as string,
       is_admin: formData.get("dropdown") as string == "Admin",
-      birthdate: Timestamp.fromMillis(Date.parse(/*formData.get("") as string*/ "2000-01-01T00:00:00.001Z")),
+      birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
       address: formData.get("address") as string,
       sex: formData.get("SexDropdown") as string,
       role: formData.get("dropdown") as string,
+      time_to_live: null
     }
     /*
     Error:
@@ -295,8 +296,8 @@ export function BeneficiaryProfileCreation() {
           birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
           grade_level: Number(formData.get("gradelevel") as string),
           is_waitlisted: is_waitlisted,
-          guardians: guardians,
           time_to_live: null,
+          guardians: guardians,
           sex: formData.get("SexDropdown") as string, /* this was missing pala? */
         });
 

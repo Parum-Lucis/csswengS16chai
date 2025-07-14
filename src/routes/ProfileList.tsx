@@ -239,7 +239,7 @@ export function VolunteerList() {
     } else {
       const fetchProfiles = async () => {
         setLoading(true); // display "fetching..."
-        const volunteerSnap = await getDocs(collection(db, "volunteers"));
+        const volunteerSnap = await getDocs(query(collection(db, "volunteers"), where("time_to_live", "==", null)));
         const profiles: any[] = [];
         let flag: boolean = false;
 
