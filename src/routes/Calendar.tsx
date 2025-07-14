@@ -103,7 +103,7 @@ export function Calendar(){
         event.start_date.toDate().getMonth() === selectedDate.getMonth() &&
         event.start_date.toDate().getFullYear() === selectedDate.getFullYear()
     );
-    
+
     const renderMonth = (month: number, year: number, selectedDate: Date) => {
         const daysInMonth = new Date(year, month + 1, 0).getDate()
         const firstDayOfMonth = new Date(year, month, 1).getDay()
@@ -213,12 +213,12 @@ export function Calendar(){
             <div className="flex flex-col items-start justify-start min-h-screen w-full p-4 sm:p-6">
                 <div className={`w-full transition-all duration-300 animate-fade overflow-hidden ${minimizeState ? "max-h-40" : "max-h-screen"}`}>
                     <div className="w-full flex justify-between">
-                        <button className="" onClick={HandlePrevMonth}>:D</button>
+                        <button className="" onClick={HandlePrevMonth}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-circle-arrow-left-icon lucide-circle-arrow-left"><circle cx="12" cy="12" r="10"/><path d="m12 8-4 4 4 4"/><path d="M16 12H8"/></svg></button>
                         <div className="flex flex-row items-center gap-3">
                             <span className="">{monthsOfYear[currentMonth]} {currentYear}</span>
-                            <button className="transition-colors duration-200 ease-out text-white p-1 px-4 rounded-sm bg-linear-to-r from-emerald-300 to-green-500 to-50% hover:from-green-400 hover:via-80% hover:to-emerald-400 hover:to-95%" onClick={handleToday}>today</button>
+                            <button className="transition-colors duration-300 ease-out text-white px-4 py-2 rounded-sm w-24 h-10 bg-gradient-to-r from-emerald-300 to-green-500 active:from-green-400 active:to-emerald-400" onClick={handleToday}>today</button>
                         </div>
-                        <button className="" onClick={() => HandleNextMonth()}>D:</button>
+                        <button className="" onClick={() => HandleNextMonth()}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-circle-arrow-right-icon lucide-circle-arrow-right"><circle cx="12" cy="12" r="10"/><path d="m12 16 4-4-4-4"/><path d="M8 12h8"/></svg></button>
                     </div>
                     <div className="w-full">
                         <div className="grid grid-cols-7 gap-2 border-b mb-4">
@@ -229,7 +229,7 @@ export function Calendar(){
                         {renderMonth(currentMonth, currentYear, selectedDate)}
                     </div>
                 </div>
-                <button onClick={handleMinimize} className={`w-full text-2xl transition-all duration-300 animate-fade ${minimizeState ? "rotate-180 mt-0.5" : "rotate-0"}`}>^</button>
+                <button onClick={handleMinimize} className={`w-full text-2xl flex justify-center items-center transition-all duration-200 animate-fade ${minimizeState ? "rotate-180 " : "rotate-0"}`}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg></button>
                 <button onClick={handleMinimize} className={`w-full border-b text-2xl transition-all duration-300 animate-fade`}></button>
                 <div className={`w-full animate-fade mt-4`}
                     key={selectedDate.toISOString()} >
