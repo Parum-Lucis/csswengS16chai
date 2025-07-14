@@ -19,6 +19,7 @@ export function EventPage() {
     const [beneficiaryList, setBeneficiaryList] = useState<Beneficiary[]>([])
     const [docID, setDocID] = useState(event?.docID)
     const [showDeleteModal, setDeleteModal] = useState(false)
+    const [showDropdown, setShowDropdown] = useState(false)
 
     useEffect(() =>  {
       const fetchEvent = async () => {
@@ -53,6 +54,24 @@ export function EventPage() {
         fetchEvent()
     }, [setEvent, setAttendees, setBeneficiaryList, params.docId])
 
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                event.target instanceof HTMLElement &&
+                !event.target.closest('[data-dropdown-toggle="dropdownSearch"]') &&
+                !event.target.closest('#dropdownSearch') &&
+                showDropdown
+            ) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showDropdown]);
+    
     useEffect(() =>{
         document.body.style.overflow = showDeleteModal ? 'hidden': 'unset';
     },[showDeleteModal ]);
@@ -120,8 +139,7 @@ export function EventPage() {
     }
 
     return (
-      <>
-        <div className="w-full min-h-screen bg-[#254151] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
+        <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative pb-60">
           {showDeleteModal &&(
                           createPortal(
                               <div className="fixed top-0 right-0 left-0 bottom-0 z-50 flex items-center justify-center bg-black/50">
@@ -147,7 +165,7 @@ export function EventPage() {
                               document.body
                           )
                       )}
-          <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6 overflow-hidden"> 
+          <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6"> 
             <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
               <form onSubmit={handleSave}>
                   <h2 className="text-secondary text-2xl text-center font-bold font-sans">
@@ -192,7 +210,7 @@ export function EventPage() {
                           id="startdate"
                           name="startdate"
                           type="datetime-local"
-                          className="input-text w-full"
+                          className="input-text w-full appearance-none"
                           step="1"
                           value={start_date.toISOString().substring(0,19)}
                           onChange={e => setEvent({...event as Event, start_date : isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value))})}
@@ -209,7 +227,7 @@ export function EventPage() {
                           id="enddate"
                           name="enddate"
                           type="datetime-local"
-                          className="input-text w-full"
+                          className="input-text w-full appearance-none"
                           step="1"
                           min={start_date.toISOString().substring(0,16)}
                           max={max_date}
@@ -239,21 +257,59 @@ export function EventPage() {
               </div>  
             </form>
           </div>
+            
+          <h2 className="text-primary text-2xl font-bold font-sans text-center mt-5">List of Attendees:</h2>
+          <div className="relative w-full max-w-2xl mt-3">
+            <div className="flex justify-end">
+              <button  
+                className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
+                onClick={() => setShowDropdown(!showDropdown)}
+                data-dropdown-toggle="dropdownSearch"
+                >
+                  Edit List
+              </button>
+              
+              {showDropdown && (
+                <div
+                  id="dropdownSearch"
+                  className="flex flex-col absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg w-full px-4 py-3 max-h-60 overflow-y-auto"
+                >
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    className="w-full px-4 py-2 mb-3 text-gray border border-gray rounded-md"
+                  />
 
-          <div>
-            <h2 className="text-primary text-2xl font-bold font-sans mb-4 mt-5">List of Attendees:</h2>
-            { beneficiaryList.length > 0 ? Array.from(
-              {length: beneficiaryList.length},
-              (_, i) => (
-                <div className="pb-4">
-                  <h3 className="mt-2 w-full bg-primary text-secondary px-4 py-2 rounded font-semibold font-sans">Attendee {i + 1}</h3>
-                  <AttendeesCard name={beneficiaryList[i].first_name + " " + beneficiaryList[i].last_name} who_attended={attendees[i].who_attended!} attendance={attendees[i].attended ?? false} />
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {/* TO DO: Display Beneficiary List */}
+                    <label className="flex items-center px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white mr-3"
+                      />
+                      <span className="font-semibold text-md text-white">DELA CRUZ, Juan</span>
+                    </label>
+                  </div>
+
+                  <div className="mt-4 text-right">
+                    <button
+                      className="text-secondary font-semibold hover:underline cursor-pointer"
+                      type="button"
+                    >
+                      Update List
+                    </button>
+                  </div>
                 </div>
-              )
-            ) : "No attendees to show."}
+              )}
+
+            </div>
+            </div>
+
+          <div className="w-full max-w-2xl mt-3">
+            {/* To Do: Display Attendees*/}
+            <AttendeesCard attendees={attendees} beneficiaryList={beneficiaryList}/> 
           </div>
-        </div>    
+        </div>
       </div>
-    </>
-  )
+  );
 }
