@@ -1,7 +1,7 @@
 import { useState, useEffect  } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
-import { collection, doc, addDoc, getDoc, getDocs, Timestamp, updateDoc, query, where, documentId } from "firebase/firestore"
+import { collection, doc, addDoc, getDoc, getDocs, Timestamp, updateDoc, query, where, documentId, deleteDoc, type DocumentData, Query, setDoc } from "firebase/firestore"
 import type { Event } from "@models/eventType"
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
@@ -24,6 +24,8 @@ export function EventPage() {
     const [notAttendeeList, setNotAttendeeList] = useState<Beneficiary[]>([])
     const [checklist, setChecklist] = useState<boolean[]>([])
     const [runQuery, setRunQuery] = useState<boolean>(true)
+    // for remove list
+    const [removeChecklist, setRemoveChecklist] = useState<boolean[]>([])
 
     useEffect(() =>  {
       const fetchEvent = async () => {
@@ -40,9 +42,9 @@ export function EventPage() {
             const updBene: Beneficiary[] = []
             attendeesList.forEach((att) => {
                 updAttendees.push(att.data() as AttendedEvents)
-                beneficiaryID.push((att.data() as AttendedEvents).docID)
+                beneficiaryID.push((att.data() as AttendedEvents).beneficiaryID)
                 console.log(att.data())
-                console.log((att.data() as AttendedEvents).docID)
+                console.log((att.data() as AttendedEvents).beneficiaryID)
             })
             setAttendees(updAttendees)
             const beneficiaryQuery = query(
@@ -149,22 +151,29 @@ export function EventPage() {
         }
     }
 
+    // huge note: this only pulls a max of 10 beneficiaries at the moment
     const showBeneficiaryList = async() => {
       const beneficiaryID: string[] = []
       setChecklist([])
       
       if(runQuery) {
+        const updList: Beneficiary[] = []
+        const updChecklist: boolean[] = []
+
         attendees.forEach((att) => {
-          beneficiaryID.push(att.docID)
+          beneficiaryID.push(att.beneficiaryID)
         })
-        const fetchBeneficiaries = query(
-          collection(db, "beneficiaries"),
-          where(documentId(), "not-in", beneficiaryID))
+        let fetchBeneficiaries: Query<DocumentData, DocumentData>
+        if(beneficiaryID.length > 0) 
+          fetchBeneficiaries = query(
+            collection(db, "beneficiaries"),
+            where(documentId(), "not-in", beneficiaryID)) 
+        else
+          fetchBeneficiaries = query(
+            collection(db, "beneficiaries"))
         const beneficiaryRefList = await getDocs(fetchBeneficiaries)
         console.log("num" + beneficiaryRefList.size)
         if(!beneficiaryRefList.empty) {
-          const updList: Beneficiary[] = []
-          const updChecklist: boolean[] = []
           beneficiaryRefList.forEach((notAtt) => {
             updList.push({...(notAtt.data() as Beneficiary), docID: notAtt.id})
             updChecklist.push(false)
@@ -172,18 +181,20 @@ export function EventPage() {
           setNotAttendeeList(updList)
           setChecklist(updChecklist)
         }
+        setRunQuery(false)
       }
-      setRunQuery(false)
     }
 
-    const handleUpdate = async() => {
+    const handleAddAttendees = async() => {
       for (let i = 0; i < checklist.length; i++) {
         let upd = false
         if(checklist[i]) {
-          const addRef = await addDoc(collection(db, 'events/'+docID+"/attendees"), {
+          const addRef = doc(collection(db, 'events/'+docID+"/attendees"))
+          await setDoc(addRef, {
             attendance: false,
             who_attended: "Beneficiary", // temp
-            docID: notAttendeeList[i].docID
+            beneficiaryID: notAttendeeList[i].docID,
+            docID: addRef.id
           });
           if (addRef) {
             upd = true
@@ -200,6 +211,28 @@ export function EventPage() {
         else {
           toast.success("Nothing to update")
         }
+      }
+    }
+
+    const handleRemoveAttendees = async() => {
+      // for test
+      setRemoveChecklist([true])
+      for (let i = 0; i < removeChecklist.length; i++) {
+        let refresh = false
+        if(removeChecklist[i]) {
+          console.log("im here at delete")
+          await deleteDoc(doc(db, "events/"+docID+"/attendees/"+attendees[i].docID))
+          refresh = true
+        }
+
+        if(refresh) {
+          toast.success("Success!");
+          setTimeout(function() {
+                location.reload();
+            }, 1000);
+          setRunQuery(true)
+        }
+        else toast.success("Nothing to update")
       }
     }
 
@@ -326,6 +359,15 @@ export function EventPage() {
           <h2 className="text-primary text-2xl font-bold font-sans text-center mt-5">List of Attendees:</h2>
           <div className="relative w-full max-w-2xl mt-3">
             <div className="flex justify-end">
+              <button
+                className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
+                type="button"
+                onClick={() => {
+                  handleRemoveAttendees()
+                }} //todo: edit this cuz rn it just deletes the first attendee
+              >
+                  Remove Attendees
+              </button>
               <button  
                 className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
                 onClick={() => {
@@ -336,6 +378,7 @@ export function EventPage() {
                 >
                   Edit List
               </button>
+              
               
               {showDropdown && (
                 <div
@@ -373,7 +416,7 @@ export function EventPage() {
                     <button
                       className="text-secondary font-semibold hover:underline cursor-pointer"
                       type="button"
-                      onClick={handleUpdate}
+                      onClick={handleAddAttendees}
                     >
                       Update List
                     </button>
