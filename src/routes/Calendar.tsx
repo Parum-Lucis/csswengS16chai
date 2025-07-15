@@ -17,7 +17,7 @@ export function Calendar(){
     const [eventsList, setEventsList] = useState<Event[]>([])
     const [prevMonthSnap, setPrevMonthSnap] = useState<React.JSX.Element | null>()
     const [nextMonthSnap, setNextMonthSnap] = useState<React.JSX.Element | null>()
-    
+
     useEffect(() => {
     
         // If there is no user logged in, skip this page and redirect to login page.
@@ -239,7 +239,7 @@ export function Calendar(){
                             <EventCalendarCard 
                                 key={event.docID} 
                                 date={event.start_date.toDate().toDateString().slice(event.start_date.toDate().toDateString().indexOf(' ') + 1)} 
-                                event={event.event_name} 
+                                event={event.name} 
                                 time={event.start_date.toDate().getHours().toString() + ':' + event.start_date.toDate().getMinutes().toString()}/>
                         ))}
                         {selectedEvents.length === 0 ? "No Events!" : ""}
