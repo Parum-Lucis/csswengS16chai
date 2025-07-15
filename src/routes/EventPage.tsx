@@ -15,6 +15,7 @@ export function EventPage() {
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null)
   const [originalEvent, setOriginalEvent] = useState<Event | null>(null)
+  // TODO: refactor bottom 2 (modify attendeesevent to include first name & last name of beneficiary)
   const [attendees, setAttendees] = useState<AttendedEvents[]>([])
   const [beneficiaryList, setBeneficiaryList] = useState<Beneficiary[]>([])
   const [docID, setDocID] = useState(event?.docID)
@@ -24,7 +25,7 @@ export function EventPage() {
   const [notAttendeeList, setNotAttendeeList] = useState<Beneficiary[]>([])
   const [checklist, setChecklist] = useState<boolean[]>([])
   const [runQuery, setRunQuery] = useState<boolean>(true)
-  // for remove list
+  // for remove list 
   const [removeChecklist, setRemoveChecklist] = useState<boolean[]>([])
 
   useEffect(() => {
@@ -152,6 +153,7 @@ export function EventPage() {
   }
 
   // huge note: this only pulls a max of 10 beneficiaries at the moment
+  // TODO: refactor this (change to query all beneficiaries and compare/remove as needed)
   const showBeneficiaryList = async () => {
     const beneficiaryID: string[] = []
     setChecklist([])
@@ -193,6 +195,8 @@ export function EventPage() {
         await setDoc(addRef, {
           attendance: false,
           who_attended: "Beneficiary", // temp
+          first_name: notAttendeeList[i].first_name,
+          last_name: notAttendeeList[i].last_name,
           beneficiaryID: notAttendeeList[i].docID,
           docID: addRef.id
         });
@@ -214,6 +218,7 @@ export function EventPage() {
     }
   }
 
+  // todo: refactor (remove bene list)
   const handleRemoveAttendees = async () => {
     let refresh = false
     console.log("checklist is" + removeChecklist)
@@ -445,6 +450,7 @@ export function EventPage() {
 
         <div className="w-full max-w-2xl mt-3">
           {
+            // todo: refactor
             beneficiaryList.length > 0 ? attendees.map((att, i) => (
               <AttendeesCard
                 key={i}
