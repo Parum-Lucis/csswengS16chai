@@ -334,6 +334,19 @@ export function EventPage() {
                         />
                       </div>
                     </div>
+
+                    <div className="flex flex-col flex-1">
+                      <label htmlFor="location" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                        Location
+                      </label>
+                      <input
+                        id="location"
+                        name="location"
+                        type="text"
+                        className="input-text w-full"
+                        required
+                      />
+                    </div>
   
                   <button
                     type="submit"
@@ -358,7 +371,7 @@ export function EventPage() {
             
           <h2 className="text-primary text-2xl font-bold font-sans text-center mt-5">List of Attendees:</h2>
           <div className="relative w-full max-w-2xl mt-3">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-3">
               <button
                 className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
                 type="button"
@@ -366,7 +379,7 @@ export function EventPage() {
                   handleRemoveAttendees()
                 }} //todo: edit this cuz rn it just deletes the first attendee
               >
-                  Remove Attendees
+                  Remove
               </button>
               <button  
                 className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
@@ -376,7 +389,7 @@ export function EventPage() {
                 }}
                 data-dropdown-toggle="dropdownSearch"
                 >
-                  Edit List
+                  Add
               </button>
               
               
@@ -390,10 +403,11 @@ export function EventPage() {
                     placeholder="Search"
                     className="w-full px-4 py-2 mb-3 text-gray border border-gray rounded-md"
                   />
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
                   {
                   notAttendeeList.length > 0 ? (
                       notAttendeeList.map((notAtt, i) => (
-                        <div className="space-y-2 max-h-64 overflow-y-auto" key={i}>
+                        <div className="space-y-2" key={i}>
                           <label className="flex items-center px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
                             <input
                               type="checkbox"
@@ -412,6 +426,7 @@ export function EventPage() {
                         ))
                       ) : "No beneficiaries to show"
                     }
+                  </div>
                   <div className="mt-4 text-right">
                     <button
                       className="text-secondary font-semibold hover:underline cursor-pointer"
@@ -436,7 +451,7 @@ export function EventPage() {
                   who_attended={att.who_attended ?? "None"} 
                 />
                 
-              )) : "No data to show"
+              )) : <div className="text-center text-white w-full max-w-2xl items-center mt-2 mr-2 font-sans bg-primary p-5 rounded-[5px] font-semibold mb-2"> "No data to show" </div>
             }
           </div>
         </div>
