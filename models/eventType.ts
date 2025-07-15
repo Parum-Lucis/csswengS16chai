@@ -3,7 +3,7 @@ import type { AttendedEvents } from "./attendedEventsType";
 
 export interface Event {
   docID?: string;
-  event_name: string;
+  name: string;
   description: string;
   start_date: Timestamp;
   end_date: Timestamp;
