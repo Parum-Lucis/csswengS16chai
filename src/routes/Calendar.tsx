@@ -239,6 +239,7 @@ export function Calendar(){
                             <EventCalendarCard 
                                 key={event.docID} 
                                 date={event.start_date.toDate().toDateString().slice(event.start_date.toDate().toDateString().indexOf(' ') + 1)} 
+                                /*onClick={() => navigate(`/view-event/${event.docID}`)}*/ // use when eventPage works
                                 event={event.name} 
                                 time={event.start_date.toDate().getHours().toString() + ':' + event.start_date.toDate().getMinutes().toString()}/>
                         ))}
