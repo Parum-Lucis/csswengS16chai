@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
-import { collection, doc, addDoc, getDoc, getDocs, Timestamp, updateDoc, query, where, documentId, deleteDoc, type DocumentData, Query, setDoc } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, deleteDoc, setDoc } from "firebase/firestore"
 import type { Event } from "@models/eventType"
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
@@ -15,9 +15,7 @@ export function EventPage() {
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null)
   const [originalEvent, setOriginalEvent] = useState<Event | null>(null)
-  // TODO: refactor bottom 2 (modify attendeesevent to include first name & last name of beneficiary)
   const [attendees, setAttendees] = useState<AttendedEvents[]>([])
-  const [beneficiaryList, setBeneficiaryList] = useState<Beneficiary[]>([])
   const [docID, setDocID] = useState(event?.docID)
   const [showDeleteModal, setDeleteModal] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -34,41 +32,41 @@ export function EventPage() {
       const attendeeQuery = collection(db, "events", params.docId as string, "attendees")
       const eventsSnap = await getDoc(getQuery)
       const attendeesList = await getDocs(attendeeQuery)
-      if (eventsSnap.exists())
+      if (eventsSnap.exists()){
         setEvent(eventsSnap.data() as Event)
-      setOriginalEvent(eventsSnap.data() as Event)
+        setOriginalEvent(eventsSnap.data() as Event)
+      }
       if (!attendeesList.empty) {
-        const beneficiaryID: string[] = []
         const updAttendees: AttendedEvents[] = []
-        const updBene: Beneficiary[] = []
+        // const updBene: Beneficiary[] = []
         const updRemove: boolean[] = []
         attendeesList.forEach((att) => {
           updAttendees.push(att.data() as AttendedEvents)
-          beneficiaryID.push((att.data() as AttendedEvents).beneficiaryID)
+          // beneficiaryID.push((att.data() as AttendedEvents).beneficiaryID)
           updRemove.push(false)
           console.log(att.data())
           console.log((att.data() as AttendedEvents).beneficiaryID)
         })
-        setAttendees(updAttendees.sort((a, b) => a.beneficiaryID.localeCompare(b.beneficiaryID)))
-        setRemoveChecklist(updRemove)
-        const beneficiaryQuery = query(
-          collection(db, "beneficiaries"),
-          where(documentId(), "in", beneficiaryID)
-        )
-        const beneficiaryRef = await getDocs(beneficiaryQuery)
-        console.log(beneficiaryRef.size)
-        beneficiaryRef.forEach((bene) => {
-          console.log("id is " + bene.id)
-          updBene.push({ ...(bene.data() as Beneficiary), docID: bene.id })
-        })
-        setBeneficiaryList(updBene.sort((a, b) => a.docID.localeCompare(b.docID)))
+        setAttendees(updAttendees.sort((a, b) => a.first_name.localeCompare(b.first_name)))
+        // setRemoveChecklist(updRemove)
+        // const beneficiaryQuery = query(
+        //   collection(db, "beneficiaries"),
+        //   where(documentId(), "in", beneficiaryID)
+        // )
+        // const beneficiaryRef = await getDocs(beneficiaryQuery)
+        // console.log(beneficiaryRef.size)
+        // beneficiaryRef.forEach((bene) => {
+        //   console.log("id is " + bene.id)
+        //   updBene.push({ ...(bene.data() as Beneficiary), docID: bene.id })
+        // })
+        // setBeneficiaryList(updBene.sort((a, b) => a.docID.localeCompare(b.docID)))
       }
       console.log((eventsSnap.data() as Event))
       setDocID(eventsSnap.id)
       setRunQuery(true)
     }
     fetchEvent()
-  }, [setEvent, setAttendees, setBeneficiaryList, params.docId])
+  }, [setEvent, setAttendees, params.docId])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -92,8 +90,6 @@ export function EventPage() {
     document.body.style.overflow = showDeleteModal ? 'hidden' : 'unset';
   }, [showDeleteModal]);
 
-
-  console.log(beneficiaryList)
   const { name, description, location: event_location } = event || {}
 
   const start_date = new Date((event?.start_date.seconds ?? 0) * 1000)
@@ -104,8 +100,6 @@ export function EventPage() {
 
   const max_date = start_date.toISOString().substring(0, 11) + "23:59"
   console.log(max_date, start_date.toISOString().substring(0, 16))
-  console.log("benlen is " + beneficiaryList.length)
-  console.log(beneficiaryList)
   const handleSave = async (e: React.MouseEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!name?.trim() || !description?.trim() || !start_date || !end_date) {
@@ -152,8 +146,7 @@ export function EventPage() {
     }
   }
 
-  // huge note: this only pulls a max of 10 beneficiaries at the moment
-  // TODO: refactor this (change to query all beneficiaries and compare/remove as needed)
+  // fixed
   const showBeneficiaryList = async () => {
     const beneficiaryID: string[] = []
     setChecklist([])
@@ -161,21 +154,13 @@ export function EventPage() {
     if (runQuery) {
       const updList: Beneficiary[] = []
       const updChecklist: boolean[] = []
-
+      const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
+      
       attendees.forEach((att) => {
         beneficiaryID.push(att.beneficiaryID)
       })
-      let fetchBeneficiaries: Query<DocumentData, DocumentData>
-      if (beneficiaryID.length > 0)
-        fetchBeneficiaries = query(
-          collection(db, "beneficiaries"),
-          where(documentId(), "not-in", beneficiaryID))
-      else
-        fetchBeneficiaries = query(
-          collection(db, "beneficiaries"))
-      const beneficiaryRefList = await getDocs(fetchBeneficiaries)
-      console.log("num" + beneficiaryRefList.size)
-      if (!beneficiaryRefList.empty) {
+      const beneficiaryRefList = beneficiarySnap.docs.filter((a) => !beneficiaryID.includes(a.id))
+      if (beneficiaryRefList.length > 0) {
         beneficiaryRefList.forEach((notAtt) => {
           updList.push({ ...(notAtt.data() as Beneficiary), docID: notAtt.id })
           updChecklist.push(false)
@@ -222,12 +207,11 @@ export function EventPage() {
   const handleRemoveAttendees = async () => {
     let refresh = false
     console.log("checklist is" + removeChecklist)
-    console.log(beneficiaryList)
     for (let i = 0; i < removeChecklist.length; i++) {
       if (removeChecklist[i]) {
         console.log("im here at delete")
-        console.log("docid is " + attendees[i].docID + ", bene is " + beneficiaryList[i].first_name)
-        console.log("attended_events ID is " + attendees[i].beneficiaryID + "bene id is " + beneficiaryList[i].docID)
+        console.log("docid is " + attendees[i].docID + ", bene is " + attendees[i].first_name)
+        console.log("attended_events ID is " + attendees[i].beneficiaryID + "bene id is " + attendees[i].docID)
         await deleteDoc(doc(db, "events/" + docID + "/attendees/" + attendees[i].docID))
         refresh = true
       }
@@ -385,7 +369,7 @@ export function EventPage() {
               type="button"
               onClick={() => {
                 handleRemoveAttendees()
-              }} //todo: edit this cuz rn it just deletes the first attendee
+              }} 
             >
               Remove
             </button>
@@ -451,10 +435,10 @@ export function EventPage() {
         <div className="w-full max-w-2xl mt-3">
           {
             // todo: refactor
-            beneficiaryList.length > 0 ? attendees.map((att, i) => (
+            attendees.length > 0 ? attendees.map((att, i) => (
               <AttendeesCard
                 key={i}
-                name={beneficiaryList[i].first_name + " " + beneficiaryList[i].last_name}
+                name={attendees[i].first_name + " " + attendees[i].last_name}
                 attendance={att.attended ?? false}
                 who_attended={att.who_attended ?? "None"}
                 handleToggle={() => {
