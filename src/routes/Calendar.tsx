@@ -17,7 +17,7 @@ export function Calendar(){
     const [eventsList, setEventsList] = useState<Event[]>([])
     const [prevMonthSnap, setPrevMonthSnap] = useState<React.JSX.Element | null>()
     const [nextMonthSnap, setNextMonthSnap] = useState<React.JSX.Element | null>()
-
+    
     useEffect(() => {
     
         // If there is no user logged in, skip this page and redirect to login page.
@@ -215,8 +215,8 @@ export function Calendar(){
                 <div className={`w-full transition-all duration-300 animate-fade overflow-hidden ${minimizeState ? "max-h-40" : "max-h-screen"}`}>
                     <div className="w-full flex justify-between">
                         <button className="" onClick={HandlePrevMonth}><CircleArrowLeft/></button>
-                        <div className="flex flex-row items-center gap-3">
-                            <span className="">{monthsOfYear[currentMonth]} {currentYear}</span>
+                        <div className="flex flex-row items-center gap-6">
+                            <span className="inline-block w-35 text-center ">{monthsOfYear[currentMonth]} {currentYear}</span>
                             <button className="transition-colors duration-300 ease-out text-white px-4 py-2 rounded-sm w-24 h-10 bg-gradient-to-r from-emerald-300 to-green-500 active:from-green-400 active:to-emerald-400" onClick={handleToday}>today</button>
                         </div>
                         <button className="" onClick={() => HandleNextMonth()}><CircleArrowRight/></button>
