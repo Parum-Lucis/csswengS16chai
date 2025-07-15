@@ -7,8 +7,21 @@ import { toast } from "react-toastify";
 import { collection, addDoc, Timestamp } from "firebase/firestore"
 import { db } from "../firebase/firebaseConfig"
 
+import { useContext, useEffect } from "react";
+import { UserContext } from "../context/userContext.ts";
+
+
 export function EventCreation() {
   const navigate = useNavigate();
+  const user = useContext(UserContext)
+
+  useEffect(() => {
+    // check for authorized user
+    if (user === null) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
