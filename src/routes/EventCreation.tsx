@@ -40,7 +40,7 @@ export function EventCreation() {
 
       // if end time is before start time
       if (end_timestamp < start_timestamp) {
-        toast.error("End time cannot be before start time! Please input valid times.");
+        toast.error("Start time must strictly be before the end time!");
         return;
       }
     } catch (error) {
@@ -63,7 +63,7 @@ export function EventCreation() {
       end_date: end_timestamp,
       location: (formData.get("location") as string).trim(),
     };
-    
+
     // add to database
     addDoc(collection(db, "events"), newEvent)
       .then(() => {
