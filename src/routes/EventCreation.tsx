@@ -26,6 +26,8 @@ export function EventCreation() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
+    const submitBtn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
+    if (submitBtn) submitBtn.disabled = true; // disable the button; stop multiple submissions
 
     // check if all form input is non-empty
     for (const [, value] of formData.entries()) {
@@ -54,16 +56,19 @@ export function EventCreation() {
       // if end time is before start time
       if (end_timestamp < start_timestamp) {
         toast.error("Start time must strictly be before the end time!");
+        submitBtn.disabled = false;
         return;
       }
     } catch (error) {
       toast.error("Please provide a valid date!");
+      submitBtn.disabled = false;
       return;
     }
 
     // double check description length
     if ((formData.get("description") as string).trim().length > 255) {
       toast.error("Description must be at most 255 characters in length!");
+      submitBtn.disabled = false;
       return;
     }
 
@@ -85,6 +90,7 @@ export function EventCreation() {
       })
       .catch((error) => {
         toast.error("Failed to create event: " + error.message);
+        submitBtn.disabled = false;
       });
   };
 
