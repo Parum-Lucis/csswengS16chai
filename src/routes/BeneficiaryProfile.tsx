@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
 import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
-import { auth, db } from "../firebase/firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Beneficiary } from "@models/beneficiaryType";
 import GuardianCard from "../components/GuardianCard";
@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
 import type { Guardian } from "@models/guardianType";
 import { emailRegex } from "../util/emailRegex";
+import { add } from "date-fns";
 
 
 export function BeneficiaryProfile() {
@@ -140,11 +141,10 @@ export function BeneficiaryProfile() {
         setDeleteModal(!showDeleteModal)
 
         const updateRef = doc(db, "beneficiaries", docID!)
-        console.log(beneficiary)
         try {
             await updateDoc(updateRef, {
                 ...beneficiary,
-                time_to_live: (Date.now() + 2592000000)
+                time_to_live: Timestamp.fromDate(add(new Date(), { days: 30 }))
             })
             toast.success("Account delete success!")
             navigate("/view-beneficiary-list")
@@ -262,12 +262,6 @@ export function BeneficiaryProfile() {
                 <div className="-top-5 sm:-top-20 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[5px] border-[#45B29D] rounded-full flex items-center justify-center mb-1">
                     <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
                 </div>
-
-                <button
-                    onClick={() => auth.signOut()}
-                    className="absolute left-4 top-8 bg-[#45B29D] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
-                    Sign Out
-                </button>
                 {(formState === null) && (
                     <h3
                         className="z-1 fixed right-4 bottom-15 bg-[#e7c438] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">

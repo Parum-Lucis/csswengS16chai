@@ -5,7 +5,7 @@ import { VolunteerProfileCreation, BeneficiaryProfileCreation } from "./routes/P
 import { YourProfile } from "./routes/YourProfile.tsx";
 import { BeneficiaryProfile } from "./routes/BeneficiaryProfile.tsx";
 import { VolunteerProfile } from "./routes/VolunteerProfile.tsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "./firebase/firebaseConfig";
 import { UserContext, type UserStateType } from "./util/userContext.ts";
 import NavigationBar from "./components/NavigationBar.tsx";
@@ -13,17 +13,41 @@ import Temp from "./components/Temp.tsx";
 import ForgetMeNot from "./routes/ForgetMeNot.tsx";
 import Admin from "./routes/Admin.tsx"
 import { VolunteerList, BeneficiaryList } from "./routes/ProfileList.tsx";
+import { AdminLayout } from "./layouts/AdminLayout.tsx";
+import { DeletedBeneficiaryList } from "./routes/admin/DeletedBeneficiaryList.tsx";
 
 
 function App() {
   const [user, setUser] = useState<UserStateType>(undefined);
-  auth.onAuthStateChanged(currUser => {
-    setUser(currUser);
-  });
+
+  useEffect(() => {
+
+    const listener = auth.onAuthStateChanged(async (currUser) => {
+      if (!currUser) {
+        setUser(currUser);
+        return;
+      } else {
+        setUser({ ...currUser, is_admin: false });
+      }
+
+      const token = await currUser?.getIdTokenResult();
+      if (!token)
+        return;
+      else
+        setUser({ ...currUser, is_admin: token.claims.is_admin as boolean })
+
+
+    });
+
+    return listener;
+  }, [])
 
   return (
     <UserContext value={user}>
       <Routes>
+        <Route path="admin/" element={<AdminLayout />} >
+          <Route path="deleted-beneficiaries" element={<DeletedBeneficiaryList />} />
+        </Route>
         <Route path="/" element={<Login />} />
         <Route path="/forget-password" element={<ForgetMeNot />} />
         <Route path="/view-admin" element={<Admin />} />
