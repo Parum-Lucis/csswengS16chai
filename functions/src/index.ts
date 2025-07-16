@@ -15,13 +15,12 @@ import * as logger from "firebase-functions/logger";
 
 import { Volunteer } from "@models/volunteerType";
 // import { generateRandomPassword } from "./util/generatePassword";
-import { getFirestore, Timestamp, WriteBatch } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { generateRandomPassword } from "./utils/generatePassword";
 import { onSchedule } from "firebase-functions/scheduler";
 import { createTimestampFromNow } from "./utils/time";
 import { onDocumentUpdated } from "firebase-functions/firestore";
 import { Beneficiary } from "@models/beneficiaryType";
-import { runTransaction, writeBatch } from "firebase/firestore";
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -117,11 +116,11 @@ export const deleteEvent = onCall<string>(async (req) => {
     }
 });
 
-export const updateAttendees = onDocumentUpdated("beneficiary/{docID}", async (event) => {
+export const updateAttendees = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
     const batch = firestore.batch()
     const attRef = firestore.collectionGroup("attendees").where("beneficiaryID", "==", event.data?.after.id);
     (await attRef.get()).forEach((att) => batch.update(att.ref, {
-        "first_name": (event.data?.after.data() as Beneficiary).first_name, 
+        "first_name": (event.data?.after.data() as Beneficiary).first_name,
         "last_name": (event.data?.after.data() as Beneficiary).last_name
     }))
 
