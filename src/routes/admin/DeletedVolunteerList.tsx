@@ -1,24 +1,25 @@
-import type { Beneficiary } from "@models/beneficiaryType";
 import { startTransition, useEffect, useOptimistic, useState } from "react";
-import { collection, doc, getDocs, query, QueryDocumentSnapshot, updateDoc, where, type FirestoreDataConverter } from "firebase/firestore";
+import { collection, getDocs, query, QueryDocumentSnapshot, where } from "firebase/firestore";
 import { differenceInDays, differenceInYears } from "date-fns";
 import { db } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
+import type { Volunteer } from "@models/volunteerType";
 import { DeletedProfileList } from "./DeletedProfileList";
+import { callRestoreDeletedVolunteer } from "../../firebase/cloudFunctions";
 
-const converter: FirestoreDataConverter<Beneficiary> = {
-    toFirestore: (data: Beneficiary) => data,
+const converter = {
+    toFirestore: (data: Volunteer) => data,
     fromFirestore: (snap: QueryDocumentSnapshot) =>
-        snap.data() as Beneficiary
+        snap.data() as Volunteer
 }
 
 
-export function DeletedBeneficiaryList() {
+export function DeletedVolunteerList() {
 
-    const [profiles, setProfiles] = useState<Beneficiary[]>([]);
-    const [isFetching, setLoading] = useState<boolean>(true);
+    const [profiles, setProfiles] = useState<Volunteer[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
 
-    const [oProfiles, removeOProfiles] = useOptimistic<Beneficiary[], string>(
+    const [oProfiles, removeOProfiles] = useOptimistic<Volunteer[], string>(
         profiles,
         (prev, removedId) => prev.filter((val) => val.docID !== removedId)
     )
@@ -30,11 +31,11 @@ export function DeletedBeneficiaryList() {
     useEffect(() => {
         async function run() {
             try {
-                const q = query(collection(db, "beneficiaries"), where("time_to_live", "!=", null)).withConverter(converter);
+                const q = query(collection(db, "volunteers"), where("time_to_live", "!=", null)).withConverter(converter);
                 const res = await getDocs(q);
                 setProfiles(res.docs.map(doc => ({ ...doc.data(), docID: doc.id })));
             } catch (error) {
-                toast.error("Couldn't load beneficiaries.");
+                toast.error("Couldn't load volunteers.");
                 console.error(error);
             } finally {
                 setLoading(false);
@@ -44,24 +45,28 @@ export function DeletedBeneficiaryList() {
         run();
     }, [])
 
-    function handleRestore(profile: Beneficiary) {
-        const name = profile.first_name + " " + profile.last_name;
-        const docId = profile.docID
+    function handleRestore(profile: Volunteer) {
+        const { docID } = profile;
+        const name = profile.first_name + " " + profile.last_name
+
         startTransition(async () => {
             try {
-                removeOProfiles(docId);
-                const d = doc(db, "beneficiaries", docId);
+                removeOProfiles(docID);
 
-                await updateDoc(d, { time_to_live: null });
-
-                toast.success("successfully restored " + name);
-                setProfiles(b => b.filter(v => v.docID !== docId));
+                const ok = await callRestoreDeletedVolunteer(docID);
+                if (ok) {
+                    toast.success("successfully restored " + name);
+                    setProfiles(b => b.filter(v => v.docID !== docID));
+                } else {
+                    throw "Something stopped us"
+                }
             } catch (error) {
                 console.log(error);
                 toast.error("couldn't restored " + name);
             }
         })
     }
+
 
     return (
         <div className="w-full max-w-md mx-auto mt-6 p-4">
@@ -97,21 +102,18 @@ export function DeletedBeneficiaryList() {
                     className="p-2 rounded-md border border-gray-300 text-sm"
                 />
             </div>
-            <DeletedProfileList<Beneficiary>
-
-                profiles={oProfiles}
-                ProfileCard={DeletedBeneficiaryCard}
+            <DeletedProfileList<Volunteer>
+                ProfileCard={DeletedVolunteerCard}
                 handleRestore={handleRestore}
-                loading={isFetching}
-
-
+                loading={loading}
+                profiles={oProfiles}
             />
         </div>
     )
 }
 
-function DeletedBeneficiaryCard({ profile, onRestore }:
-    { profile: Beneficiary, onRestore: (profile: Beneficiary) => void }) {
+function DeletedVolunteerCard({ profile, onRestore }:
+    { profile: Volunteer, onRestore: (profile: Volunteer) => void }) {
     const { first_name, last_name, sex, birthdate, time_to_live } = profile;
     console.log(time_to_live)
     const daysLeftuntilDeleted = time_to_live ? differenceInDays(time_to_live.toDate(), new Date()) : "?"
@@ -135,7 +137,7 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
                 </div>
                 <div className="flex flex-col text-sm">
                     <span className="font-bold text-base font-[Montserrat]">
-                        {`${last_name.toUpperCase()}, ${first_name}`}
+                        {`${first_name.toUpperCase()} ${last_name}`}
                     </span>
                     <span>Age: {differenceInYears(new Date(), birthdate.toDate())}</span>
                     <span>Sex: {sex}</span>

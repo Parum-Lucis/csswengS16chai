@@ -23,6 +23,7 @@ export function VolunteerProfileCreation() {
     const formData = new FormData(e.target as HTMLFormElement);
 
     const data: Volunteer = {
+      docID: "nonsense",
       contact_number: formData.get("cNum") as string,
       email: formData.get("email") as string,
       first_name: formData.get("fName") as string,

@@ -15,6 +15,7 @@ import Admin from "./routes/Admin.tsx"
 import { VolunteerList, BeneficiaryList } from "./routes/ProfileList.tsx";
 import { AdminLayout } from "./layouts/AdminLayout.tsx";
 import { DeletedBeneficiaryList } from "./routes/admin/DeletedBeneficiaryList.tsx";
+import { DeletedVolunteerList } from "./routes/admin/DeletedVolunteerList.tsx";
 
 
 function App() {
@@ -27,14 +28,13 @@ function App() {
         setUser(currUser);
         return;
       } else {
-        setUser({ ...currUser, is_admin: false });
+        const token = await currUser?.getIdTokenResult();
+        if (!token)
+          setUser({ ...currUser, is_admin: false })
+        else
+          setUser({ ...currUser, is_admin: token.claims.is_admin as boolean })
       }
 
-      const token = await currUser?.getIdTokenResult();
-      if (!token)
-        return;
-      else
-        setUser({ ...currUser, is_admin: token.claims.is_admin as boolean })
 
 
     });
@@ -45,8 +45,14 @@ function App() {
   return (
     <UserContext value={user}>
       <Routes>
-        <Route path="admin/" element={<AdminLayout />} >
+        <Route path="admin" element={<AdminLayout />} >
+          <Route index element={<Admin />} />
           <Route path="deleted-beneficiaries" element={<DeletedBeneficiaryList />} />
+          <Route path="volunteer" >
+            <Route index element={<VolunteerList />} />
+            <Route path="deleted" element={<DeletedVolunteerList />} />
+            <Route path="new" element={<VolunteerProfileCreation />} />
+          </Route>
         </Route>
         <Route path="/" element={<Login />} />
         <Route path="/forget-password" element={<ForgetMeNot />} />

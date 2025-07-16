@@ -6,3 +6,4 @@ export const callCreateVolunteerProfile = httpsCallable<Volunteer>(func, 'create
 export const callDeleteVolunteerProfile = httpsCallable<string>(func, 'deleteVolunteerProfile');
 export const callDeleteBeneficiaryProfile = httpsCallable<string>(func, 'deleteBeneficiaryProfile');
 export const callPromoteVolunteerToAdmin = httpsCallable<string>(func, 'promoteVolunteerToAdmin');
+export const callRestoreDeletedVolunteer = httpsCallable<string, boolean>(func, "restoreDeletedVolunteer");
