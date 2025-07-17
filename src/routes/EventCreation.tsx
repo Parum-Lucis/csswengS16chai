@@ -75,7 +75,7 @@ export function EventCreation() {
     // create object and trim whitespaces
     // note: create attendees subcollection when we're actually adding attendees na 
     var newEvent: Omit<Event, "attendees"> = {
-      event_name: (formData.get("eventName") as string).trim(),
+      name: (formData.get("eventName") as string).trim(),
       description: (formData.get("description") as string).trim(),
       start_date: start_timestamp,
       end_date: end_timestamp,
