@@ -56,7 +56,7 @@ function App() {
         </Route>
         <Route path="/" element={<Login />} />
         <Route path="/forget-password" element={<ForgetMeNot />} />
-        <Route path="/view-admin" element={<Admin />} />
+        {/* <Route path="/view-admin" element={<Admin />} /> */}
         <Route path="/view-profile" element={<YourProfile />} />
         <Route path="/view-beneficiary/:docId" element={<BeneficiaryProfile />} />
         <Route path="/view-volunteer/:docId" element={<VolunteerProfile />} />

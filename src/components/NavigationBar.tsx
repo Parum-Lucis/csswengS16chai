@@ -7,7 +7,7 @@ import { UserContext } from "../util/userContext.ts";
 function NavigationBar() {
     const user = useContext(UserContext)
     const urls = [
-        { name: "Admin", pldt: "/view-admin" },
+        { name: "Admin", pldt: "/admin" },
         { name: "Search", pldt: "/view-profile-list" },
         { name: "Beneficiaries", pldt: "/view-beneficiary-list" },
         { name: "You", pldt: "/view-profile" },
