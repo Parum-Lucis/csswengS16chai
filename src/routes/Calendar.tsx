@@ -3,9 +3,9 @@ import { NavLink, useNavigate } from "react-router";
 import { useState, useContext, useEffect, useRef } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore"
-import { UserContext } from "../context/userContext.ts";
-import EventCalendarCard from "../components/EventCalendarCard.tsx";
-import type { Event } from "@models/eventType.ts";
+import { UserContext } from "../context/userContext";
+import EventCalendarCard from "../components/EventCalendarCard";
+import type { Event } from "@models/eventType";
 import { toast } from "react-toastify";
 import { CircleArrowLeft, ChevronDown, CircleArrowRight } from 'lucide-react';
 import { render } from "@testing-library/react";
@@ -214,12 +214,14 @@ export function Calendar(){
             <div className="flex flex-col items-start justify-start min-h-screen w-full p-4 sm:p-6">
                 <div className={`w-full transition-all duration-300 animate-fade overflow-hidden ${minimizeState ? "max-h-40" : "max-h-screen"}`}>
                     <div className="w-full flex justify-between">
-                        <button className="" onClick={HandlePrevMonth}><CircleArrowLeft/></button>
+                        <button aria-label="Go to previous month" // added for accessibility
+                                className="" onClick={HandlePrevMonth}><CircleArrowLeft/></button>
                         <div className="flex flex-row items-center gap-6">
                             <span className="inline-block w-35 text-center ">{monthsOfYear[currentMonth]} {currentYear}</span>
                             <button className="transition-colors duration-300 ease-out text-white px-4 py-2 rounded-sm w-24 h-10 bg-gradient-to-r from-emerald-300 to-green-500 active:from-green-400 active:to-emerald-400" onClick={handleToday}>today</button>
                         </div>
-                        <button className="" onClick={() => HandleNextMonth()}><CircleArrowRight/></button>
+                        <button aria-label="Go to next month" // added for accessibility
+                                className="" onClick={() => HandleNextMonth()}><CircleArrowRight/></button>
                     </div>
                     <div className="w-full">
                         <div className="grid grid-cols-7 gap-2 border-b mb-4">
@@ -230,7 +232,8 @@ export function Calendar(){
                         {renderMonth(currentMonth, currentYear, selectedDate)}
                     </div>
                 </div>
-                <button onClick={handleMinimize} className={`w-full text-2xl flex justify-center items-center transition-all duration-200 animate-fade ${minimizeState ? "rotate-180 " : "rotate-0"}`}><ChevronDown /></button>
+                <button aria-label="Minimize or expand calendar" // added for accessibility
+                        onClick={handleMinimize} className={`w-full text-2xl flex justify-center items-center transition-all duration-200 animate-fade ${minimizeState ? "rotate-180 " : "rotate-0"}`}><ChevronDown /></button>
                 <button onClick={handleMinimize} className={`w-full border-b text-2xl transition-all duration-300 animate-fade`}></button>
                 <div className={`w-full animate-fade mt-4`}
                     key={selectedDate.toISOString()} >
