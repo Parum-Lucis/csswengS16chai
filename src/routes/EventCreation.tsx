@@ -1,4 +1,5 @@
 import type { Event } from "@models/eventType";
+import type { AttendedEvents } from "@models/attendedEventsType";
 
 import React from "react";
 import { useNavigate } from "react-router";
@@ -6,12 +7,27 @@ import { toast } from "react-toastify";
 import { collection, addDoc, Timestamp } from "firebase/firestore"
 import { db } from "../firebase/firebaseConfig"
 
+import { useContext, useEffect } from "react";
+import { UserContext } from "../context/userContext.ts";
+
+
 export function EventCreation() {
   const navigate = useNavigate();
+  const user = useContext(UserContext)
+
+  useEffect(() => {
+    // check for authorized user
+    if (user === null) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
+    const submitBtn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
+    if (submitBtn) submitBtn.disabled = true; // disable the button; stop multiple submissions
 
     // check if all form input is non-empty
     for (const [, value] of formData.entries()) {
@@ -22,36 +38,49 @@ export function EventCreation() {
       }
     }
 
-    let start_timestamp, end_timestamp;
+    var start_timestamp, end_timestamp;
     try {
       // handle start date-time
       const date = new Date(formData.get("date") as string);
-      const start_time = formData.get("time") as string;
+      const start_time = formData.get("stime") as string;
       let [hours, minutes] = start_time.split(":").map(Number);
       date.setHours(hours, minutes, 0, 0);
       start_timestamp = Timestamp.fromDate(date);
 
       // handle end date-time
-      const end_time = formData.get("time") as string; // TODO: change
+      const end_time = formData.get("etime") as string;
       [hours, minutes] = end_time.split(":").map(Number);
       date.setHours(hours, minutes, 0, 0);
       end_timestamp = Timestamp.fromDate(date);
+
+      // if end time is before start time
+      if (end_timestamp < start_timestamp) {
+        toast.error("Start time must strictly be before the end time!");
+        submitBtn.disabled = false;
+        return;
+      }
     } catch (error) {
       toast.error("Please provide a valid date!");
-      console.error(error)
+      submitBtn.disabled = false;
+      return;
+    }
+
+    // double check description length
+    if ((formData.get("description") as string).trim().length > 255) {
+      toast.error("Description must be at most 255 characters in length!");
+      submitBtn.disabled = false;
       return;
     }
 
     // create object and trim whitespaces
     // note: create attendees subcollection when we're actually adding attendees na 
-    const newEvent: Omit<Event, "attendees"> = {
-      name: (formData.get("eventName") as string).trim(),
+    var newEvent: Omit<Event, "attendees"> = {
+      event_name: (formData.get("eventName") as string).trim(),
       description: (formData.get("description") as string).trim(),
       start_date: start_timestamp,
       end_date: end_timestamp,
       location: (formData.get("location") as string).trim(),
     };
-
 
     // add to database
     addDoc(collection(db, "events"), newEvent)
@@ -61,6 +90,7 @@ export function EventCreation() {
       })
       .catch((error) => {
         toast.error("Failed to create event: " + error.message);
+        submitBtn.disabled = false;
       });
   };
 
@@ -113,6 +143,7 @@ export function EventCreation() {
                 type="date"
                 className="appearance-none input-text w-full"
                 required
+                // onChange={e => toast.info(`Selected date: ${new Date((e.target as HTMLInputElement).value)}`)} // checker
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -121,8 +152,8 @@ export function EventCreation() {
                   Start Time
                 </label>
                 <input
-                  id="time"
-                  name="time"
+                  id="stime"
+                  name="stime"
                   type="time"
                   className="appearance-none input-text w-full"
                   required
@@ -134,8 +165,8 @@ export function EventCreation() {
                   End Time
                 </label>
                 <input
-                  id="time"
-                  name="time"
+                  id="etime"
+                  name="etime"
                   type="time"
                   className="appearance-none input-text w-full"
                   required
