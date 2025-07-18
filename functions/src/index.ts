@@ -19,6 +19,8 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { generateRandomPassword } from "./utils/generatePassword";
 import { onSchedule } from "firebase-functions/scheduler";
 import { createTimestampFromNow } from "./utils/time";
+import { onDocumentUpdated } from "firebase-functions/firestore";
+import { Beneficiary } from "@models/beneficiaryType";
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -99,6 +101,36 @@ export const deleteBeneficiaryProfile = onCall<string>(async (req) => {
     }
 })
 
+export const deleteEvent = onCall<string>(async (req) => {
+    if (!req.auth) return false;
+
+    const uid = req.data;
+    try {
+        await firestore.doc(`events/${uid}`).update(
+            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
+        );
+        return true;
+    } catch (error) {
+        logger.error(error);
+        return false;
+    }
+});
+
+export const updateAttendees = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
+    const batch = firestore.batch()
+    const attRef = firestore.collectionGroup("attendees").where("beneficiaryID", "==", event.data?.after.id);
+    (await attRef.get()).forEach((att) => batch.update(att.ref, {
+        "first_name": (event.data?.after.data() as Beneficiary).first_name,
+        "last_name": (event.data?.after.data() as Beneficiary).last_name
+    }))
+
+    await batch.commit()
+})
+
+/*
+ * firebase functions:shell
+ * setInterval(() => cronCleaner(), 60000)
+ */
 export const cronCleaner = onSchedule("every 1 minutes", async () => {
     try {
         logger.log("Cleanup running!")
@@ -129,17 +161,33 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
 
         if (beneficiarySnapshot.size === 0) {
             logger.log("No expired beneficiaries.");
+        } else {
+            beneficiarySnapshot.forEach(async doc => {
+                logger.info(`Deleting beneficiary ${doc.id}`);
+                await firestore.doc(`beneficiaries/${doc.id}`).delete()
+                logger.info(`Successfully deleted beneficiary ${doc.id}`);
+            })
+
+            logger.info("Successfully deleted beneficiaries! Count:" + beneficiarySnapshot.size)
+        }
+
+        // clean events
+        const eventSnapshot = await firestore.collection("events")
+            .where("time_to_live", "<=", Timestamp.now())
+            .get();
+
+        if (eventSnapshot.size === 0) {
+            logger.log("No expired events.");
             return;
         }
 
-        beneficiarySnapshot.forEach(async doc => {
-            logger.info(`Deleting beneficiary ${doc.id}`);
-            await firestore.doc(`beneficiaries/${doc.id}`).delete()
-            logger.info(`Successfully deleted beneficiary ${doc.id}`);
-        })
+        eventSnapshot.forEach(async doc => {
+            logger.info(`Deleting event ${doc.id}`);
+            await firestore.doc(`events/${doc.id}`).delete();
+            logger.info(`Successfully deleted event ${doc.id}`);
+        });
 
-        logger.info("Successfully deleted beneficiaries! Count:" + beneficiarySnapshot.size)
-
+        logger.info("Successfully deleted events! Count: " + eventSnapshot.size);
     } catch (error) {
         logger.error(error)
     }
