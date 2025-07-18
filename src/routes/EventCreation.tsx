@@ -8,7 +8,7 @@ import { collection, addDoc, Timestamp } from "firebase/firestore"
 import { db } from "../firebase/firebaseConfig"
 
 import { useContext, useEffect } from "react";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../context/userContext";
 
 
 export function EventCreation() {
@@ -148,7 +148,7 @@ export function EventCreation() {
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex flex-col w-full sm:w-1/2">
-                <label htmlFor="time" className="text-white font-[Montserrat] font-semibold">
+                <label htmlFor="stime" className="text-white font-[Montserrat] font-semibold">
                   Start Time
                 </label>
                 <input
@@ -161,7 +161,7 @@ export function EventCreation() {
               </div>
 
               <div className="flex flex-col w-full sm:w-1/2">
-                <label htmlFor="time" className="text-white font-[Montserrat] font-semibold size-1/2">
+                <label htmlFor="etime" className="text-white font-[Montserrat] font-semibold size-1/2">
                   End Time
                 </label>
                 <input
