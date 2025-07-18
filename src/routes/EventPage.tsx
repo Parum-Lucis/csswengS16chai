@@ -110,6 +110,7 @@ export function EventPage() {
       toast.error("Start date cannot be greater than end date!")
       return
     }
+    console.log("i am here")
     try {
       start_date.setMinutes(start_date.getMinutes() + start_date.getTimezoneOffset())
       end_date.setMinutes(end_date.getMinutes() + end_date.getTimezoneOffset())
@@ -282,7 +283,7 @@ export function EventPage() {
                   name="description"
                   className="input-text w-full"
                   value={description}
-                  onChange={e => setEvent({ ...event as Event, description: e.target.value })}
+                  onChange={e => setEvent(prev => ({ ...prev as Event, description: e.target.value }))}
                 />
               </div>
 
@@ -301,8 +302,8 @@ export function EventPage() {
                     className="input-text w-full appearance-none"
                     step="1"
                     value={start_date.toISOString().substring(0, 19)}
-                    onChange={e => setEvent({ ...event as Event, start_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value)) })}
-                  />
+                    onChange={e => setEvent(prev => ({ ...prev as Event, start_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
+                    />
                 </div>
 
                 <div className="flex flex-col flex-1">
@@ -320,7 +321,7 @@ export function EventPage() {
                     min={start_date.toISOString().substring(0, 16)}
                     max={max_date}
                     value={end_date.toISOString().substring(0, 19)}
-                    onChange={e => setEvent({ ...event as Event, end_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.end_date : Timestamp.fromMillis(Date.parse(e.target.value)) })}
+                    onChange={e => setEvent(prev => ({ ...prev as Event, end_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.end_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
                   />
                 </div>
               </div>
@@ -335,7 +336,7 @@ export function EventPage() {
                   type="text"
                   className="input-text w-full"
                   value={event_location}
-                  onChange={e => setEvent({ ...event as Event, location: e.target.value})}
+                  onChange={e => setEvent(prev => ({ ...prev as Event, location: e.target.value}))}
                   required
                 />
               </div>
