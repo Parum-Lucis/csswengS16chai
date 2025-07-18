@@ -128,28 +128,38 @@ export function BeneficiaryList() {
 
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
-      <h1 className="text-center text-6xl font-bold text-[#254151] mb-4 font-[Montserrat]">Profile List</h1>
+      <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Beneficiary List</h1>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
-          <option value="">Filter By</option>
-          <option value="student">Students</option>
-          <option value="waitlist">Waitlisted</option>
+          <option className="bg-secondary text-white" value="">Filter By</option>
+          <option className="bg-secondary text-white" value="student">
+            Students
+          </option>
+          <option className="bg-secondary text-white" value="waitlist">
+            Waitlisted
+          </option>
         </select>
 
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
-          <option value="">Sort by</option>
-          <option value="last">Last Name</option>
-          <option value="first">First Name</option>
-          <option value="age">Age</option>
+          <option className="bg-secondary text-white" value="">Sort by</option>
+          <option className="bg-secondary text-white" value="last"> 
+            Last Name
+          </option>
+          <option className="bg-secondary text-white" value="first">
+            First Name
+          </option>
+          <option className="bg-secondary text-white" value="age">
+            Age
+          </option>
         </select>
 
         <input
@@ -157,45 +167,43 @@ export function BeneficiaryList() {
           placeholder="Search"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/2"
         />
       </div>
 
-      <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg mb-15">
-        <div className="flex flex-col gap-4">
-          {loading ? (
-            // display loading while fetching from database.
-            <div className="text-center text-white py-8">Fetching...</div>
-          ) : filteredprofiles.length === 0 ? (
-            <div className="text-center text-white py-8">No profiles to show.</div>
-          ) : (
-            // non-empty profiles
-            filteredprofiles.map((profile, index) => (
+      <div className="flex flex-col gap-4">
+        {loading ? (
+          // display loading while fetching from database.
+          <div className="text-center text-white py-8">Fetching...</div>
+        ) : filteredprofiles.length === 0 ? (
+          <div className="text-center text-white py-8">No profiles to show.</div>
+        ) : (
+          // non-empty profiles
+          filteredprofiles.map((profile, index) => (
 
-              <div
-                key={`${sort}-${index}`}
-                onClick={() => {
-                  console.log(`Profile clicked: ${profile.first_name} ${profile.last_name} (${profile.docId})`);
-                  navigate(`/view-beneficiary/${profile.docId}`);
-                }}
-                className="flex items-center bg-[#45B29D] text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
-              >
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-                  <svg
-                    className="w-6 h-6 text-[#45B29D]"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
-                    />
-                  </svg>
-                </div>
-                <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
+            <div
+              key={`${sort}-${index}`}
+              onClick={() => {
+                console.log(`Profile clicked: ${profile.first_name} ${profile.last_name} (${profile.docId})`);
+                navigate(`/view-beneficiary/${profile.docId}`);
+              }}
+              className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
+            >
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
+                <svg
+                  className="w-6 h-6 text-primary"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+                  />
+                </svg>
               </div>
-            ))
-          )}
-        </div>
+              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -321,28 +329,38 @@ export function VolunteerList() {
 
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
-      <h1 className="text-center text-6xl font-bold text-[#254151] mb-4 font-[Montserrat]">Profile List</h1>
+      <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Volunteer List</h1>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
-          <option value="">Filter By</option>
-          <option value="admin">Admins</option>
-          <option value="volunteer">Volunteers (Non-Admin)</option>
+          <option className="bg-secondary text-white" value="">Filter By</option>
+          <option className="bg-secondary text-white" value="student">
+            Students
+          </option>
+          <option className="bg-secondary text-white" value="waitlist">
+            Waitlisted
+          </option>
         </select>
 
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
-          <option value="">Sort by</option>
-          <option value="last">Last Name</option>
-          <option value="first">First Name</option>
-          <option value="age">Age</option>
+          <option className="bg-secondary text-white" value="">Sort by</option>
+          <option className="bg-secondary text-white" value="last"> 
+            Last Name
+          </option>
+          <option className="bg-secondary text-white" value="first">
+            First Name
+          </option>
+          <option className="bg-secondary text-white" value="age">
+            Age
+          </option>
         </select>
 
         <input
@@ -350,44 +368,42 @@ export function VolunteerList() {
           placeholder="Search"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/2"
         />
       </div>
 
-      <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
-        <div className="flex flex-col gap-4">
-          {loading ? (
-            // display loading while fetching from database.
-            <div className="text-center text-white py-8">Fetching...</div>
-          ) : filteredprofiles.length === 0 ? (
-            <div className="text-center text-white py-8">No profiles to show.</div>
-          ) : (
-            // non-empty profiles
-            filteredprofiles.map((profile, index) => (
+      <div className="flex flex-col gap-4">
+        {loading ? (
+          // display loading while fetching from database.
+          <div className="text-center text-white py-8">Fetching...</div>
+        ) : filteredprofiles.length === 0 ? (
+          <div className="text-center text-white py-8">No profiles to show.</div>
+        ) : (
+          // non-empty profiles
+          filteredprofiles.map((profile, index) => (
 
-              <div
-                key={`${sort}-${index}`}
-                onClick={() => {
-                  navigate(`/view-volunteer/${profile.docId}`);
-                }}
-                className="flex items-center bg-[#45B29D] text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
-              >
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-                  <svg
-                    className="w-6 h-6 text-[#45B29D]"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
-                    />
-                  </svg>
-                </div>
-                <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
+            <div
+              key={`${sort}-${index}`}
+              onClick={() => {
+                navigate(`/view-volunteer/${profile.docId}`);
+              }}
+              className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
+            >
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
+                <svg
+                  className="w-6 h-6 text-primary"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+                  />
+                </svg>
               </div>
-            ))
-          )}
-        </div>
+              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

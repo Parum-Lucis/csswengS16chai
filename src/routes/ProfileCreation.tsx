@@ -87,41 +87,47 @@ export function VolunteerProfileCreation() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 bg-[#254151]">
-      <div className="relative w-full max-w-2xl flex flex-col items-center rounded-[5px] p-4 sm:p-6">
-        <div className="absolute sm:top-0 z-1 w-28 h-28 sm:w-36 sm:h-36 overflow-hidden bg-gray-500 border-4 border-[#45B29D] rounded-full flex items-center justify-center">
-          <i className="text-[6rem] sm:text-[7rem] text-gray-300 fi fi-ss-circle-user"></i>
+    <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
+      <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pb-10 px-4 sm:px-6 overflow-hidden">
+        <div className="absolute sm:top-0 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[10px] border-primary rounded-full flex items-center justify-center mb-1 mt-15">
+          <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
         </div>
-        <div className="flex w-full bg-[#45B29D] rounded-[5px] p-4 pt-20">
+        
+        <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
           <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
             <div>
-              <label htmlFor="dropdown" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="dropdown" className="text-white font-sans font-semibold">
                 Role
               </label>
+
               <select
                 id="dropdown"
                 name="dropdown"
-                className="w-full rounded-[5px] p-2 font-[Montserrat] border-2 border-[#254151]"
+                className="appearance-none bg-full bg-tertiary w-full rounded-[5px] p-2 font-sans border-1 border-secondary"
               >
-                <option value="Admin">Admin</option>
-                <option value="Volunteer">Volunteer</option>
+              <option className="bg-white text-black" value="Admin">Admin</option>
+              <option className="bg-white text-black" value="Volunteer">Volunteer</option>
               </select>
             </div>
+
             <div>
-              <label htmlFor="birthdate" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="birthdate" className="text-white font-sans font-semibold">
                 Birth Date
               </label>
+
               <input
                 id="birthdate"
                 name="birthdate"
                 type="date"
-                className="input-text w-full"
+                className="appearance-none input-text w-full"
               />
             </div>
+
             <div>
-              <label htmlFor="email" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="email" className="text-white font-sans font-semibold">
                 Email
               </label>
+
               <input
                 id="email"
                 name="email"
@@ -129,11 +135,13 @@ export function VolunteerProfileCreation() {
                 className="input-text w-full"
               />
             </div>
+
             <div className="flex flex-col sm:flex-row sm:gap-4">
               <div className="flex flex-col w-full sm:w-1/2">
-                <label htmlFor="fName" className="text-white font-[Montserrat] font-semibold">
+                <label htmlFor="fName" className="text-white font-sans font-semibold">
                   First Name
                 </label>
+
                 <input
                   id="fName"
                   name="fName"
@@ -141,35 +149,41 @@ export function VolunteerProfileCreation() {
                   className="input-text w-full"
                 />
               </div>
+
               <div className="flex flex-col w-full sm:w-1/2">
-                <label htmlFor="lName" className="text-white font-[Montserrat] font-semibold">
+                <label htmlFor="lName" className="text-white font-sans font-semibold">
                   Last Name
                 </label>
+
                 <input
                   id="lName"
                   name="lName"
                   type="text"
                   className="input-text w-full"
                 />
-              </div>
+              </div>  
             </div>
+
             <div>
-              <label htmlFor="SexDropdown" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="SexDropdown" className="text-white font-sans font-semibold">
                 Sex
               </label>
+
               <select
                 id="SexDropdown"
                 name="SexDropdown"
-                className="w-full rounded-[5px] p-2 font-[Montserrat] border-2 border-[#254151]"
+                className="appearance-none bg-full bg-tertiary w-full rounded-[5px] p-2 font-sans border-1 border-secondary"
               >
-                <option value="Male">Male</option>
-                <option value="Volunteer">Female</option>
+                <option className="bg-white text-black" value="Male">Male</option>
+                <option className="bg-white text-black" value="Volunteer">Female</option>
               </select>
             </div>
+
             <div>
-              <label htmlFor="address" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="address" className="text-white font-sans font-semibold">
                 Address
               </label>
+
               <input
                 id="address"
                 name="address"
@@ -177,10 +191,12 @@ export function VolunteerProfileCreation() {
                 className="input-text w-full"
               />
             </div>
+
             <div>
-              <label htmlFor="cNum" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="cNum" className="text-white font-sans font-semibold">
                 Contact No.
               </label>
+
               <input
                 id="cNum"
                 name="cNum"
@@ -188,9 +204,10 @@ export function VolunteerProfileCreation() {
                 className="input-text w-full"
               />
             </div>
+
             <button
               type="submit"
-              className="bg-[#254151] text-white mt-4 p-2 rounded-[5px] font-semibold"
+              className="bg-secondary text-white mt-4 p-2 rounded-[5px] font-semibold"
             >
               Create Account
             </button>
@@ -346,15 +363,16 @@ export function BeneficiaryProfileCreation() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 bg-[#254151]">
-      <div className="relative w-full max-w-2xl flex flex-col items-center rounded-[5px] p-4 sm:p-6">
-        <div className="absolute top-0 sm:top-0 z-10 w-28 h-28 sm:w-36 sm:h-36 overflow-hidden bg-gray-500 border-4 border-[#45B29D] rounded-full flex items-center justify-center">
-          <i className="text-[6rem] sm:text-[7rem] text-gray-300 fi fi-ss-circle-user"></i>
+    <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
+      <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pb-10 px-4 sm:px-6 overflow-hidden">
+        <div className="absolute sm:top-0 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[10px] border-primary rounded-full flex items-center justify-center mb-1 mt-15">
+          <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
         </div>
-        <div className="flex w-full flex-col bg-[#45B29D] rounded-[5px] p-4 pt-20">
+
+        <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
           <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
             <div>
-              <label htmlFor="idNum" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="idNum" className="text-white font-sans font-semibold">
                 ID no.
               </label>
               <input
@@ -365,19 +383,19 @@ export function BeneficiaryProfileCreation() {
               />
             </div>
             <div>
-              <label htmlFor="birthdate" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="birthdate" className="text-white font-sans font-semibold">
                 Birth Date
               </label>
               <input
                 id="birthdate"
                 name="birthdate"
                 type="date"
-                className="input-text w-full"
+                className="appearance-none input-text w-full"
               />
             </div>
             <div className="flex flex-col sm:flex-row sm:gap-4">
               <div className="flex flex-col w-full sm:w-1/2">
-                <label htmlFor="fName" className="text-white font-[Montserrat] font-semibold">
+                <label htmlFor="fName" className="text-white font-sans font-semibold">
                   First Name
                 </label>
                 <input
@@ -388,7 +406,7 @@ export function BeneficiaryProfileCreation() {
                 />
               </div>
               <div className="flex flex-col w-full sm:w-1/2">
-                <label htmlFor="lName" className="text-white font-[Montserrat] font-semibold">
+                <label htmlFor="lName" className="text-white font-sans font-semibold">
                   Last Name
                 </label>
                 <input
@@ -400,20 +418,20 @@ export function BeneficiaryProfileCreation() {
               </div>
             </div>
             <div>
-              <label htmlFor="SexDropdown" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="SexDropdown" className="text-white font-sans font-semibold">
                 Sex
               </label>
               <select
                 id="SexDropdown"
                 name="SexDropdown"
-                className="w-full rounded-[5px] p-2 font-[Montserrat] border-2 border-[#254151]"
+                className="appearance-none g-full bg-tertiary w-full rounded-[5px] p-2 font-sans border-1 border-secondary"
               >
-                <option value="Male">Male</option>
-                <option value="Volunteer">Female</option>
+                <option className="bg-white text-black" value="Male">Male</option>
+                <option className="bg-white text-black" value="Volunteer">Female</option>
               </select>
             </div>
             <div>
-              <label htmlFor="gradelevel" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="gradelevel" className="text-white font-sans font-semibold">
                 Grade Level
               </label>
               <input
@@ -424,7 +442,7 @@ export function BeneficiaryProfileCreation() {
               />
             </div>
             <div>
-              <label htmlFor="address" className="text-white font-[Montserrat] font-semibold">
+              <label htmlFor="address" className="text-white font-sans font-semibold">
                 Address
               </label>
               <input
@@ -437,13 +455,13 @@ export function BeneficiaryProfileCreation() {
             <div className="flex flex-row justify-end gap-1">
               <button
                 type="button"
-                className={`flex w-fit bg-[#254151] text-[#45B29D] p-1 px-3 rounded-sm font-semibold font-[Montserrat] cursor-pointer`}
+                className={`flex w-fit bg-secondary text-primary p-1 px-3 rounded-sm font-semibold font-sans cursor-pointer`}
                 onClick={handleAdd}>
                 +
               </button>
               <button
                 type="button"
-                className={`flex w-fit bg-[#254151] text-[#45B29D] p-1 px-3 rounded-sm font-semibold font-[Montserrat] cursor-pointer`}
+                className={`flex w-fit bg-secondary text-primary p-1 px-3 rounded-sm font-semibold font-sans cursor-pointer`}
                 onClick={handleSub}>
                 -
               </button>
@@ -451,7 +469,7 @@ export function BeneficiaryProfileCreation() {
             <div className="flex flex-col">
               <button
                 type="button"
-                className={`flex items-center justify-between bg-[#254151] text-[#45B29D] px-2 py-1 rounded-t-sm font-semibold font-[Montserrat] transition-all duration-300 cursor-pointer ${minimizeState ? "rounded-b-sm" : "rounded-t-sm"}`}
+                className={`flex items-center justify-between bg-secondary text-primary px-2 py-1 rounded-t-sm font-semibold font-sans transition-all duration-300 cursor-pointer ${minimizeState ? "rounded-b-sm" : "rounded-t-sm"}`}
                 onClick={handleMinimize}>
                 Guardian Information
                 <span className="flex items-center justify-center">
@@ -459,12 +477,12 @@ export function BeneficiaryProfileCreation() {
                 </span>
               </button>
               <div className={`overflow-auto transition-all duration-300 ease-in-out ${minimizeState ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}>
-                <div className="w-full rounded-b-sm text-white border border-[#254151] bg-[#3EA08D] p-3">
+                <div className="w-full rounded-b-sm text-white border border-secondary bg-tertiary p-3">
                   {Array.from(
                     { length: guardians.length },
                     (_, i) => (
                       <div className="pb-4">
-                        <h3 className="font-[Montserrat] mb-2">Guardian {i + 1}</h3>
+                        <h3 className="font-sans mb-2">Guardian {i + 1}</h3>
                         <GuardianCard formState={false} index={i} guardians={guardians} setGuardians={setGuardians} />
                       </div>
                     )
@@ -474,7 +492,7 @@ export function BeneficiaryProfileCreation() {
             </div>
             <button
               type="submit"
-              className="bg-[#254151] text-white mt-4 p-2 rounded-[5px] font-semibold"
+              className="bg-secondary text-white mt-4 p-2 rounded-[5px] font-semibold"
             >
               Create Account
             </button>

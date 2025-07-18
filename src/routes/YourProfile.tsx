@@ -121,16 +121,16 @@ export function YourProfile() {
         }
 
     return (
-        <div className="w-full min-h-screen bg-[#254151] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
+        <div className="w-full min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
             {showDeleteModal && (
                 createPortal(
                     <div className="transition-all duration-300 fixed top-0 right-0 left-0 bottom-0 z-50 flex items-center justify-center bg-black/50">
                         <div className="bg-white rounded-sm p-6 w-full max-w-md">
-                            <h2 className="text-lg font-bold text-[#254151] mb-4">Confirm Deletion</h2>
-                            <p className="mb-6 text-[#254151]">Are you sure you want to delete this account? This action cannot be undone.</p>
+                            <h2 className="text-lg font-bold text-secondary mb-4">Confirm Deletion</h2>
+                            <p className="mb-6 text-secondary">Are you sure you want to delete this account? This action cannot be undone.</p>
                             <div className="flex justify-end gap-3">
                                 <button
-                                    className="bg-gray-300 hover:bg-gray-400 text-[#254151] font-semibold px-4 py-2 rounded"
+                                    className="bg-gray-300 hover:bg-gray-400 text-secondary font-semibold px-4 py-2 rounded"
                                     onClick={handleDelete}
                                 >
                                     Cancel
@@ -148,24 +148,24 @@ export function YourProfile() {
                 )
             )}
             <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6 overflow-hidden">
-                <div className="-top-5 sm:-top-20 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[5px] border-[#45B29D] rounded-full flex items-center justify-center mb-1">
+                <div className="absolute sm:top-5 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[10px] border-primary rounded-full flex items-center justify-center mb-1 mt-15">
                     <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
                 </div>
 
                 <button
                     onClick={() => auth.signOut()}
-                    className="absolute left-4 top-8 bg-[#45B29D] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
+                    className="absolute left-4 top-8 bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-onhover transition">
                     Sign Out
                 </button>
                 {(formState === null) && (
                     <h3
-                        className="z-1 fixed right-4 bottom-15 bg-[#e7c438] text-white px-4 py-2 rounded font-semibold hover:bg-[#45b29c8a] transition">
+                        className="z-1 fixed right-4 bottom-20 bg-[#e7c438] text-white px-4 py-2 rounded font-semibold md:right-5 md:bottom-25">
                         Fetching...
                     </h3>
                 )}
 
-                <div className="w-full max-w-2xl bg-[#45B29D] rounded-md px-4 sm:px-6 py-8">
-                    <h3 className="text-[#254151] text-2xl text-center font-bold font-[Montserrat]">
+                <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
+                    <h3 className="text-secondary text-2xl text-center font-bold font-sans">
                         {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
                     </h3>
                     <div className="flex flex-col gap-4 mt-6">
@@ -173,13 +173,13 @@ export function YourProfile() {
                             <div className="flex flex-col flex-1">
                                 <label
                                     htmlFor="bDate"
-                                    className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
+                                    className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
                                     Birth Date:
                                 </label>
                                 <input
                                     type="date"
                                     id="bDate"
-                                    className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                                    className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
                                     readOnly={formState ?? true}
                                     onChange={() => setVolunteer({ ...volunteer as Volunteer, birthdate: Timestamp.fromDate(birthdate) })}
                                     value={birthdate?.toISOString().substring(0, 10)} />
@@ -188,13 +188,13 @@ export function YourProfile() {
                             <div className="flex flex-col flex-1">
                                 <label
                                     htmlFor="Sex"
-                                    className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
+                                    className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
                                     Sex:
                                 </label>
                                 <input
                                     type="text"
                                     id="Sex"
-                                    className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                                    className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
                                     readOnly={formState ?? true}
                                     onChange={(e) => setVolunteer({ ...volunteer as Volunteer, sex: e.target.value })}
                                     value={sex} />
@@ -203,13 +203,13 @@ export function YourProfile() {
                         <div className="flex flex-col">
                             <label
                                 htmlFor="email"
-                                className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
+                                className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
                                 Email:
                             </label>
                             <input
                                 type="email"
                                 id="email"
-                                className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                                className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
                                 readOnly={formState ?? true}
                                 onChange={(e) => setVolunteer({ ...volunteer as Volunteer, email: e.target.value })}
                                 value={email}
@@ -218,13 +218,13 @@ export function YourProfile() {
                         <div className="flex flex-col">
                             <label
                                 htmlFor="cNum"
-                                className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
+                                className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
                                 Contact No:
                             </label>
                             <input
                                 type="number"
                                 id="cNum"
-                                className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                                className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
                                 readOnly={formState ?? true}
                                 onChange={(e) => setVolunteer({ ...volunteer as Volunteer, contact_number: e.target.value })}
                                 value={"0" + Number(contact)}
@@ -233,13 +233,13 @@ export function YourProfile() {
                         <div className="flex flex-col">
                             <label
                                 htmlFor="add"
-                                className="mb-1 bg-[#254151] text-white px-2 py-1 rounded font-semibold font-[Montserrat]">
+                                className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
                                 Address:
                             </label>
                             <input
                                 type="text"
                                 id="add"
-                                className="w-full text-white border border-[#254151] bg-[#3EA08D] rounded px-3 py-2 font-[Montserrat]"
+                                className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
                                 readOnly={formState ?? true}
                                 onChange={(e) => setVolunteer({ ...volunteer as Volunteer, address: e.target.value })}
                                 value={address} />
@@ -248,14 +248,14 @@ export function YourProfile() {
                             {(!formState && formState !== null) && (
                                 <button
                                     type="submit"
-                                    className="mt-2 w-full bg-red-600 text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
+                                    className="mt-2 w-full bg-red-600 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                                     onClick={handleEdit}>
                                     Discard
                                 </button>
                             )}
                             <button
                                 type="submit"
-                                className="mt-2 w-full bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
+                                className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                                 onClick={formState ? handleEdit : handleSave}
                                 disabled={formState === null}>
                                 {formState || formState === null ? "Edit" : "Save Changes"}
@@ -263,7 +263,7 @@ export function YourProfile() {
                         </div>
                         <button
                             type="submit"
-                            className="mt-2 w-full bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
+                            className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                             onClick={handleDelete}
                             disabled={formState === null}>
                             Delete Account

@@ -9,11 +9,9 @@ function Admin() {
     const user = useContext(UserContext)
 
     const urls = [
+        { name: "Create Volunteer Profile", pldt: "/create-volunteer-profile" },
         { name: "Create Beneficiary Profile", pldt: "/create-beneficiary-profile" },
-        { name: "View Deleted Beneficiaries", pldt: "deleted-beneficiaries" },
-        { name: "View Volunteers", pldt: "volunteer" },
-        { name: "Create Volunteer Profile", pldt: "volunteer/new" },
-        { name: "View Deleted Volunteers", pldt: "volunteer/deleted" },
+        { name: "Create Event", pldt: "/create-event" },
     ];
 
     useEffect(() => {
@@ -24,11 +22,11 @@ function Admin() {
     }, [user, navigate]);
 
     return (
-        <div className="w-full min-h-screen flex bg-[#254151] items-start">
-            <div className="flex flex-col wrap-anywhere p-9 gap-4 font-[Montserrat] font-bold w-full max-w-5xl text-white">
+        <div className="w-full min-h-screen flex bg-secondary items-start">
+            <div className="flex flex-col wrap-anywhere p-9 gap-4 font-sans font-bold w-full max-w-5xl text-white">
                 {urls.map((ur) => (
                     <NavLink to={ur.pldt} key={ur.name}
-                        className="flex duration-100 bg-[#45B29D] rounded-md text-2xl text-center p-6 hover:bg-[#45b29c8a]"> {ur.name}</NavLink>
+                        className="flex duration-100 bg-primary rounded-md text-2xl text-center p-6 hover:bg-onhover"> {ur.name}</NavLink>
                 ))
                 }
             </div>

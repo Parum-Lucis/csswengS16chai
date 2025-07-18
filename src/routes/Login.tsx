@@ -69,12 +69,12 @@ function Login() {
         alt="Logo"
         className="w-24 h-24 sm:w-32 sm:h-32 p-1 mt-10 mb-6 rounded-full border-2 border-solid border-[#E3E3E3]"
       />
-      <h2 className="font-[Montserrat] text-center font-bold text-[1.2rem] sm:text-[1.3rem]">
+      <h2 className="font-sans text-center font-bold text-[1.2rem] sm:text-[1.3rem]">
         Management and Events Tracker
       </h2>
       <div className="w-full max-w-md flex justify-center items-center mb-6 mt-4">
         <form className="w-full flex flex-col gap-2 p-4 sm:p-6" onSubmit={login}>
-          <label htmlFor="username" className="font-[Montserrat] font-semibold">
+          <label htmlFor="username" className="font-sans font-semibold">
             Username
           </label>
           <input
@@ -85,7 +85,7 @@ function Login() {
           />
           <label
             htmlFor="password"
-            className="font-[Montserrat] font-semibold mt-5"
+            className="font-sans font-semibold mt-5"
           >
             Password
           </label>
@@ -96,25 +96,25 @@ function Login() {
             className=" border-solid border-3 rounded-[5px] p-1.5"
           />
           <div className="flex justify-between items-center mt-2">
-            <label className="font-[Montserrat] text-sm">
+            <label className="font-sans text-sm">
               <input
                 id="cbox"
                 name="cbox"
                 type="checkbox"
-                className="mr-2 h-3 w-3"
+                className="cursor-pointer mr-2 h-3 w-3"
               />
               Remember Me
             </label>
             <a
               onClick={() => { navigate("/forget-password") }}
-              className="font-[Montserrat] text-sm text-[#45B29D] hover:underline"
+              className="font-sans text-sm text-primary hover:underline cursor-pointer"
             >
               Forgot Password?
             </a>
           </div>
           <button
             type="submit"
-            className="bg-[#45B29D] text-white mt-10 p-1.5 rounded-[5px] w-full m-auto font-semibold cursor-pointer
+            className="bg-primary text-white mt-10 p-1.5 rounded-[5px] w-full m-auto font-semibold cursor-pointer
             hover:opacity-50 focus:opacity-50"
           >
             Log in

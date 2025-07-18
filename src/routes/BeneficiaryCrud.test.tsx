@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { BeneficiaryProfileCreation } from './ProfileCreation';
