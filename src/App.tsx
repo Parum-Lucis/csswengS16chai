@@ -14,7 +14,9 @@ import Temp from "./components/Temp";
 import ForgetMeNot from "./routes/ForgetMeNot";
 import Admin from "./routes/Admin"
 import { VolunteerList, BeneficiaryList } from "./routes/ProfileList";
-
+import EventList from "./routes/EventList";
+import { EventPage } from "./routes/EventPage";
+import EventCreation from "./routes/EventCreation";
 
 function App() {
   const [user, setUser] = useState<UserStateType>(undefined);
@@ -33,13 +35,15 @@ function App() {
         <Route path="/view-volunteer/:docId" element={<VolunteerProfile />} />
         <Route path="/create-volunteer-profile" element={<VolunteerProfileCreation />} />
         <Route path="/create-beneficiary-profile" element={<BeneficiaryProfileCreation />} />
+        <Route path="/create-event" element={<EventCreation />} />
         <Route path="/view-profile-list" element={<Temp />} />
         <Route path="/view-beneficiary-list" element={<BeneficiaryList />} />
         <Route path="/view-volunteer-list" element={<VolunteerList />} />
         <Route path="/view-calendar" element={<Calendar />} />
-        <Route path="/view-event-list" element={<Temp />} />
+        <Route path="/view-event-list" element={<EventList />} />
+        <Route path="/view-event/:docId" element={<EventPage />} />
       </Routes>
-      <NavigationBar/>
+      <NavigationBar />
     </UserContext>
   );
 }
