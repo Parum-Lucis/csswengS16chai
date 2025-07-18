@@ -313,8 +313,9 @@ describe("Edit Event", () => {
     
         // what should happen
         await waitFor(() => {
-          expect(toast.error).toHaveBeenCalledWith("Something went wrong");
+          expect(toast.error).toHaveBeenCalledWith("Start date cannot be greater than end date!");
         });
+        expect(updateDoc).not.toHaveBeenCalled();
     });
 });
 
