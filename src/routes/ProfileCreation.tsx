@@ -92,7 +92,7 @@ export function VolunteerProfileCreation() {
         <div className="absolute sm:top-0 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[10px] border-primary rounded-full flex items-center justify-center mb-1 mt-15">
           <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
         </div>
-        
+
         <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
           <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
             <div>
@@ -105,8 +105,8 @@ export function VolunteerProfileCreation() {
                 name="dropdown"
                 className="appearance-none bg-full bg-tertiary w-full rounded-[5px] p-2 font-sans border-1 border-secondary"
               >
-              <option className="bg-white text-black" value="Admin">Admin</option>
-              <option className="bg-white text-black" value="Volunteer">Volunteer</option>
+                <option className="bg-white text-black" value="Volunteer">Volunteer</option>
+                <option className="bg-white text-black" value="Admin">Admin</option>
               </select>
             </div>
 
@@ -161,7 +161,7 @@ export function VolunteerProfileCreation() {
                   type="text"
                   className="input-text w-full"
                 />
-              </div>  
+              </div>
             </div>
 
             <div>
@@ -314,9 +314,9 @@ export function BeneficiaryProfileCreation() {
           birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
           grade_level: Number(formData.get("gradelevel") as string),
           is_waitlisted: is_waitlisted,
-          time_to_live: null,
           guardians: guardians,
           sex: formData.get("SexDropdown") as string, /* this was missing pala? */
+          time_to_live: null,
         });
 
         if (addRef) {
