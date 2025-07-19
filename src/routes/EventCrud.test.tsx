@@ -128,7 +128,7 @@ describe("Event Creation", () => {
         await waitFor(() => {
             expect(addDoc).toHaveBeenCalled();
             expect(toast.success).toHaveBeenCalledWith("Event created successfully!");
-            expect(mockedNavigate).toHaveBeenCalledWith("/view-admin");
+            expect(mockedNavigate).toHaveBeenCalledWith("/admin");
         });
     });
 
@@ -361,7 +361,7 @@ describe("Delete Event", () => {
         await waitFor(() => {
             expect(callDeleteEvent).toHaveBeenCalledWith("test-event-id");
             expect(toast.success).toHaveBeenCalledWith("Event delete success!");
-            expect(mockedNavigate).toHaveBeenCalledWith("/view-event-list");
+            expect(mockedNavigate).toHaveBeenCalledWith("/event");
         });
     });
 });
