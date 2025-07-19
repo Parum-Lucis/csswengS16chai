@@ -214,6 +214,7 @@ export function VolunteerList() {
 
   // Profiles and test profiles flag
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [pic, setPic] = useState<Blob>(new Blob([]));
   const useTestProfiles = false; // false if db query
 
   // Fetching profiles 
@@ -277,6 +278,16 @@ export function VolunteerList() {
         if (flag) {
           toast.warn("One or more profiles failed to load.");
         }
+
+        try {
+
+          const picRef = ref(store, "/pfp/volunteers/basilio.png");
+          const blob = await getBlob(picRef);
+          setPic(blob);
+        } catch (error) {
+          console.log(error)
+        }
+
       };
       fetchProfiles();
     }
@@ -373,15 +384,7 @@ export function VolunteerList() {
               className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
             >
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-                <svg
-                  className="w-6 h-6 text-primary"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
-                  />
-                </svg>
+                <img src={URL.createObjectURL(pic)} />
               </div>
               <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
             </Link>
