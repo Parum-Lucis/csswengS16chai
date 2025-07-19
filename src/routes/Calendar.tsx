@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router";
 import { useState, useContext, useEffect, useRef } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore"
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 import EventCalendarCard from "../components/EventCalendarCard";
 import type { Event } from "@models/eventType";
 import { toast } from "react-toastify";
