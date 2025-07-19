@@ -1,13 +1,15 @@
 import { Link } from "react-router";
 import "../css/styles.css";
 import ProfileCard from "../components/ProfileCard";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db, store } from "../firebase/firebaseConfig";
-import { differenceInYears } from "date-fns";
+import { db } from "../firebase/firebaseConfig";
+import { compareAsc, differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
-import { getBlob, ref } from "firebase/storage";
 import { PlusCircle } from "lucide-react";
+import type { Beneficiary } from "@models/beneficiaryType";
+import { beneficiaryConverter, volunteerConverter } from "../util/converters";
+import type { Volunteer } from "@models/volunteerType";
 
 export function BeneficiaryList() {
   // List control states
@@ -19,104 +21,67 @@ export function BeneficiaryList() {
   const [loading, setLoading] = useState(true);
 
   // Profiles and test profiles flag
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const useTestProfiles = false; // false if db query
+  const [profiles, setProfiles] = useState<Beneficiary[]>([]);
 
   // Fetching profiles 
   // RUNS TWICE while in development because of React's strict mode
   // https://www.reddit.com/r/reactjs/comments/1epir3s/why_is_my_useeffect_being_called_twice_even/
   useEffect(() => {
-    if (useTestProfiles) {
-      setProfiles([
-        { first_name: "Juan", last_name: "Dela Cruz", age: 12, sex: "M", type: "student" },
-        { first_name: "Maria", last_name: "Clara", age: 10, sex: "F", type: "student" },
-        { first_name: "Jose", last_name: "Rizal", age: 13, sex: "M", type: "student" },
-        { first_name: "Melchora", last_name: "Aquino", age: 9, sex: "F", type: "student" },
-        { first_name: "Gabriela", last_name: "Silang", age: 7, sex: "F", type: "waitlist" },
-        { first_name: "Maria", last_name: "Elena", age: 11, sex: "F", type: "waitlist" },
-        { first_name: "Apolinario", last_name: "Mabini", age: 8, sex: "M", type: "waitlist" },
-      ]);
-      setLoading(false);
-    } else {
-      const fetchProfiles = async () => {
-        setLoading(true); // display "fetching..."
-        const beneficiarySnap = await getDocs(query(collection(db, "beneficiaries"), where("time_to_live", "==", null)));
-        const profiles: any[] = [];
-        let flag: boolean = false;
-
-        // TODO: use db models when pulled in main
-        // validate doc fields (allow N/A for now)
-        beneficiarySnap.docs.forEach(doc => {
-          try {
-            const data = doc.data();
-            const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
-            const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
-            const sex = data.sex;
-            const type = data.accredited_id == null ? "waitlist" : "student";
-
-            // Skip if name missing
-            if (!data.first_name || !data.last_name) {
-              flag = true;
-              console.error("Error fetching beneficiary: " + doc.id, "Missing name fields");
-              return;
-            }
-
-            profiles.push({
-              docId: doc.id,
-              first_name: data.first_name,
-              last_name: data.last_name,
-              sex: sex,
-              age,
-              type,
-            });
-          } catch (error) {
-            flag = true;
-            console.error("Error fetching beneficiary: " + doc.id, error);
-            return;
-          }
-        });
-
-        setProfiles(profiles);
+    const fetchProfiles = async () => {
+      setLoading(true); // display "fetching..."
+      const q = query(collection(db, "beneficiaries"), where("time_to_live", "==", null));
+      try {
+        const beneficiarySnap = await getDocs(q.withConverter(beneficiaryConverter));
+        setProfiles(beneficiarySnap.docs.map(beneficiary => beneficiary.data()))
+      } catch (error) {
+        console.error(error);
+      } finally {
         setLoading(false);
+      }
 
-        // warn that one or more profiles were skipped
-        if (flag) {
-          toast.warn("One or more profiles failed to load.");
-        }
-      };
-      fetchProfiles();
-    }
+
+    };
+    fetchProfiles();
+
   }, []);
 
+  const filteredProfiles = useMemo(() => {
+    // Filter profiles based on filter val
+    let temp = [...profiles];
+    if (filter === "waitlisted") {
+      temp = temp.filter(profile => profile.accredited_id === null);
+    } else if (filter === "student") {
+      temp = temp.filter(profile => profile.accredited_id !== null);
+    }
 
-  // Filter profiles based on filter val
-  let filteredprofiles = filter ? profiles.filter(profile => profile.type === filter) : profiles;
+    // Sort profiles based on selected sort val
+    if (sort === "last") {
+      temp.sort((a, b) => a.last_name.localeCompare(b.last_name));
+    } else if (sort === "first") {
+      temp.sort((a, b) => a.first_name.localeCompare(b.first_name));
+    } else if (sort === "age") {
+      temp.sort((a, b) => compareAsc(a.birthdate.toDate(), b.birthdate.toDate()));
+    }
 
-  // Sort profiles based on selected sort val
-  if (sort === "last") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.last_name.localeCompare(b.last_name));
-  } else if (sort === "first") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
-  } else if (sort === "age") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.age - b.age);
-  }
+    // Search filter (partial or exact matches on name and age)
+    if (search.trim() !== "") {
+      const searchLower = search.trim().toLowerCase();
+      const terms = searchLower.split(/[\s,]+/).filter(Boolean);
 
-  // Search filter (partial or exact matches on name and age)
-  if (search.trim() !== "") {
-    const searchLower = search.trim().toLowerCase();
-    const terms = searchLower.split(/[\s,]+/).filter(Boolean);
-
-    filteredprofiles = filteredprofiles.filter(profile => {
-      const values = [
-        profile.first_name.toLowerCase(),
-        profile.last_name.toLowerCase(),
-        profile.age.toString()
-      ];
-      return terms.every(term =>
-        values.some(value => value.includes(term))
-      );
-    });
-  }
+      temp = temp.filter(profile => {
+        const values = [
+          profile.first_name.toLowerCase(),
+          profile.last_name.toLowerCase(),
+          profile.birthdate.toString(),
+          differenceInYears(new Date(), profile.birthdate.toDate()).toString()
+        ];
+        return terms.every(term =>
+          values.some(value => value.includes(term))
+        );
+      });
+    }
+    return temp;
+  }, [filter, sort, search, profiles])
 
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
@@ -171,15 +136,15 @@ export function BeneficiaryList() {
         {loading ? (
           // display loading while fetching from database.
           <div className="text-center text-white py-8">Fetching...</div>
-        ) : filteredprofiles.length === 0 ? (
+        ) : filteredProfiles.length === 0 ? (
           <div className="text-center text-white py-8">No profiles to show.</div>
         ) : (
           // non-empty profiles
-          filteredprofiles.map((profile, index) => (
+          filteredProfiles.map((profile, index) => (
 
             <Link
               key={`${sort}-${index}`}
-              to={profile.docId}
+              to={profile.docID}
               className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
             >
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
@@ -193,7 +158,7 @@ export function BeneficiaryList() {
                   />
                 </svg>
               </div>
-              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
+              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={differenceInYears(new Date(), profile.birthdate.toDate())} sex={profile.sex} sort={sort} />
             </Link>
           ))
         )}
@@ -213,78 +178,31 @@ export function VolunteerList() {
   const [loading, setLoading] = useState(true);
 
   // Profiles and test profiles flag
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const useTestProfiles = false; // false if db query
+  const [profiles, setProfiles] = useState<Volunteer[]>([]);
 
   // Fetching profiles 
   useEffect(() => {
-    if (useTestProfiles) {
-      setProfiles([
-        { first_name: "Juan", last_name: "Dela Cruz", age: 12, sex: "M", is_admin: true },
-        { first_name: "Maria", last_name: "Clara", age: 10, sex: "F", is_admin: true },
-        { first_name: "Jose", last_name: "Rizal", age: 13, sex: "M", is_admin: true },
-        { first_name: "Melchora", last_name: "Aquino", age: 9, sex: "F", is_admin: true },
-        { first_name: "Gabriela", last_name: "Silang", age: 7, sex: "F", is_admin: false },
-        { first_name: "Maria", last_name: "Elena", age: 11, sex: "F", is_admin: false },
-        { first_name: "Apolinario", last_name: "Mabini", age: 8, sex: "M", is_admin: false },
-      ]);
-      setLoading(false);
-    } else {
-      const fetchProfiles = async () => {
-        setLoading(true); // display "fetching..."
-        const volunteerSnap = await getDocs(query(collection(db, "volunteers"), where("time_to_live", "==", null)));
-        const profiles: any[] = [];
-        let flag: boolean = false;
+    const fetchProfiles = async () => {
+      setLoading(true); // display "fetching..."
+      const q = query(collection(db, "volunteers"), where("time_to_live", "==", null));
 
-        // TODO: use db models when pulled in main
-        // validate doc fields (allow N/A for now)
-        volunteerSnap.forEach(doc => {
-          try {
-            const data = doc.data();
-            const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
-            const age = birthDate ? differenceInYears(new Date(), birthDate) : "N/A";
-            const sex = data.sex;
-            const type = data.is_admin ? "admin" : "volunteer";
-
-            // Skip if name missing
-            if (!data.first_name || !data.last_name) {
-              flag = true;
-              console.error("Error fetching beneficiary: " + doc.id, "Missing name fields");
-              return;
-            }
-
-            // TODO: handle routing to current user's profile differently
-
-            profiles.push({
-              docId: doc.id,
-              first_name: data.first_name,
-              last_name: data.last_name,
-              sex: sex,
-              age: age,
-              type,
-            });
-          } catch (error) {
-            flag = true;
-            console.error("Error fetching volunteer: " + doc.id, error);
-            return;
-          }
-        });
-
-        setProfiles(profiles);
+      try {
+        const volunteerSnap = await getDocs(q.withConverter(volunteerConverter));
+        setProfiles(volunteerSnap.docs.map(profile => profile.data()))
+      } catch (error) {
+        console.error(error);
+        toast.error("failed to load volunteers");
+      } finally {
         setLoading(false);
+      }
+    };
+    fetchProfiles();
 
-        // warn that one or more profiles were skipped
-        if (flag) {
-          toast.warn("One or more profiles failed to load.");
-        }
-      };
-      fetchProfiles();
-    }
   }, []);
 
 
   // Filter profiles based on filter val
-  let filteredprofiles = filter ? profiles.filter(profile => profile.type === filter) : profiles;
+  let filteredprofiles = filter ? profiles.filter(profile => profile.role.toLocaleLowerCase() === filter.toLocaleLowerCase()) : profiles;
 
   // Sort profiles based on selected sort val
   if (sort === "last") {
@@ -292,7 +210,7 @@ export function VolunteerList() {
   } else if (sort === "first") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
   } else if (sort === "age") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.age - b.age);
+    filteredprofiles = [...filteredprofiles].sort((a, b) => compareAsc(a.birthdate.toDate(), b.birthdate.toDate()));
   }
 
   // Search filter (partial or exact matches on name and age)
@@ -304,7 +222,8 @@ export function VolunteerList() {
       const values = [
         profile.first_name.toLowerCase(),
         profile.last_name.toLowerCase(),
-        profile.age.toString()
+        profile.birthdate.toString(),
+        differenceInYears(new Date(), profile.birthdate.toDate()).toString()
       ];
       return terms.every(term =>
         values.some(value => value.includes(term))
@@ -369,7 +288,7 @@ export function VolunteerList() {
 
             <Link
               key={`${sort}-${index}`}
-              to={profile.docId}
+              to={profile.docID}
               className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
             >
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
@@ -383,7 +302,7 @@ export function VolunteerList() {
                   />
                 </svg>
               </div>
-              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
+              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={differenceInYears(new Date(), profile.birthdate.toDate())} sex={profile.sex} sort={sort} />
             </Link>
           ))
         )}

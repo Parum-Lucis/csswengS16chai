@@ -6,7 +6,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { BeneficiaryList } from './ProfileList';
 import { UserContext } from '../util/userContext';
-import { collection, getDocs } from 'firebase/firestore';
+import { getDocs } from 'firebase/firestore';
 import { VolunteerList } from './ProfileList';
 
 jest.mock('firebase/firestore', () => ({

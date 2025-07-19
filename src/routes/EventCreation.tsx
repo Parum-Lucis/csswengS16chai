@@ -1,6 +1,4 @@
 import type { Event } from "@models/eventType";
-import type { AttendedEvents } from "@models/attendedEventsType";
-
 import React from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
@@ -25,7 +23,7 @@ export function EventCreation() {
       }
     }
 
-    var start_timestamp, end_timestamp;
+    let start_timestamp, end_timestamp;
     try {
       // handle start date-time
       const date = new Date(formData.get("date") as string);
@@ -47,6 +45,7 @@ export function EventCreation() {
         return;
       }
     } catch (error) {
+      console.error(error);
       toast.error("Please provide a valid date!");
       submitBtn.disabled = false;
       return;
@@ -61,7 +60,7 @@ export function EventCreation() {
 
     // create object and trim whitespaces
     // note: create attendees subcollection when we're actually adding attendees na 
-    var newEvent: Omit<Event, "attendees"> = {
+    const newEvent: Omit<Event, "attendees"> = {
       name: (formData.get("eventName") as string).trim(),
       description: (formData.get("description") as string).trim(),
       start_date: start_timestamp,
@@ -130,7 +129,7 @@ export function EventCreation() {
                 type="date"
                 className="appearance-none input-text w-full"
                 required
-                // onChange={e => toast.info(`Selected date: ${new Date((e.target as HTMLInputElement).value)}`)} // checker
+              // onChange={e => toast.info(`Selected date: ${new Date((e.target as HTMLInputElement).value)}`)} // checker
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-4">

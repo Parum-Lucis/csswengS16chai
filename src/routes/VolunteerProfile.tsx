@@ -32,7 +32,7 @@ export function VolunteerProfile() {
             setForm(true)
         }
         fetchBeneficiary()
-    }, [setVolunteer])
+    }, [params.docId])
     console.log(volunteer)
     const navigate = useNavigate();
     const { sex, contact_number: contact, email, address } = volunteer || {}

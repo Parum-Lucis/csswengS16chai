@@ -6,8 +6,7 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { BeneficiaryProfileCreation } from './ProfileCreation';
 import { BeneficiaryProfile } from './BeneficiaryProfile';
 import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
-import { addDoc, collection, doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../firebase/firebaseConfig';
+import { addDoc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { auth } from '../firebase/firebaseConfig'
 import { ToastContainer } from 'react-toastify';
 
