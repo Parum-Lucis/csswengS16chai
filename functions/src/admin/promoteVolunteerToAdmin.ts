@@ -19,7 +19,7 @@ export const promoteVolunteerToAdmin = onCall<string>(async (req) => {
 
         await Promise.all([
             getAuth().setCustomUserClaims(uid, { is_admin: true }),
-            getFirestore().doc(`volunteers/${uid}`).update({ "is_admin": true })
+            getFirestore().doc(`volunteers/${uid}`).update({ "is_admin": true, "role": "Admin" })
         ]);
         return true;
 

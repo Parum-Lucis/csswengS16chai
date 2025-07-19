@@ -338,11 +338,11 @@ export function VolunteerList() {
           className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
-          <option className="bg-secondary text-white" value="student">
-            Students
+          <option className="bg-secondary text-white" value="volunteer">
+            Volunteers
           </option>
-          <option className="bg-secondary text-white" value="waitlist">
-            Waitlisted
+          <option className="bg-secondary text-white" value="admin">
+            Admins
           </option>
         </select>
 
