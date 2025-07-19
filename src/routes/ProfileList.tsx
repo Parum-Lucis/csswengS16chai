@@ -59,7 +59,7 @@ export function BeneficiaryList() {
             const data = doc.data();
             const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
             const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
-            const sex = data.sex === "M" || data.sex === "F" ? data.sex : "N/A";
+            const sex = data.sex;
             const type = data.accredited_id == null ? "waitlist" : "student";
 
             // Skip if name missing
@@ -151,7 +151,7 @@ export function BeneficiaryList() {
           className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
-          <option className="bg-secondary text-white" value="last"> 
+          <option className="bg-secondary text-white" value="last">
             Last Name
           </option>
           <option className="bg-secondary text-white" value="first">
@@ -258,7 +258,7 @@ export function VolunteerList() {
             const data = doc.data();
             const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
             const age = birthDate ? differenceInYears(new Date(), birthDate) : "N/A";
-            const sex = data.sex === "M" || data.sex === "F" ? data.sex : "N/A";
+            const sex = data.sex;
             const type = data.is_admin ? "admin" : "volunteer";
 
             // Skip if name missing
@@ -352,7 +352,7 @@ export function VolunteerList() {
           className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
-          <option className="bg-secondary text-white" value="last"> 
+          <option className="bg-secondary text-white" value="last">
             Last Name
           </option>
           <option className="bg-secondary text-white" value="first">

@@ -10,10 +10,11 @@ function Admin() {
 
     const urls = [
         { name: "Create Beneficiary Profile", pldt: "/create-beneficiary-profile" },
-        { name: "Create Event", pldt: "/create-event" },
+        { name: "Delete Beneficiary Profile", pldt: "deleted-beneficiaries" },
         { name: "View Volunteers", pldt: "volunteer/" },
         { name: "Create Volunteer Profile", pldt: "volunteer/new" },
         { name: "Deleted Volunteers", pldt: "volunteer/deleted" },
+        { name: "Create Event", pldt: "/create-event" },
     ];
 
     useEffect(() => {
