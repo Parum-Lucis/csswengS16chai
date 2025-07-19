@@ -19,7 +19,7 @@ function Login() {
   // if there is already a user logged in, just skip the login page.
   useEffect(() => {
     if (user) {
-      navigate("/view-profile");
+      navigate("/me");
     }
   }, [user, navigate]);
 
@@ -42,7 +42,7 @@ function Login() {
         rememberMe ? browserLocalPersistence : browserSessionPersistence
       );
       console.log(user);
-      navigate("/view-profile");
+      navigate("/me");
     } catch (error) {
       // see https://firebase.google.com/docs/auth/admin/errors for other auth/error-codes
       if (error instanceof FirebaseError) {

@@ -7,21 +7,8 @@ import { toast } from "react-toastify";
 import { collection, addDoc, Timestamp } from "firebase/firestore"
 import { db } from "../firebase/firebaseConfig"
 
-import { useContext, useEffect } from "react";
-import { UserContext } from "../util/userContext";
-
-
 export function EventCreation() {
   const navigate = useNavigate();
-  const user = useContext(UserContext)
-
-  useEffect(() => {
-    // check for authorized user
-    if (user === null) {
-      navigate("/");
-    }
-  }, [user, navigate]);
-
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -86,7 +73,7 @@ export function EventCreation() {
     addDoc(collection(db, "events"), newEvent)
       .then(() => {
         toast.success("Event created successfully!");
-        navigate("/view-admin");
+        navigate("/admin");
       })
       .catch((error) => {
         toast.error("Failed to create event: " + error.message);

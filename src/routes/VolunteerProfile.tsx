@@ -35,17 +35,8 @@ export function VolunteerProfile() {
     }, [setVolunteer])
     console.log(volunteer)
     const navigate = useNavigate();
-    const usertest = useContext(UserContext);
     const { sex, contact_number: contact, email, address } = volunteer || {}
     const birthdate = new Date((volunteer?.birthdate.seconds ?? 0) * 1000)
-
-    useEffect(() => {
-
-        // If there is no user logged in, skip this page and redirect to login page.
-        if (usertest === null) {
-            navigate("/");
-        }
-    }, [usertest, navigate]);
 
     useEffect(() => {
         document.body.style.overflow = showDeleteModal ? 'hidden' : 'unset';
@@ -73,7 +64,7 @@ export function VolunteerProfile() {
                     navigate("/");
                 }
                 else
-                    navigate('/view-volunteer-list')
+                    navigate('../')
             }
 
         } catch (error) {

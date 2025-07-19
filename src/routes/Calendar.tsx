@@ -1,31 +1,19 @@
 import "../css/styles.css";
-import { NavLink, useNavigate } from "react-router";
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore"
-import { UserContext } from "../util/userContext";
 import EventCalendarCard from "../components/EventCalendarCard";
 import type { Event } from "@models/eventType";
 import { toast } from "react-toastify";
 import { CircleArrowLeft, ChevronDown, CircleArrowRight } from 'lucide-react';
-import { render } from "@testing-library/react";
+import { format } from "date-fns";
 
-export function Calendar(){
-    const navigate = useNavigate()
-    const usertest = useContext(UserContext)
+export function Calendar() {
     const [minimizeState, setMinimize] = useState(false)
     const [eventsList, setEventsList] = useState<Event[]>([])
     const [prevMonthSnap, setPrevMonthSnap] = useState<React.JSX.Element | null>()
     const [nextMonthSnap, setNextMonthSnap] = useState<React.JSX.Element | null>()
 
-    useEffect(() => {
-    
-        // If there is no user logged in, skip this page and redirect to login page.
-        if (usertest === null) {
-        navigate("/");
-        }
-    }, [usertest, navigate]);
-    
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const monthsOfYear = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -156,32 +144,30 @@ export function Calendar(){
                     )
                 }
                 {visibleWeeks.map((week, weekIndex) =>
-                    (week.map((day,dayIndex) =>
-                        <>
-                            {day !== 0 ? (
-                                <button 
-                                    type="button"
-                                    className={`grid h-10 py-2 text-center border rounded-full transition-all duration-200
-                                                ${
-                                                    day === selectedDate.getDate() &&
-                                                    currentMonth === selectedDate.getMonth() &&
-                                                    currentYear === selectedDate.getFullYear() ?
-                                                    "text-white bg-secondary" : ""
-                                                }
-                                                ${
-                                                    day === currentDate.getDate() &&
-                                                    currentMonth === currentDate.getMonth() &&
-                                                    currentYear === currentDate.getFullYear() ?
-                                                    "text-primary" : ""
-                                                }`} 
-                                    key={`${weekIndex}-${day}`}
-                                    onClick={() => handleDayClick(day)}>
-                                    {day}
-                                    {eventsList.some(event =>
-                                        event?.start_date.toDate().getDate() === day &&
-                                        event?.start_date.toDate().getMonth() === currentMonth &&
-                                        event?.start_date.toDate().getFullYear() === currentYear
-                                        ) && (
+                (week.map((day, dayIndex) =>
+                    <>
+                        {day !== 0 ? (
+                            <button
+                                type="button"
+                                className={`grid h-10 py-2 text-center border rounded-full transition-all duration-200
+                                                ${day === selectedDate.getDate() &&
+                                        currentMonth === selectedDate.getMonth() &&
+                                        currentYear === selectedDate.getFullYear() ?
+                                        "text-black bg-white" : ""
+                                    }
+                                                ${day === currentDate.getDate() &&
+                                        currentMonth === currentDate.getMonth() &&
+                                        currentYear === currentDate.getFullYear() ?
+                                        "text-primary" : ""
+                                    }`}
+                                key={`${weekIndex}-${day}`}
+                                onClick={() => handleDayClick(day)}>
+                                {day}
+                                {eventsList.some(event =>
+                                    event?.start_date.toDate().getDate() === day &&
+                                    event?.start_date.toDate().getMonth() === currentMonth &&
+                                    event?.start_date.toDate().getFullYear() === currentYear
+                                ) && (
                                         <span className="-translate-x-1.5 w-2 h-2 bg-primary rounded-full"></span>
                                     )}
                                 </button>
@@ -239,12 +225,12 @@ export function Calendar(){
                     key={selectedDate.toISOString()} >
                     <div className="flex flex-col justify-center space-y-2">
                         {selectedEvents.map((event) => (
-                            <EventCalendarCard 
-                                key={event.docID} 
-                                date={event.start_date.toDate().toDateString().slice(event.start_date.toDate().toDateString().indexOf(' ') + 1)} 
-                                /*onClick={() => navigate(`/view-event/${event.docID}`)}*/ // use when eventPage works
-                                event={event.name} 
-                                time={event.start_date.toDate().getHours().toString() + ':' + event.start_date.toDate().getMinutes().toString()}/>
+                            <EventCalendarCard
+                                key={event.docID}
+                                date={event.start_date.toDate().toDateString().slice(event.start_date.toDate().toDateString().indexOf(' ') + 1)}
+                                event={event.name}
+                                uid={event.docID ?? "sdfsdf"}
+                                time={format(event.start_date.toDate(), "hh:mm a")} />
                         ))}
                         {selectedEvents.length === 0 ? "No Events!" : ""}
                     </div>

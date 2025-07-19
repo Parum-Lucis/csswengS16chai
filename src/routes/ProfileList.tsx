@@ -1,23 +1,15 @@
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 import "../css/styles.css";
 import ProfileCard from "../components/ProfileCard";
-import { UserContext } from "../util/userContext";
-import { useContext, useEffect, useState } from "react";
-import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
+import { useEffect, useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db, store } from "../firebase/firebaseConfig";
 import { differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
+import { getBlob, ref } from "firebase/storage";
+import { PlusCircle } from "lucide-react";
 
 export function BeneficiaryList() {
-  const navigate = useNavigate();
-  const usertest = useContext(UserContext);
-
-  useEffect(() => {
-    if (usertest === null) {
-      navigate("/");
-    }
-  }, [usertest, navigate]);
-
   // List control states
   const [filter, setFilter] = useState<string>("");
   const [sort, setSort] = useState<string>("");
@@ -172,6 +164,10 @@ export function BeneficiaryList() {
       </div>
 
       <div className="flex flex-col gap-4">
+        <Link to="new" className="flex p-4 gap-2 bg-primary mb-4 rounded-xl">
+          <PlusCircle />
+          Create New Profile
+        </Link>
         {loading ? (
           // display loading while fetching from database.
           <div className="text-center text-white py-8">Fetching...</div>
@@ -181,12 +177,9 @@ export function BeneficiaryList() {
           // non-empty profiles
           filteredprofiles.map((profile, index) => (
 
-            <div
+            <Link
               key={`${sort}-${index}`}
-              onClick={() => {
-                console.log(`Profile clicked: ${profile.first_name} ${profile.last_name} (${profile.docId})`);
-                navigate(`/view-beneficiary/${profile.docId}`);
-              }}
+              to={profile.docId}
               className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
             >
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
@@ -201,7 +194,7 @@ export function BeneficiaryList() {
                 </svg>
               </div>
               <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
-            </div>
+            </Link>
           ))
         )}
       </div>
@@ -210,14 +203,6 @@ export function BeneficiaryList() {
 }
 
 export function VolunteerList() {
-  const navigate = useNavigate();
-  const usertest = useContext(UserContext);
-
-  useEffect(() => {
-    if (usertest === null) {
-      navigate("/");
-    }
-  }, [usertest, navigate]);
 
   // List control states
   const [filter, setFilter] = useState<string>("");
@@ -382,11 +367,9 @@ export function VolunteerList() {
           // non-empty profiles
           filteredprofiles.map((profile, index) => (
 
-            <div
+            <Link
               key={`${sort}-${index}`}
-              onClick={() => {
-                navigate(`/view-volunteer/${profile.docId}`);
-              }}
+              to={profile.docId}
               className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
             >
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
@@ -401,7 +384,7 @@ export function VolunteerList() {
                 </svg>
               </div>
               <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
-            </div>
+            </Link>
           ))
         )}
       </div>

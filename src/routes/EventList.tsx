@@ -1,6 +1,5 @@
-import { useContext, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { UserContext } from "../util/userContext";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 import type { Event } from "@models/eventType";
 import { collection, getDocs, QueryDocumentSnapshot, type FirestoreDataConverter } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
@@ -20,9 +19,6 @@ const converter: FirestoreDataConverter<Event> = {
 }
 
 export function EventList() {
-  const navigate = useNavigate();
-  const usertest = useContext(UserContext);
-
   const [events, setEvents] = useState<Event[]>([]);
 
   useEffect(() => {
@@ -38,12 +34,6 @@ export function EventList() {
 
     fetchEvents()
   }, []);
-
-  useEffect(() => {
-    if (usertest === null) {
-      navigate("/");
-    }
-  }, [usertest, navigate]);
 
   const [filter, setFilter] = useState<string>("");
   const [sort, setSort] = useState<string>("");
@@ -141,7 +131,7 @@ function EventCard(
 
   return (
     <Link
-      to={`/view-event/${docID}`}
+      to={`/event/${docID}`}
       className="flex items-center bg-primary text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
     >
       <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 shrink-0">

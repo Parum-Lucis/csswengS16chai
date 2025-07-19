@@ -138,7 +138,7 @@ export function EventPage() {
         .then((result) => {
           if (result.data) {
             toast.success("Event delete success!")
-            navigate("/view-event-list");
+            navigate("/event");
           } else { toast.error("Could not delete the event (no auth or event not found)") }
         })
     }
