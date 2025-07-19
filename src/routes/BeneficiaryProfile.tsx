@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 import type { Guardian } from "@models/guardianType";
 import { emailRegex } from "../util/emailRegex";
 import { add } from "date-fns";
+import type { Event } from "@models/eventType";
 
 
 export function BeneficiaryProfile() {
@@ -220,16 +221,15 @@ export function BeneficiaryProfile() {
 
         }
 
-    const eventsTest = [
-        { id: 0, name: "Donation", date: "12/02/1902" },
-        { id: 1, name: "Teaching", date: "12/02/1999" },
-        { id: 2, name: "Airplane Visit", date: "11/09/2001" },
-        { id: 3, name: "Church", date: "12/02/2004" },
-        { id: 4, name: "Donation", date: "12/02/2005" },
-        { id: 5, name: "Teaching", date: "12/02/2006" },
-        { id: 6, name: "Food Drive", date: "12/02/2007" },
-        { id: 7, name: "Food Drive", date: "12/02/2008" },
-        { id: 8, name: "Christmas Party", date: "22/12/2009" },
+    const eventsTest: Event[] = [
+        {
+            name: "HardCoded",
+            description: "Hardcore",
+            start_date: Timestamp.fromDate(new Date()),
+            end_date: Timestamp.fromDate(new Date()),
+            location: "there",
+            attendees: []
+        }
     ];
     return (
         <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
@@ -419,8 +419,8 @@ export function BeneficiaryProfile() {
                         Attended Events
                     </h3>
                     <div className="space-y-2">
-                        {eventsTest.map((event, index) => (
-                            <EventCard key={index} date={event.date} event={event.name} />
+                        {eventsTest.map(({ start_date, name }, index) => (
+                            <EventCard key={index} date={start_date} name={name} />
                         ))}
                     </div>
                 </div>
