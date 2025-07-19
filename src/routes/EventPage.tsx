@@ -9,6 +9,7 @@ import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
 import { callDeleteEvent } from '../firebase/cloudFunctions';
+import { sendEmailReminder } from "../firebase/cloudFunctions";
 
 export function EventPage() {
   const params = useParams()
@@ -183,6 +184,8 @@ export function EventPage() {
           who_attended: "Beneficiary", // temp
           first_name: notAttendeeList[i].first_name,
           last_name: notAttendeeList[i].last_name,
+          email: notAttendeeList[i].guardians[0].email,
+          contact_number: notAttendeeList[i].guardians[0].contact_number,
           beneficiaryID: notAttendeeList[i].docID,
           docID: addRef.id
         });
@@ -365,6 +368,21 @@ export function EventPage() {
         <h2 className="text-primary text-2xl font-bold font-sans text-center mt-5">List of Attendees:</h2>
         <div className="relative w-full max-w-2xl mt-3">
           <div className="flex justify-end gap-3">
+            <button
+              className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
+              type="button"
+              onClick={async () => {
+                if(!originalEvent) 
+                  return;
+                const success = await sendEmailReminder({...originalEvent, docID: docID})
+                console.log(success.data)
+                if(success.data.includes(true))
+                  toast.success("Email sent!")
+                else toast.error("Something went wrong.")
+              }} 
+            >
+              Send Email
+            </button>
             <button
               className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
               type="button"

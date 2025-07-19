@@ -21,6 +21,10 @@ import { onSchedule } from "firebase-functions/scheduler";
 import { createTimestampFromNow } from "./utils/time";
 import { onDocumentUpdated } from "firebase-functions/firestore";
 import { Beneficiary } from "@models/beneficiaryType";
+
+import 'dotenv/config'
+
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -192,3 +196,5 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
         logger.error(error)
     }
 })
+
+export { sendEmailReminder } from "./sendEmail";
