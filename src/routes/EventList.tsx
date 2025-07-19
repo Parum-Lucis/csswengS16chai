@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 import type { Event } from "@models/eventType";
 import { collection, getDocs, QueryDocumentSnapshot, type FirestoreDataConverter } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
