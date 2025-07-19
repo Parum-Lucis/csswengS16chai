@@ -1,6 +1,6 @@
-import { startTransition, useEffect, useOptimistic, useState } from "react";
+import { startTransition, useEffect, useMemo, useOptimistic, useState } from "react";
 import { collection, getDocs, query, QueryDocumentSnapshot, where } from "firebase/firestore";
-import { differenceInDays, differenceInYears } from "date-fns";
+import { compareDesc, differenceInDays, differenceInYears } from "date-fns";
 import { db } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import type { Volunteer } from "@models/volunteerType";
@@ -23,10 +23,6 @@ export function DeletedVolunteerList() {
         profiles,
         (prev, removedId) => prev.filter((val) => val.docID !== removedId)
     )
-
-    const [filter, setFilter] = useState<string>("");
-    const [sort, setSort] = useState<string>("");
-    const [search, setSearch] = useState<string>("");
 
     useEffect(() => {
         async function run() {
@@ -68,6 +64,46 @@ export function DeletedVolunteerList() {
     }
 
 
+    const [filter, setFilter] = useState<string>("");
+    const [sort, setSort] = useState<string>("");
+    const [search, setSearch] = useState<string>("");
+    const modifiedList = useMemo<Volunteer[]>(() => {
+        let temp = filter ? oProfiles.filter(profile => profile.role.toLocaleLowerCase() === filter.toLocaleLowerCase()) : oProfiles;
+
+        // Sort profiles based on selected sort val
+        if (sort === "last") {
+            temp.sort((a, b) => a.last_name.localeCompare(b.last_name));
+        } else if (sort === "first") {
+            temp.sort((a, b) => a.last_name.localeCompare(b.first_name));
+        } else if (sort === "age") {
+            temp.sort((a, b) => compareDesc(a.birthdate.toDate(), b.birthdate.toDate()));
+        } else if (sort === "deletion") {
+            temp.sort((a, b) =>
+                a.time_to_live !== null && b.time_to_live !== null ?
+                    b.time_to_live?.toMillis() - a.time_to_live?.toMillis() : -1)
+        }
+
+        // Search filter (partial or exact matches on name and age)
+        if (search.trim() !== "") {
+            const searchLower = search.trim().toLowerCase();
+            const terms = searchLower.split(/[\s,]+/).filter(Boolean);
+
+            temp = temp.filter(profile => {
+                const values = [
+                    profile.first_name.toLowerCase(),
+                    profile.last_name.toLowerCase(),
+                    profile.birthdate.toDate().toDateString()
+                ];
+                return terms.every(term =>
+                    values.some(value => value.includes(term))
+                );
+            });
+        }
+
+        return temp;
+    }, [filter, sort, search, oProfiles])
+
+
     return (
         <div className="w-full max-w-md mx-auto mt-6 p-4">
             <h1 className="text-center text-6xl font-bold text-[#254151] mb-4 font-[Montserrat]">Profile List</h1>
@@ -92,6 +128,7 @@ export function DeletedVolunteerList() {
                     <option value="last">Last Name</option>
                     <option value="first">First Name</option>
                     <option value="age">Age</option>
+                    <option value="deletion">Deletion age</option>
                 </select>
 
                 <input
@@ -106,7 +143,7 @@ export function DeletedVolunteerList() {
                 ProfileCard={DeletedVolunteerCard}
                 handleRestore={handleRestore}
                 loading={loading}
-                profiles={oProfiles}
+                profiles={modifiedList}
             />
         </div>
     )
