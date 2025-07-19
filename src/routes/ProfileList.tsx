@@ -4,7 +4,7 @@ import ProfileCard from "../components/ProfileCard";
 import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import { compareAsc, differenceInYears } from "date-fns";
+import { compareAsc, compareDesc, differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
 import { PlusCircle } from "lucide-react";
 import type { Beneficiary } from "@models/beneficiaryType";
@@ -48,7 +48,7 @@ export function BeneficiaryList() {
   const filteredProfiles = useMemo(() => {
     // Filter profiles based on filter val
     let temp = [...profiles];
-    if (filter === "waitlisted") {
+    if (filter === "waitlist") {
       temp = temp.filter(profile => profile.accredited_id === null);
     } else if (filter === "student") {
       temp = temp.filter(profile => profile.accredited_id !== null);
@@ -60,7 +60,7 @@ export function BeneficiaryList() {
     } else if (sort === "first") {
       temp.sort((a, b) => a.first_name.localeCompare(b.first_name));
     } else if (sort === "age") {
-      temp.sort((a, b) => compareAsc(a.birthdate.toDate(), b.birthdate.toDate()));
+      temp.sort((a, b) => compareDesc(a.birthdate.toDate(), b.birthdate.toDate()));
     }
 
     // Search filter (partial or exact matches on name and age)

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../util/userContext.ts";
+import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
 import { callDeleteVolunteerProfile } from "../firebase/cloudFunctions";
 import { signOut } from "firebase/auth";
-import { emailRegex } from "../util/emailRegex.ts";
+import { emailRegex } from "../util/emailRegex";
 
 export function YourProfile() {
 

@@ -2,16 +2,20 @@
  * @jest-environment jsdom
  */
 import '@testing-library/jest-dom';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { BeneficiaryList } from './ProfileList';
 import { UserContext } from '../util/userContext';
-import { getDocs } from 'firebase/firestore';
+import { getDocs, Timestamp } from 'firebase/firestore';
 import { VolunteerList } from './ProfileList';
 
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
   getDocs: jest.fn(),
+  where: jest.fn(),
+  query: jest.fn(() => ({
+    withConverter: jest.fn()
+  }))
 }));
 
 jest.mock('../firebase/firebaseConfig', () => ({
@@ -65,7 +69,7 @@ describe('Beneficiary List Page', () => {
   test('renders title, filter, sort, and search inputs', () => {
     renderWithUser({ email: 'user@test.com' });
 
-    expect(screen.getByRole('heading', { name: /profile list/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /beneficiary list/i })).toBeInTheDocument();
 
     expect(screen.getByDisplayValue('Filter By')).toBeInTheDocument();
 
@@ -80,7 +84,7 @@ describe('Beneficiary List Page', () => {
   });
 
   test('renders beneficiary cards after fetching', async () => {
-    renderWithUser({ email: 'user@test.com' });
+    act(() => renderWithUser({ email: 'user@test.com' }))
 
     await waitFor(() => {
       expect(screen.getByText(/Test/i)).toBeInTheDocument();
@@ -188,7 +192,7 @@ describe('Volunteer List Page', () => {
       id: '1', data: () => ({
         first_name: 'Another',
         last_name: 'Admin',
-        birthdate: new Date('2015-01-01'),
+        birthdate: Timestamp.fromDate(new Date('2015-01-01')),
         sex: 'F',
         is_admin: true
       })
@@ -197,7 +201,7 @@ describe('Volunteer List Page', () => {
       id: '2', data: () => ({
         first_name: 'Test',
         last_name: 'Volunteer',
-        birthdate: new Date('2010-01-01'),
+        birthdate: Timestamp.fromDate(new Date('2010-01-01')),
         sex: 'M',
         is_admin: false
       })
@@ -222,7 +226,7 @@ describe('Volunteer List Page', () => {
   test('renders title, filter, sort, and search inputs', () => {
     renderVolunteerWithUser({ email: 'user@test.com' });
 
-    expect(screen.getByRole('heading', { name: /profile list/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /volunteer list/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Filter By')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Sort by')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();

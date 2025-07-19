@@ -347,16 +347,18 @@ describe('Retrieve Beneficiary Profile', () => {
         });
       });
 
-    test('redirects to login if no user is logged in', async () => {
-        (auth.onAuthStateChanged as jest.Mock).mockImplementation(callback => {
-            callback(null);
-            return jest.fn();
-        });
-        renderBeneficiaryProfile();
-        await waitFor(() => {
-            expect(mockedNavigate).toHaveBeenCalledWith('/');
-        });
-    });
+    // NOTE: Individual pages/components are no longer responsible for navigating away
+    // if a user is not logged in.
+    // test('redirects to login if no user is logged in', async () => {
+    //     (auth.onAuthStateChanged as jest.Mock).mockImplementation(callback => {
+    //         callback(null);
+    //         return jest.fn();
+    //     });
+    //     renderBeneficiaryProfile();
+    //     await waitFor(() => {
+    //         expect(mockedNavigate).toHaveBeenCalledWith('/');
+    //     });
+    // });
 });
 
 describe('Beneficiary Update', () => {
@@ -560,7 +562,7 @@ describe('Beneficiary Update', () => {
             })
           );
           expect(screen.getByText(/Account delete success!/i)).toBeInTheDocument();
-          expect(mockedNavigate).toHaveBeenCalledWith('/');
+          expect(mockedNavigate).toHaveBeenCalledWith('/beneficiary');
         });
       });
 
