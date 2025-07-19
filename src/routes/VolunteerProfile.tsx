@@ -109,9 +109,6 @@ export function VolunteerProfile() {
                 })
                 setOriginalVolunteer(volunteer)
                 toast.success("Account update success!")
-                setTimeout(function () {
-                    location.reload();
-                }, 1000);
             } catch {
                 toast.error("Something went wrong")
             }
@@ -123,7 +120,7 @@ export function VolunteerProfile() {
         const res = await callPromoteVolunteerToAdmin(params.docId);
         if (res) {
             toast.info("Successfully promoted the Volunteer!");
-            location.reload();
+            setOriginalVolunteer(v => v === null ? null : ({ ...v, is_admin: true, role: "Volunteer" }))
         } else {
             toast.error("couldn't promote volunteer");
         }
@@ -173,7 +170,7 @@ export function VolunteerProfile() {
 
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
                     <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                        {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
+                        {originalVolunteer?.last_name}, {originalVolunteer?.first_name} {originalVolunteer?.is_admin ? "(Admin)" : ""}
                     </h3>
                     <div className="flex flex-col gap-4 mt-6">
                         <div className="flex flex-col sm:flex-row gap-4">
@@ -276,7 +273,7 @@ export function VolunteerProfile() {
                             Delete Account
                         </button>
                         {
-                            !volunteer?.is_admin &&
+                            !originalVolunteer?.is_admin &&
                             <button
                                 type="button"
                                 className="mt-2 w-full bg-[#254151] text-white px-4 py-2 rounded font-semibold font-[Montserrat] cursor-pointer"
