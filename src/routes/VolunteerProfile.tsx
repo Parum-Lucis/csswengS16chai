@@ -182,107 +182,107 @@ export function VolunteerProfile() {
                 {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
                 </h3>
                 <div className="flex flex-col gap-4 mt-6">
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex flex-col flex-1">
-                    <label
-                        htmlFor="bDate"
-                        className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                        Birth Date:
-                    </label>
-                    <input
-                        type="date"
-                        id="bDate"
-                        className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                        readOnly={formState ?? true}
-                        onChange={(e) => setVolunteer({...volunteer as Volunteer, birthdate : Timestamp.fromMillis(Date.parse(e.target.value))})}
-                        value={birthdate?.toISOString().substring(0,10)}/>
-                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex flex-col flex-1">
+                        <label
+                            htmlFor="bDate"
+                            className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                            Birth Date:
+                        </label>
+                        <input
+                            type="date"
+                            id="bDate"
+                            className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                            readOnly={formState ?? true}
+                            onChange={(e) => setVolunteer({...volunteer as Volunteer, birthdate : Timestamp.fromMillis(Date.parse(e.target.value))})}
+                            value={birthdate?.toISOString().substring(0,10)}/>
+                        </div>
 
-                    <div className="flex flex-col flex-1">
-                    <label
-                        htmlFor="Sex"
-                        className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                        Sex:
-                    </label>
-                    <input
-                        type="text"
-                        id="Sex"
-                        className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                        readOnly={formState ?? true}
-                        onChange={(e) => setVolunteer({...volunteer as Volunteer, sex : e.target.value})}
-                        value={sex}/>
+                        <div className="flex flex-col flex-1">
+                        <label
+                            htmlFor="Sex"
+                            className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                            Sex:
+                        </label>
+                        <input
+                            type="text"
+                            id="Sex"
+                            className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                            readOnly={formState ?? true}
+                            onChange={(e) => setVolunteer({...volunteer as Volunteer, sex : e.target.value})}
+                            value={sex}/>
+                        </div>
+                    </div>
+                    <div className="flex flex-col">
+                        <label
+                            htmlFor="email"
+                            className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                        Email:
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                            readOnly={formState ?? true}
+                            onChange={(e) => setVolunteer({...volunteer as Volunteer, email : e.target.value})}
+                            value={email}
+                            />
+                    </div>
+                    <div className="flex flex-col">
+                        <label
+                            htmlFor="cNum"
+                            className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                        Contact No:
+                        </label>
+                        <input
+                            type="number"
+                            id="cNum"
+                            className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                            readOnly={formState ?? true}
+                            onChange={(e) => setVolunteer({...volunteer as Volunteer, contact_number : e.target.value})}
+                            value={"0"+Number(contact)}
+                            />
+                    </div>
+                    <div className="flex flex-col">
+                        <label
+                            htmlFor="add"
+                            className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                        Address:
+                        </label>
+                        <input
+                            type="text"
+                            id="add"
+                            className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                            readOnly={formState ?? true}
+                            onChange={(e) => setVolunteer({...volunteer as Volunteer, address : e.target.value})}
+                            value={address}/>
+                    </div>
+                    <div className="flex flex-row items-center justify-around w-full gap-4">
+                        {(!formState && formState !== null) && (
+                        <button
+                            type="submit"
+                            className="mt-2 w-full bg-red-600 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                            onClick={handleEdit}>
+                            Discard
+                        </button>
+                        )}
+                        <button
+                            type="submit"
+                            className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                            onClick={formState ? handleEdit : handleSave}
+                            disabled={formState===null}>
+                            {formState || formState === null ? "Edit" : "Save Changes"}
+                        </button>
+                        <button
+                                type="submit"
+                                className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                                onClick={handleDelete}
+                                disabled={formState===null}>
+                                Delete Account
+                        </button>
                     </div>
                 </div>
-                <div className="flex flex-col">
-                    <label
-                        htmlFor="email"
-                        className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                    Email:
-                    </label>
-                    <input
-                        type="email"
-                        id="email"
-                        className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                        readOnly={formState ?? true}
-                        onChange={(e) => setVolunteer({...volunteer as Volunteer, email : e.target.value})}
-                        value={email}
-                        />
-                </div>
-                <div className="flex flex-col">
-                    <label
-                        htmlFor="cNum"
-                        className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                    Contact No:
-                    </label>
-                    <input
-                        type="number"
-                        id="cNum"
-                        className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                        readOnly={formState ?? true}
-                        onChange={(e) => setVolunteer({...volunteer as Volunteer, contact_number : e.target.value})}
-                        value={"0"+Number(contact)}
-                        />
-                </div>
-                <div className="flex flex-col">
-                    <label
-                        htmlFor="add"
-                        className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                    Address:
-                    </label>
-                    <input
-                        type="text"
-                        id="add"
-                        className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                        readOnly={formState ?? true}
-                        onChange={(e) => setVolunteer({...volunteer as Volunteer, address : e.target.value})}
-                        value={address}/>
-                </div>
-                <div className="flex flex-row items-center justify-around w-full gap-4">
-                    {(!formState && formState !== null) && (
-                    <button
-                        type="submit"
-                        className="mt-2 w-full bg-red-600 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                        onClick={handleEdit}>
-                        Discard
-                    </button>
-                    )}
-                    <button
-                        type="submit"
-                        className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                        onClick={formState ? handleEdit : handleSave}
-                        disabled={formState===null}>
-                    {formState || formState === null ? "Edit" : "Save Changes"}
-                    </button>
-                </div>
-                <button
-                        type="submit"
-                        className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                        onClick={handleDelete}
-                        disabled={formState===null}>
-                        Delete Account
-                </button>
-                </div>
-             </div>
+            </div>
         </div>
     </div>
     );

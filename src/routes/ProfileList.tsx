@@ -7,6 +7,9 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
+import {
+  Upload,
+} from 'lucide-react';
 
 export function BeneficiaryList() {
   const navigate = useNavigate();
@@ -134,7 +137,7 @@ export function BeneficiaryList() {
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/3"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
           <option className="bg-secondary text-white" value="student">
@@ -148,7 +151,7 @@ export function BeneficiaryList() {
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/3"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
           <option className="bg-secondary text-white" value="last"> 
@@ -167,8 +170,15 @@ export function BeneficiaryList() {
           placeholder="Search"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/2"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/3"
         />
+
+        <button
+          type="submit"
+          className="font-sans font-semibold text-white bg-primary rounded-md w-[42px] h-[37px] shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+        >
+          <Upload className="w-5 h-5" />
+        </button>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -370,6 +380,13 @@ export function VolunteerList() {
           onChange={e => setSearch(e.target.value)}
           className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/2"
         />
+
+        <button
+          type="submit"
+          className="font-sans font-semibold text-white bg-primary rounded-md w-[42px] h-[37px] shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+        >
+          <Upload className="w-5 h-5" />
+        </button>
       </div>
 
       <div className="flex flex-col gap-4">

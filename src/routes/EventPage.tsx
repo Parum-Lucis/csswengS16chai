@@ -340,42 +340,34 @@ export function EventPage() {
                   required
                 />
               </div>
+              <div className="flex flex-row items-center justify-around w-full gap-4">
+                <button
+                  type="submit"
+                  className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                //  onClick={formState ? handleEdit : handleSave}
+                //  disabled={formState===null}>
+                //  {formState || formState === null ? "Edit" : "Save Changes"}</form>
+                >
+                  Edit
+                </button>
 
-              <button
-                type="submit"
-                className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-              //  onClick={formState ? handleEdit : handleSave}
-              //  disabled={formState===null}>
-              //  {formState || formState === null ? "Edit" : "Save Changes"}</form>
-              >
-                Edit
-              </button>
-
-              <button
-                type="button"
-                className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                onClick={handleDelete}
-              >
-                Delete
-              </button>
+                <button
+                  type="button"
+                  className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                  onClick={handleDelete}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </form>
         </div>
 
         <h2 className="text-primary text-2xl font-bold font-sans text-center mt-5">List of Attendees:</h2>
         <div className="relative w-full max-w-2xl mt-3">
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col gap-4 sm:flex-row">
             <button
-              className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
-              type="button"
-              onClick={() => {
-                handleRemoveAttendees()
-              }} 
-            >
-              Remove
-            </button>
-            <button
-              className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
+              className="mt-2 w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
               onClick={() => {
                 setShowDropdown(!showDropdown)
                 showBeneficiaryList()
@@ -385,6 +377,20 @@ export function EventPage() {
               Add
             </button>
 
+            <button
+              className="mt-2 w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+              type="button"
+              // onClick={() => {
+              //   handleRemoveAttendees()
+              // }} 
+              onClick={() => {
+                setShowDropdown(!showDropdown)
+                showBeneficiaryList()
+              }}
+              data-dropdown-toggle="dropdownSearch"
+            >
+              Remove
+            </button>
 
             {showDropdown && (
               <div
@@ -394,7 +400,7 @@ export function EventPage() {
                 <input
                   type="text"
                   placeholder="Search"
-                  className="w-full px-4 py-2 mb-3 text-gray border border-gray rounded-md"
+                  className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
                 />
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {
@@ -430,8 +436,21 @@ export function EventPage() {
               </div>
             )}
 
+            <button
+              className="mt-2 w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+              type="button"
+            >
+              Update
+            </button>
           </div>
         </div>
+        
+         <button
+          className="mt-4 w-full max-w-2xl bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+          type="button"
+        >
+          Export
+        </button>
 
         <div className="w-full max-w-2xl mt-3">
           {
