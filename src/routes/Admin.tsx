@@ -10,7 +10,7 @@ function Admin() {
 
     const urls = [
         { name: "Create Beneficiary Profile", pldt: "/create-beneficiary-profile" },
-        { name: "Delete Beneficiary Profile", pldt: "deleted-beneficiaries" },
+        { name: "Deleted Beneficiaries", pldt: "deleted-beneficiaries" },
         { name: "View Volunteers", pldt: "volunteer/" },
         { name: "Create Volunteer Profile", pldt: "volunteer/new" },
         { name: "Deleted Volunteers", pldt: "volunteer/deleted" },
