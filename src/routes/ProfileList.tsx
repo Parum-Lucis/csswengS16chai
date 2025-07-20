@@ -292,7 +292,7 @@ export function VolunteerList() {
               className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
             >
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-                <img src={URL.createObjectURL(pic)} />
+                <img />
               </div>
               <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={differenceInYears(new Date(), profile.birthdate.toDate())} sex={profile.sex} sort={sort} />
             </Link>
