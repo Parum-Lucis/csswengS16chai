@@ -109,7 +109,7 @@ export function VolunteerProfile() {
         if (params.docId === null) return;
 
         const res = await callPromoteVolunteerToAdmin(params.docId);
-        if (res) {
+        if (res.data) {
             toast.info("Successfully promoted the Volunteer!");
             setOriginalVolunteer(v => v === null ? null : ({ ...v, is_admin: true, role: "Volunteer" }))
         } else {
