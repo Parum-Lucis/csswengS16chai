@@ -90,7 +90,7 @@ function App() {
         <Route path="/create-beneficiary-profile" element={<BeneficiaryProfileCreation />} />
         <Route path="/create-event" element={<EventCreation />} />
         <Route path="/view-profile-list" element={<Temp />} />
-        <Route path="/view-beneficiary-list" element={<BeneficiaryList />} />
+        <Route path="/view-beneficiary-list" element={<BeneficiaryList />} /> 
         <Route path="/view-volunteer-list" element={<VolunteerList />} />
         <Route path="/view-calendar" element={<Calendar />} />
         <Route path="/view-event-list" element={<EventList />} />
