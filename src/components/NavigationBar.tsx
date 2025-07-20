@@ -7,17 +7,20 @@ import {
     SquareChartGantt,
     Calendar
 } from 'lucide-react';
+import { useAuth } from "../util/userContext";
 
 function NavigationBar() {
-
+    const user = useAuth();
     const urls = [
         { name: "You", pldt: "/me", icon: User },
-        { name: "Admin", pldt: "/admin", icon: Settings },
         { name: "Beneficiaries", pldt: "/beneficiary", icon: Users },
-        // { name: "Volunteers", pldt: "/view-volunteer-list", icon: Handshake }, normal volunteers shouldn't have access to this.
         { name: "Events", pldt: "/event", icon: SquareChartGantt },
         { name: "Calendar", pldt: "/calendar", icon: Calendar }
     ];
+
+    if (user && user.is_admin) {
+        urls.splice(1, 0, { name: "Admin", pldt: "/admin", icon: Settings })
+    }
 
     return (
         <>
