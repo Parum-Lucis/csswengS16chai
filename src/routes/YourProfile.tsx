@@ -236,28 +236,28 @@ export function YourProfile() {
                         </div>
                         <div className="flex flex-row items-center justify-around w-full gap-4">
                             {(!formState && formState !== null) && (
-                                <button
-                                    type="submit"
-                                    className="mt-2 w-full bg-red-600 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                                    onClick={handleEdit}>
-                                    Discard
-                                </button>
+                            <button
+                                type="submit"
+                                className="mt-2 w-full bg-red-600 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                                onClick={handleEdit}>
+                                Discard
+                            </button>
                             )}
                             <button
                                 type="submit"
                                 className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                                 onClick={formState ? handleEdit : handleSave}
-                                disabled={formState === null}>
+                                disabled={formState===null}>
                                 {formState || formState === null ? "Edit" : "Save Changes"}
                             </button>
+                            <button
+                                    type="submit"
+                                    className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                                    onClick={handleDelete}
+                                    disabled={formState===null}>
+                                    Delete Account
+                            </button>
                         </div>
-                        <button
-                            type="submit"
-                            className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                            onClick={handleDelete}
-                            disabled={formState === null}>
-                            Delete Account
-                        </button>
                     </div>
                 </div>
             </div>
