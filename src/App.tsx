@@ -17,6 +17,7 @@ import { VolunteerList, BeneficiaryList } from "./routes/ProfileList";
 import EventList from "./routes/EventList";
 import { EventPage } from "./routes/EventPage";
 import EventCreation from "./routes/EventCreation";
+import ImportCSV from "./routes/ImportCSV";
 
 function App() {
   const [user, setUser] = useState<UserStateType>(undefined);
@@ -37,11 +38,12 @@ function App() {
         <Route path="/create-beneficiary-profile" element={<BeneficiaryProfileCreation />} />
         <Route path="/create-event" element={<EventCreation />} />
         <Route path="/view-profile-list" element={<Temp />} />
-        <Route path="/view-beneficiary-list" element={<BeneficiaryList />} />
+        <Route path="/view-beneficiary-list" element={<BeneficiaryList />} /> 
         <Route path="/view-volunteer-list" element={<VolunteerList />} />
         <Route path="/view-calendar" element={<Calendar />} />
         <Route path="/view-event-list" element={<EventList />} />
         <Route path="/view-event/:docId" element={<EventPage />} />
+        <Route path="/import-csv" element={<ImportCSV />} />
       </Routes>
       <NavigationBar />
     </UserContext>

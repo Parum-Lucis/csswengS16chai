@@ -12,6 +12,7 @@ function Admin(){
         {  name: "Create Volunteer Profile",  pldt: "/create-volunteer-profile" },
         {  name: "Create Beneficiary Profile", pldt: "/create-beneficiary-profile" },
         {  name: "Create Event", pldt: "/create-event" },
+        {  name: "Import CSV", pldt: "/import-csv" }
     ];
 
     useEffect(() => {
@@ -22,18 +23,24 @@ function Admin(){
       }, [user, navigate]);
 
     return (
-        <div className="w-full min-h-screen flex bg-secondary items-start">
-            {(
-            <div className="flex wrap-anywhere p-9 gap-4 font-sans font-bold w-full max-w-5xl text-white">
-                    { urls.map ((ur) => (
-                        <NavLink to={ur.pldt}
-                        className="flex duration-100 bg-primary rounded-md text-2xl text-center p-6 hover:bg-onhover"> {ur.name}</NavLink>
-                        ))
-                    }
-            </div>)
-            }
+        <div className="w-full bg-secondary flex items-center justify-center px-4 py-10 sm:px-6 lg:px-8 relative mt-20">
+            <div className="relative w-full max-w-2xl flex flex-col items-center px-4 sm:px-6 overflow-hidden">
+            <h1 className="text-center text-5xl font-bold text-primary mb-8 font-sans">Admin Dashboard</h1>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                {urls.map((ur) => (
+                <NavLink
+                    key={ur.name}
+                    to={ur.pldt}
+                    className="font-sans font-semibold text-white text-center bg-primary px-5 py-5 rounded-md flex items-center justify-center shadow-lg cursor-pointer hover:opacity-90 transition"
+                >
+                    {ur.name}
+                </NavLink>
+                ))}
+            </div>
+            </div>  
         </div>
-    )
+    );
 }
 
 export default Admin;
