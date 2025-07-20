@@ -9,10 +9,12 @@ function Admin(){
     const user = useContext(UserContext)
 
     const urls = [
-        {  name: "Create Volunteer Profile",  pldt: "/create-volunteer-profile" },
         {  name: "Create Beneficiary Profile", pldt: "/create-beneficiary-profile" },
+        {  name: "Import Beneficiary", pldt: "/import-csv" },
+        {  name: "Create Volunteer Profile",  pldt: "/create-volunteer-profile" },  
+        {  name: "Import Volunteer", pldt: "/import-csv" },
         {  name: "Create Event", pldt: "/create-event" },
-        {  name: "Import CSV", pldt: "/import-csv" }
+        {  name: "Import Event", pldt: "/import-csv" }
     ];
 
     useEffect(() => {
