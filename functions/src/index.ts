@@ -81,6 +81,7 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 
 export const deleteVolunteerProfile = onCall<string>(async (req) => {
     if (!req.auth) return false;
+    if (req.auth.uid !== req.data && !req.auth.token.is_admin) return false;
 
     const uid = req.data;
     try {
@@ -98,37 +99,6 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
         return false;
     }
 })
-
-export const deleteBeneficiaryProfile = onCall<string>(async (req) => {
-    if (!req.auth) return false;
-
-    const uid = req.data;
-    try {
-        await firestore.doc(`beneficiaries/${uid}`).update(
-            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
-        )
-        return true;
-
-    } catch (error) {
-        logger.error(error)
-        return false;
-    }
-})
-
-export const deleteEvent = onCall<string>(async (req) => {
-    if (!req.auth) return false;
-
-    const uid = req.data;
-    try {
-        await firestore.doc(`events/${uid}`).update(
-            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
-        );
-        return true;
-    } catch (error) {
-        logger.error(error);
-        return false;
-    }
-});
 
 export const updateAttendees = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
     const batch = firestore.batch()

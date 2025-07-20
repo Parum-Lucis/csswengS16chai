@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
-import { callDeleteEvent } from '../firebase/cloudFunctions';
+import { add } from "date-fns";
 
 export function EventPage() {
   const params = useParams()
@@ -32,7 +32,7 @@ export function EventPage() {
       const attendeeQuery = collection(db, "events", params.docId as string, "attendees")
       const eventsSnap = await getDoc(getQuery)
       const attendeesList = await getDocs(attendeeQuery)
-      if (eventsSnap.exists()){
+      if (eventsSnap.exists()) {
         setEvent(eventsSnap.data() as Event)
         setOriginalEvent(eventsSnap.data() as Event)
       }
@@ -131,19 +131,19 @@ export function EventPage() {
   }
 
   const handleConfirm = async () => {
+    if (!params.docId) return;
     setDeleteModal(!showDeleteModal)
 
     try {
-      callDeleteEvent(params.docId)
-        .then((result) => {
-          if (result.data) {
-            toast.success("Event delete success!")
-            navigate("/event");
-          } else { toast.error("Could not delete the event (no auth or event not found)") }
-        })
+      const d = doc(db, "events", params.docId);
+      await updateDoc(d, {
+        time_to_live: Timestamp.fromDate(add(new Date(), { days: 30 }))
+      })
+      toast.success("Event delete success!")
+      navigate("/event");
     }
     catch {
-      toast.error("Something went wrong!")
+      toast.error("Could not delete the event (no auth or event not found)");
     }
   }
 
@@ -156,7 +156,7 @@ export function EventPage() {
       const updList: Beneficiary[] = []
       const updChecklist: boolean[] = []
       const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
-      
+
       attendees.forEach((att) => {
         beneficiaryID.push(att.beneficiaryID)
       })
@@ -219,9 +219,9 @@ export function EventPage() {
     }
     if (refresh) {
       toast.success("Success!");
-      setTimeout(function() {
-            location.reload();
-        }, 1000);
+      setTimeout(function () {
+        location.reload();
+      }, 1000);
       setRunQuery(true)
     }
     else toast.success("Nothing to update")
@@ -303,7 +303,7 @@ export function EventPage() {
                     step="1"
                     value={start_date.toISOString().substring(0, 19)}
                     onChange={e => setEvent(prev => ({ ...prev as Event, start_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
-                    />
+                  />
                 </div>
 
                 <div className="flex flex-col flex-1">
@@ -336,7 +336,7 @@ export function EventPage() {
                   type="text"
                   className="input-text w-full"
                   value={event_location}
-                  onChange={e => setEvent(prev => ({ ...prev as Event, location: e.target.value}))}
+                  onChange={e => setEvent(prev => ({ ...prev as Event, location: e.target.value }))}
                   required
                 />
               </div>
@@ -370,7 +370,7 @@ export function EventPage() {
               type="button"
               onClick={() => {
                 handleRemoveAttendees()
-              }} 
+              }}
             >
               Remove
             </button>
