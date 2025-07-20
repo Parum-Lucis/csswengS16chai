@@ -46,7 +46,7 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
     if (!req.auth) return false;
     if (!req.auth.token.is_admin) return false;
 
-    const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate } = req.data;
+    const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate, pfpPath } = req.data;
     try {
 
         const { uid } = await auth.createUser({
@@ -66,6 +66,7 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
                 sex,
                 address,
                 birthdate: new Timestamp(birthdate.seconds, birthdate.nanoseconds),
+                pfpPath: pfpPath,
                 time_to_live: null
             })
         ])

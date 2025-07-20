@@ -11,6 +11,6 @@ export interface Volunteer {
   sex: string;
   address: string;
   birthdate: Timestamp;
-  pfpPath: string;
+  pfpPath?: string;
   time_to_live: Timestamp | null;
 }
