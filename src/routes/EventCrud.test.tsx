@@ -312,9 +312,9 @@ describe("Edit Event", () => {
         fireEvent.click(screen.getByRole("button", { name: /edit/i }));
     
         // what should happen
-        // await waitFor(() => {
-        //   expect(toast.error).toHaveBeenCalledWith("Something went wrong");
-        // });
+        await waitFor(() => {
+          expect(toast.error).toHaveBeenCalledWith("Start date cannot be greater than end date!");
+        });
         expect(updateDoc).not.toHaveBeenCalled();
     });
 });
