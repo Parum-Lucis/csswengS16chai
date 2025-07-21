@@ -19,6 +19,8 @@ import { ref, uploadBytes } from "firebase/storage";
 export function VolunteerProfileCreation() {
   const navigate = useNavigate();
 
+  const [pfpFile, setPfpFile] = useState<File | null>(null); // hayst...
+
   const submitDetails = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -100,7 +102,7 @@ export function VolunteerProfileCreation() {
 
         <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
           <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
-            <ProfilePictureInput />
+            <ProfilePictureInput pfpFile={pfpFile} onPfpChange={e => setPfpFile(e.target.files ? e.target.files[0] : null)} />
             <div>
               <label htmlFor="dropdown" className="text-white font-sans font-semibold">
                 Role

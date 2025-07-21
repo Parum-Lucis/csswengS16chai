@@ -12,5 +12,6 @@ export interface Volunteer {
   address: string;
   birthdate: Timestamp;
   pfpPath?: string;
+  pfpFile?: File | null; //not stored in firestore. Instead, should be retrieved via getBlob(...) or some other.
   time_to_live: Timestamp | null;
 }

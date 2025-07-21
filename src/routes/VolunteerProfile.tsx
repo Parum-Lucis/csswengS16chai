@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
 import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
-import { auth, db } from "../firebase/firebaseConfig";
+import { auth, db, store } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Volunteer } from "@models/volunteerType";
 import { createPortal } from 'react-dom';
@@ -11,6 +11,8 @@ import { emailRegex } from "../util/emailRegex";
 import { callDeleteVolunteerProfile, callPromoteVolunteerToAdmin } from "../firebase/cloudFunctions";
 import { signOut } from "firebase/auth";
 import { ProfilePictureInput } from "../components/ProfilePicture";
+import { volunteerConverter } from "../util/converters";
+import { deleteObject, getBlob, ref, uploadBytes } from "firebase/storage";
 
 export function VolunteerProfile() {
     const params = useParams()
@@ -24,13 +26,21 @@ export function VolunteerProfile() {
     useEffect(() => {
         const fetchBeneficiary = async () => {
             if (!params.docId) return
-            const getQuery = doc(db, "volunteers", params.docId)
+            const getQuery = doc(db, "volunteers", params.docId).withConverter(volunteerConverter)
             const volunteerSnap = await getDoc(getQuery)
-            if (volunteerSnap.exists())
-                setVolunteer(volunteerSnap.data() as Volunteer)
-            setOriginalVolunteer(volunteerSnap.data() as Volunteer)
-            setDocID(volunteerSnap.id)
-            setIsViewForm(true)
+            if (volunteerSnap.exists()) {
+                const data = volunteerSnap.data()
+                setVolunteer(data)
+                setOriginalVolunteer(data)
+                setDocID(volunteerSnap.id)
+                setIsViewForm(true)
+                if (data.pfpPath) {
+                    const path = data.pfpPath;
+                    const r = ref(store, path);
+                    const blob = await getBlob(r);
+                    setVolunteer(prev => (prev === null ? null : { ...prev, pfpFile: new File([blob], path) }))
+                }
+            }
         }
         fetchBeneficiary()
     }, [params.docId])
@@ -91,13 +101,37 @@ export function VolunteerProfile() {
                 toast.error("Please input a proper email!");
                 return
             }
+            const newFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
             const updateRef = doc(db, "volunteers", docID!)
             try {
-                await updateDoc(updateRef, {
-                    ...volunteer
-                })
+
+                // did they try to upload a picture?
+                if (volunteer?.pfpFile) {
+                    // delete the existing picture and upload new one.
+                    const { pfpFile, ...volunteerRed } = volunteer;
+                    if (originalVolunteer?.pfpPath) {
+                        const oldRef = ref(store, originalVolunteer.pfpPath);
+                        deleteObject(oldRef); // don't even wait for it.
+                    }
+
+                    // upload the new picture
+                    const newPfpRef = ref(store, newFilePath);
+                    await Promise.all([
+                        uploadBytes(newPfpRef, pfpFile),
+                        updateDoc(updateRef, {
+                            ...volunteerRed,
+                            pfpPath: newFilePath
+                        })
+                    ])
+                } else {
+                    await updateDoc(updateRef, {
+                        ...volunteer,
+                    })
+                }
+
+
                 setOriginalVolunteer(volunteer)
-                toast.success("Account update success!")
+                toast.success("Account update successs!")
             } catch {
                 toast.error("Something went wrong")
             }
@@ -159,7 +193,13 @@ export function VolunteerProfile() {
                         {originalVolunteer?.last_name}, {originalVolunteer?.first_name} {originalVolunteer?.is_admin ? "(Admin)" : ""}
                     </h3>
                     <div className="flex flex-col gap-4 mt-6">
-                        <ProfilePictureInput readOnly={isViewForm} currentPicPath={volunteer?.pfpPath} />
+                        <ProfilePictureInput readOnly={isViewForm} pfpFile={volunteer?.pfpFile ?? null}
+                            onPfpChange={(e) => {
+                                if (e.target.files && e.target.files.length > 0) {
+                                    const files = e.target.files;
+                                    setVolunteer(prev => prev === null ? null : ({ ...prev, pfpFile: files[0] }))
+                                }
+                            }} />
                         <div className="flex flex-col sm:flex-row gap-4">
                             <div className="flex flex-col flex-1">
                                 <label
