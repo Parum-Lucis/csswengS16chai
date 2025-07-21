@@ -14,5 +14,6 @@ export interface Beneficiary {
   attended_events: AttendedEvents[];
   guardians: Guardian[];
   pfpPath?: string;
+  pfpFile?: File | null;
   time_to_live?: Timestamp;
 }
