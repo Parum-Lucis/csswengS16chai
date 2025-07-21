@@ -170,31 +170,17 @@ describe('Beneficiary List Page', () => {
 
   test('searches beneficiaries by age', async () => {
     renderWithUser({ email: 'user@test.com' });
-
-    // Wait until "Test User" is rendered
-    await waitFor(() =>
-      screen.getByText((content, element) => {
-        const text = element?.textContent?.toLowerCase() || '';
-        return text.includes('test') && text.includes('user');
-      })
-    );
-
+  
+    expect(await screen.findByText(/USER, Test/i)).toBeInTheDocument();
+    expect(await screen.findByText(/STUDENT, Another/i)).toBeInTheDocument();
+  
     const searchInput = screen.getByPlaceholderText(/search/i);
-    fireEvent.change(searchInput, { target: { value: '13' } });
-
+    fireEvent.change(searchInput, { target: { value: '15' } });
+  
+    // After searching, "Test User" should still be there, and "Another Student" should be gone.
     await waitFor(() => {
-      expect(
-        screen.getByText((content, element) => {
-          const text = element?.textContent?.toLowerCase() || '';
-          return text.includes('test') && text.includes('user');
-        })
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByText((content, element) => {
-          const text = element?.textContent?.toLowerCase() || '';
-          return text.includes('another') && text.includes('student');
-        })
-      ).not.toBeInTheDocument();
+      expect(screen.getByText(/USER, Test/i)).toBeInTheDocument();
+      expect(screen.queryByText(/STUDENT, Another/i)).not.toBeInTheDocument();
     });
   });
 
