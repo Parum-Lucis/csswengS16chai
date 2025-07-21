@@ -15,11 +15,12 @@ jest.mock("firebase-admin/auth", () => ({
   })),
 }));
 
-jest.mock("firebase-admin/firestore", () => {
-  const mockDocUpdate = jest.fn();
-  const mockDocCreate = jest.fn();
-  const mockTimestamp = "mock-timestamp";
+// Create shared mock references that will be used across tests
+const mockDocUpdate = jest.fn();
+const mockDocCreate = jest.fn();
+const mockTimestamp = "mock-timestamp";
 
+jest.mock("firebase-admin/firestore", () => {
   const mockDoc = {
     create: mockDocCreate,
     update: mockDocUpdate,
@@ -40,18 +41,43 @@ jest.mock("firebase-admin/firestore", () => {
     },
   }));
 
+  const mockGetEvents = jest.fn(async () => ({
+    size: 1,
+    forEach: (cb: Function) => {
+      cb({ id: "event789" });
+    },
+  }));
+
   const mockCollection = jest.fn((collectionName: string) => ({
     where: jest.fn(() => ({
-      get:
-        collectionName === "volunteers"
-          ? mockGetVolunteers
-          : mockGetBeneficiaries,
+      get: collectionName === "volunteers" 
+        ? mockGetVolunteers 
+        : collectionName === "beneficiaries"
+        ? mockGetBeneficiaries
+        : mockGetEvents,
     })),
   }));
+
+  const mockBatchUpdate = jest.fn();
+  const mockBatchCommit = jest.fn();
+  const mockBatch = {
+    update: mockBatchUpdate,
+    commit: mockBatchCommit,
+  };
 
   const mockFirestore = {
     doc: jest.fn(() => mockDoc),
     collection: mockCollection,
+    batch: jest.fn(() => mockBatch),
+    collectionGroup: jest.fn(() => ({
+      where: jest.fn(() => ({
+        get: jest.fn(async () => ({
+          forEach: (cb: (doc: { ref: string }) => void) => {
+            [{ ref: "attendeeRef1" }, { ref: "attendeeRef2" }].forEach(cb);
+          },
+        })),
+      })),
+    })),
   };
 
   return {
@@ -59,14 +85,20 @@ jest.mock("firebase-admin/firestore", () => {
     Timestamp: {
       now: jest.fn(() => mockTimestamp),
     },
+    // Export mocks for direct access in tests
     __mockDocCreate: mockDocCreate,
     __mockDocUpdate: mockDocUpdate,
+    __mockBatchUpdate: mockBatchUpdate,
+    __mockBatchCommit: mockBatchCommit,
   };
 });
 
 import * as firestore from "firebase-admin/firestore";
-const mockDocUpdate = (firestore as any).__mockDocUpdate;
-const mockDocCreate = (firestore as any).__mockDocCreate;
+// Get references to the mocked functions
+const mockDocUpdateRef = (firestore as any).__mockDocUpdate;
+const mockDocCreateRef = (firestore as any).__mockDocCreate;
+const mockBatchUpdate = (firestore as any).__mockBatchUpdate;
+const mockBatchCommit = (firestore as any).__mockBatchCommit;
 
 jest.mock("./utils/generatePassword", () => ({
   generateRandomPassword: jest.fn(() => "password123"),
@@ -82,6 +114,7 @@ let deleteBeneficiaryProfile: any;
 let deleteEvent: any;
 let updateAttendees: any;
 let cronCleaner: any;
+
 beforeAll(async () => {
   const mod = await import("./index");
   createVolunteerProfile = mod.createVolunteerProfile;
@@ -146,7 +179,7 @@ describe("Create Volunteer Profile", () => {
 
     mockCreateUser.mockResolvedValue({ uid: "uid123" });
     mockSetCustomUserClaims.mockResolvedValue(undefined);
-    mockDocCreate.mockResolvedValue(undefined); // <---- FIX
+    mockDocCreate.mockResolvedValue(undefined);
 
     const wrapped = testEnv.wrap(createVolunteerProfile);
     const result = await wrapped({
@@ -170,7 +203,18 @@ describe("Create Volunteer Profile", () => {
       password: "password123",
     });
     expect(mockSetCustomUserClaims).toHaveBeenCalledWith("uid123", { is_admin: false });
-    expect(mockDocCreate).toHaveBeenCalled(); // <---- FIX
+    expect(mockDocCreate).toHaveBeenCalledWith({
+      first_name: "John",
+      last_name: "Doe",
+      contact_number: "1234567890",
+      email: "test@example.com",
+      role: "volunteer",
+      is_admin: false,
+      sex: "male",
+      address: "123 Main St",
+      birthdate: expect.any(Object), // Timestamp object
+      time_to_live: null
+    });
     expect(result).toBe(true);
   });
 
@@ -179,7 +223,17 @@ describe("Create Volunteer Profile", () => {
     const wrapped = testEnv.wrap(createVolunteerProfile);
     const result = await wrapped({
       ...mockBaseRequest,
-      data: { email: "test@example.com", is_admin: false },
+      data: { 
+        email: "test@example.com", 
+        is_admin: false,
+        first_name: "John",
+        last_name: "Doe",
+        contact_number: "1234567890",
+        role: "volunteer",
+        sex: "male",
+        address: "123 Main St",
+        birthdate: { seconds: 946684800, nanoseconds: 0 }
+      },
       auth: mockAuth(true),
     });
     expect(result).toBe(false);
@@ -230,7 +284,7 @@ describe("Delete Volunteer Profile", () => {
 
   it("updates volunteer document with time_to_live", async () => {
     mockUpdateUser.mockResolvedValue(true); 
-    mockDocUpdate.mockResolvedValue(true);
+    mockDocUpdateRef.mockResolvedValue(true);
     
     const wrapped = testEnv.wrap(deleteVolunteerProfile);
     const result = await wrapped({
@@ -240,12 +294,12 @@ describe("Delete Volunteer Profile", () => {
     });
     
     expect(mockUpdateUser).toHaveBeenCalledWith("uid123", { disabled: true }); 
-    expect(mockDocUpdate).toHaveBeenCalled();
+    expect(mockDocUpdateRef).toHaveBeenCalled();
     expect(result).toBe(true);
   });
 
   it("returns false on error", async () => {
-    mockDocUpdate.mockRejectedValue(new Error("error"));
+    mockDocUpdateRef.mockRejectedValue(new Error("error"));
     const wrapped = testEnv.wrap(deleteVolunteerProfile);
     const result = await wrapped({
       ...mockBaseRequest,
@@ -271,19 +325,19 @@ describe("Delete Beneficiary Profile", () => {
   });
 
   it("updates beneficiary document with time_to_live", async () => {
-    mockDocUpdate.mockResolvedValue(true);
+    mockDocUpdateRef.mockResolvedValue(true);
     const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
     const result = await wrapped({
       ...mockBaseRequest,
       data: "uid123",
       auth: mockAuth(true),
     });
-    expect(mockDocUpdate).toHaveBeenCalled();
+    expect(mockDocUpdateRef).toHaveBeenCalled();
     expect(result).toBe(true);
   });
 
   it("returns false on error", async () => {
-    mockDocUpdate.mockRejectedValue(new Error("error"));
+    mockDocUpdateRef.mockRejectedValue(new Error("error"));
     const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
     const result = await wrapped({
       ...mockBaseRequest,
@@ -306,15 +360,15 @@ describe("Delete Event", () => {
   });
 
   it("updates event document with time_to_live", async () => {
-    mockDocUpdate.mockResolvedValue(true);
+    mockDocUpdateRef.mockResolvedValue(true);
     const wrapped = testEnv.wrap(deleteEvent);
     const result = await wrapped({ ...mockBaseRequest, data: "event123", auth: mockAuth(true) });
-    expect(mockDocUpdate).toHaveBeenCalled();
+    expect(mockDocUpdateRef).toHaveBeenCalled();
     expect(result).toBe(true);
   });
 
   it("returns false on error", async () => {
-    mockDocUpdate.mockRejectedValue(new Error("error"));
+    mockDocUpdateRef.mockRejectedValue(new Error("error"));
     const wrapped = testEnv.wrap(deleteEvent);
     const result = await wrapped({ ...mockBaseRequest, data: "event123", auth: mockAuth(true) });
     expect(result).toBe(false);
@@ -322,31 +376,6 @@ describe("Delete Event", () => {
 });
 
 describe("Update Attendees", () => {
-  const mockBatchUpdate = jest.fn();
-  const mockBatchCommit = jest.fn();
-  const mockBatch = {
-    update: mockBatchUpdate,
-    commit: mockBatchCommit,
-  };
-
-  const mockAttendeeDocs = [
-    { ref: "attendeeRef1" },
-    { ref: "attendeeRef2" },
-  ];
-
-  beforeAll(() => {
-    (firestore as any).getFirestore().batch = jest.fn(() => mockBatch);
-
-    (firestore as any).getFirestore().collectionGroup = jest.fn(() => ({
-      where: jest.fn(() => ({
-        get: jest.fn(async () => ({
-          forEach: (cb: (doc: { ref: string }) => void) =>
-            mockAttendeeDocs.forEach(cb),
-        })),
-      })),
-    }));
-  });
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -357,26 +386,31 @@ describe("Update Attendees", () => {
     const event = {
       data: {
         before: { data: () => ({ first_name: "Old", last_name: "Name" }) },
-        after: { data: () => ({ first_name: "John", last_name: "Doe" }) },
+        after: { 
+          id: "beneficiary123",
+          data: () => ({ first_name: "John", last_name: "Doe" }) 
+        },
       },
     };
 
     await wrapped(event as any, { params: { docID: "beneficiary123" } } as any);
 
-    expect(mockBatchUpdate).toHaveBeenCalledTimes(mockAttendeeDocs.length);
-    mockAttendeeDocs.forEach((doc) => {
-      expect(mockBatchUpdate).toHaveBeenCalledWith(doc.ref, {
-        first_name: "John",
-        last_name: "Doe",
-      });
+    expect(mockBatchUpdate).toHaveBeenCalledTimes(2); // Two attendee docs
+    expect(mockBatchUpdate).toHaveBeenCalledWith("attendeeRef1", {
+      first_name: "John",
+      last_name: "Doe",
+    });
+    expect(mockBatchUpdate).toHaveBeenCalledWith("attendeeRef2", {
+      first_name: "John",
+      last_name: "Doe",
     });
     expect(mockBatchCommit).toHaveBeenCalled();
   });
 
   it("does nothing if no attendees found", async () => {
-    const wrapped = (updateAttendees as any).run;
-
-    (firestore as any).getFirestore().collectionGroup = jest.fn(() => ({
+    // Override the collectionGroup mock for this specific test
+    const mockFirestore = (firestore as any).getFirestore();
+    mockFirestore.collectionGroup = jest.fn(() => ({
       where: jest.fn(() => ({
         get: jest.fn(async () => ({
           forEach: (_cb: (doc: { ref: string }) => void) => {}, // No calls
@@ -384,10 +418,15 @@ describe("Update Attendees", () => {
       })),
     }));
 
+    const wrapped = (updateAttendees as any).run;
+
     const event = {
       data: {
         before: { data: () => ({ first_name: "Old", last_name: "Name" }) },
-        after: { data: () => ({ first_name: "John", last_name: "Doe" }) },
+        after: { 
+          id: "beneficiary123",
+          data: () => ({ first_name: "John", last_name: "Doe" }) 
+        },
       },
     };
 
@@ -414,6 +453,7 @@ describe("cronCleaner", () => {
     const wrapped = (cronCleaner as any).run;
     await wrapped({});
     expect(mockDeleteDoc).toHaveBeenCalled();
+    // Should be called for volunteer, beneficiary, and event deletions
     expect(mockDeleteDoc).toHaveBeenCalledTimes(3);
   });
 
