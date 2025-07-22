@@ -20,6 +20,18 @@ const mockDocUpdate = jest.fn();
 const mockDocCreate = jest.fn();
 const mockTimestamp = "mock-timestamp";
 
+const mockTimestampObject = {
+  seconds: Date.now() / 1000,
+  nanoseconds: 0,
+  toDate: () => new Date(),
+};
+const mockTimestampClass = jest.fn((seconds, nanoseconds) => ({
+    ...mockTimestampObject,
+    seconds,
+    nanoseconds,
+}));
+(mockTimestampClass as any).now = jest.fn(() => mockTimestampObject);
+
 jest.mock("firebase-admin/firestore", () => {
   const mockDoc = {
     create: mockDocCreate,
@@ -84,9 +96,7 @@ jest.mock("firebase-admin/firestore", () => {
 
   return {
     getFirestore: jest.fn(() => mockFirestore),
-    Timestamp: {
-      now: jest.fn(() => mockTimestamp),
-    },
+    Timestamp: mockTimestampClass,
     // Export mocks for direct access in tests
     __mockDocFn: mockDocFn,
     __mockDocCreate: mockDocCreate,
@@ -185,7 +195,7 @@ describe("Create Volunteer Profile", () => {
       email: "test@example.com",
       contact_number: "1234567890",
       address: "123 Main St",
-      birthdate: "2000-01-01",
+      birthdate: { seconds: 946684800, nanoseconds: 0 },
       sex: "male",
       role: "volunteer",
       is_admin: false,
@@ -206,7 +216,7 @@ describe("Create Volunteer Profile", () => {
     expect(mockSetCustomUserClaims).toHaveBeenCalledWith("uid123", {
       is_admin: false,
     });
-    expect(mockDocFnRef).toHaveBeenCalledWith("uid123");
+    expect(mockDocFnRef).toHaveBeenCalledWith("volunteers/uid123");
     expect(mockDocCreateRef).toHaveBeenCalledWith({
       first_name: "John",
       last_name: "Doe",
@@ -249,7 +259,7 @@ describe("Create Volunteer Profile", () => {
       email: "test@example.com",
       contact_number: "1234567890",
       address: "123 Main St",
-      birthdate: "2000-01-01",
+      birthdate: { seconds: 946684800, nanoseconds: 0 },
       sex: "male",
       role: "volunteer",
       is_admin: false,
