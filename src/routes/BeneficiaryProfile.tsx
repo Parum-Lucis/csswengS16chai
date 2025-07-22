@@ -19,7 +19,6 @@ export function BeneficiaryProfile() {
     const params = useParams()
     const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null)
     const [originalBenificiary, setOriginalBeneficiary] = useState<Beneficiary | null>(null)
-    const [attendedEvents, setAttendedEvents] = useState<AttendedEvents[]>([])
     //formState = null, all disabled
     //formState = true, readonly
     //formState = false, edit
@@ -33,6 +32,9 @@ export function BeneficiaryProfile() {
     const [showDeleteModal, setDeleteModal] = useState(false)
     const [docID, setDocID] = useState(beneficiary?.docID)
     const [gradeLevel, setGradeLevel] = useState<string>("");
+    // attendee list
+    const [attendedEvents, setAttendedEvents] = useState<AttendedEvents[]>([])
+    const [attendance, setAttendance] = useState({ present: 0, events: 0 })
 
 
     useEffect(() => {
@@ -49,11 +51,21 @@ export function BeneficiaryProfile() {
             setForm(true)
 
             const attList: AttendedEvents[] = []
+            let pres = 0
+            let events = 0
             const attRef = await getDocs(query(collectionGroup(db, "attendees"), where("beneficiaryID", "==", beneficiariesSnap.id)))
             attRef.forEach((att) => {
-                attList.push({ ...(att.data() as AttendedEvents), docID: att.id })
+                const attData = att.data() as AttendedEvents
+                attList.push({ ...attData, docID: att.id });
+                // ignore if null/undefined (means event hasn't happened)
+                if (attData.event_start.toMillis() < Date.now()) {
+                    if (attData.attended ?? false)
+                        pres += 1
+                    events += 1
+                }
             })
             setAttendedEvents(attList)
+            setAttendance({ present: pres, events: events })
         }
         fetchBeneficiary()
     }, [setBeneficiary, setAttendedEvents, params.docId])
@@ -417,6 +429,7 @@ export function BeneficiaryProfile() {
                     <h3 className="text-[#45B29D] text-2xl text-center font-bold font-[Montserrat] mb-4">
                         Attended Events
                     </h3>
+                    Attendance Rate: {attendance.present / attendance.events}%
                     <div className="space-y-2">
                         {attendedEvents.map((att, index) => (
                             <EventCard key={index} attEvent={att} />
