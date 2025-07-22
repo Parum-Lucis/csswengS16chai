@@ -27,6 +27,8 @@ jest.mock("firebase-admin/firestore", () => {
     delete: mockDeleteDoc,
   };
 
+  const mockDocFn = jest.fn(() => mockDoc);
+
   const mockGetVolunteers = jest.fn(async () => ({
     size: 1,
     forEach: (cb: Function) => {
@@ -66,7 +68,7 @@ jest.mock("firebase-admin/firestore", () => {
   };
 
   const mockFirestore = {
-    doc: jest.fn(() => mockDoc),
+    doc: mockDocFn,
     collection: mockCollection,
     batch: jest.fn(() => mockBatch),
     collectionGroup: jest.fn(() => ({
@@ -86,6 +88,7 @@ jest.mock("firebase-admin/firestore", () => {
       now: jest.fn(() => mockTimestamp),
     },
     // Export mocks for direct access in tests
+    __mockDocFn: mockDocFn,
     __mockDocCreate: mockDocCreate,
     __mockDocUpdate: mockDocUpdate,
     __mockBatchUpdate: mockBatchUpdate,
@@ -99,6 +102,7 @@ const mockDocUpdateRef = (firestore as any).__mockDocUpdate;
 const mockDocCreateRef = (firestore as any).__mockDocCreate;
 const mockBatchUpdate = (firestore as any).__mockBatchUpdate;
 const mockBatchCommit = (firestore as any).__mockBatchCommit;
+const mockDocFnRef = (firestore as any).__mockDocFn;
 
 jest.mock("./utils/generatePassword", () => ({
   generateRandomPassword: jest.fn(() => "password123"),
@@ -175,47 +179,46 @@ describe("Create Volunteer Profile", () => {
   });
 
   it("creates user and document when admin", async () => {
-    jest.clearAllMocks();
-
-    mockCreateUser.mockResolvedValue({ uid: "uid123" });
-    mockSetCustomUserClaims.mockResolvedValue(undefined);
-    mockDocCreate.mockResolvedValue(undefined);
-
-    const wrapped = testEnv.wrap(createVolunteerProfile);
-    const result = await wrapped({
-      ...mockBaseRequest,
-      data: { 
-        email: "test@example.com", 
-        is_admin: false,
-        first_name: "John",
-        last_name: "Doe",
-        contact_number: "1234567890",
-        role: "volunteer",
-        sex: "male",
-        address: "123 Main St",
-        birthdate: { seconds: 946684800, nanoseconds: 0 }
-      },
-      auth: mockAuth(true),
-    });
-
-    expect(mockCreateUser).toHaveBeenCalledWith({
-      email: "test@example.com",
-      password: "password123",
-    });
-    expect(mockSetCustomUserClaims).toHaveBeenCalledWith("uid123", { is_admin: false });
-    expect(mockDocCreate).toHaveBeenCalledWith({
+    const data = {
       first_name: "John",
       last_name: "Doe",
-      contact_number: "1234567890",
       email: "test@example.com",
+      contact_number: "1234567890",
+      address: "123 Main St",
+      birthdate: "2000-01-01",
+      sex: "male",
       role: "volunteer",
       is_admin: false,
-      sex: "male",
-      address: "123 Main St",
-      birthdate: expect.any(Object), // Timestamp object
-      time_to_live: null
-    });
+    };
+    const context = { auth: { uid: "admin123", token: { is_admin: true } } };
+    mockCreateUser.mockResolvedValue({ uid: "uid123" });
+    mockDocCreateRef.mockResolvedValue({});
+    mockSetCustomUserClaims.mockResolvedValue({});
+
+    const wrapped = testEnv.wrap(createVolunteerProfile);
+    const result = await wrapped({ data: data, auth: context.auth });
+
     expect(result).toBe(true);
+    expect(mockCreateUser).toHaveBeenCalledWith({
+      email: "test@example.com",
+      password: expect.any(String),
+    });
+    expect(mockSetCustomUserClaims).toHaveBeenCalledWith("uid123", {
+      is_admin: false,
+    });
+    expect(mockDocFnRef).toHaveBeenCalledWith("uid123");
+    expect(mockDocCreateRef).toHaveBeenCalledWith({
+      first_name: "John",
+      last_name: "Doe",
+      email: "test@example.com",
+      contact_number: "1234567890",
+      address: "123 Main St",
+      birthdate: expect.any(Object), // Firestore timestamp
+      sex: "male",
+      is_admin: false,
+      role: "volunteer",
+      time_to_live: null,
+    });
   });
 
   it("returns false on error", async () => {
@@ -240,31 +243,28 @@ describe("Create Volunteer Profile", () => {
   });
 
   it("returns false if Firestore doc creation fails after user creation", async () => {
-    jest.clearAllMocks();
+    const data = {
+      first_name: "John",
+      last_name: "Doe",
+      email: "test@example.com",
+      contact_number: "1234567890",
+      address: "123 Main St",
+      birthdate: "2000-01-01",
+      sex: "male",
+      role: "volunteer",
+      is_admin: false,
+    };
+    const context = { auth: { uid: "admin123", token: { is_admin: true } } };
     mockCreateUser.mockResolvedValue({ uid: "uid123" });
-    mockSetCustomUserClaims.mockResolvedValue(undefined);
-    mockDocCreate.mockRejectedValue(new Error("Firestore error"));
+    mockSetCustomUserClaims.mockResolvedValue({});
+    mockDocCreateRef.mockRejectedValue(new Error("Firestore error"));
 
     const wrapped = testEnv.wrap(createVolunteerProfile);
-    const result = await wrapped({
-      ...mockBaseRequest,
-      data: { 
-        email: "test@example.com", 
-        is_admin: false,
-        first_name: "John",
-        last_name: "Doe",
-        contact_number: "1234567890",
-        role: "volunteer",
-        sex: "male",
-        address: "123 Main St",
-        birthdate: { seconds: 946684800, nanoseconds: 0 }
-      },
-      auth: mockAuth(true),
-    });
+    const result = await wrapped({ data: data, auth: context.auth });
 
     expect(result).toBe(false);
     expect(mockCreateUser).toHaveBeenCalled();
-    expect(mockDocCreate).toHaveBeenCalled();
+    expect(mockDocCreateRef).toHaveBeenCalled();
   });
 });
 
