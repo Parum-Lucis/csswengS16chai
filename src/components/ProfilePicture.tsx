@@ -17,7 +17,7 @@ export function ProfilePictureInput(
                 {
                     pfpFile ?
                         <img src={URL.createObjectURL(pfpFile)} alt="profile picture" className="h-full w-full" /> :
-                        <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
+                        <i className="flex text-[8rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
                 }
             </label>
         </div>
