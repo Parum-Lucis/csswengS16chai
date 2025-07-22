@@ -7,4 +7,4 @@ export const callCreateVolunteerProfile = httpsCallable<Volunteer>(func, 'create
 export const callDeleteVolunteerProfile = httpsCallable<string>(func, 'deleteVolunteerProfile');
 export const callDeleteBeneficiaryProfile = httpsCallable<string>(func, 'deleteBeneficiaryProfile');
 export const callDeleteEvent = httpsCallable<string>(func, 'deleteEvent');
-export const sendEmailReminder = httpsCallable<Event, boolean[]>(func, 'sendEmailReminder');
+export const sendEmailReminder = httpsCallable<Event, boolean>(func, 'sendEmailReminder');

@@ -6,13 +6,13 @@ import type { Event } from "@models/eventType";
 
 import nodemailer from "nodemailer";
 import mjml2html from "mjml";
-import { formatDate } from "date-fns";
-import type { Locale } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 
 
 const firestore = getFirestore()
 
 export const sendEmailReminder = onCall<Event>(async (req) => {
+    // nodemailer
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -21,17 +21,20 @@ export const sendEmailReminder = onCall<Event>(async (req) => {
         }
     }); 
 
+    // querying each attendee of event
     const attRef = await firestore.collection("events/"+req.data.docID+"/attendees").get()
+
+    // takes email of each attendee
     const emailList: string[] = []
     attRef.forEach((att) => {
         emailList.push((att.data() as AttendedEvents).email)
     })
+
+    // dates
     const start_date = new Date((req.data.start_date.seconds ?? 0) * 1000)
     const end_date = new Date((req.data.end_date.seconds ?? 0) * 1000)
 
-    start_date.setMinutes(start_date.getMinutes() - start_date.getTimezoneOffset())
-    end_date.setMinutes(end_date.getMinutes() - end_date.getTimezoneOffset())
-
+    // mjml json template for email
     const { html }= mjml2html({
             tagName: 'mjml',
             attributes: {},
@@ -70,7 +73,11 @@ export const sendEmailReminder = onCall<Event>(async (req) => {
                                 'font-size': "15px", 
                                 'font-family': "helvetica"
                             },
-                            content: 'This is a reminder to attend the event titled ' + req.data.name + ' between ' + formatDate(start_date, "h:mm bb")+  ' and ' + formatDate(end_date, "h:mm bb") + ' on ' + formatDate(start_date, "MMMM d, yyyy.")
+                            content: 'This is a reminder to attend the event titled ' 
+                                + req.data.name + ' between ' 
+                                + formatInTimeZone(start_date, "Asia/Manila", "h:mm bb") +  ' and ' 
+                                + formatInTimeZone(end_date, "Asia/Manila", "h:mm bb") + ' on ' 
+                                + formatInTimeZone(start_date, "Asia/Manila", "MMMM d, yyyy.")
                         },
                         {
                             tagName: 'mj-text',
@@ -106,22 +113,26 @@ export const sendEmailReminder = onCall<Event>(async (req) => {
             }]
     })
 
-    const info = await transporter.sendMail({
+    //
+    await transporter.sendMail({
         from: 'CHAI-TAGUIG',
         bcc: emailList,
         subject: "Event Reminder for " + req.data.name,
-        text: "This is a reminder to attend the event titled " + req.data.name + " as you are one of the listed attendees of this event. Description: " + req.data.description, // plain‑text body
-        //html: mjml2html("<b>This is a reminder to attend the event titled " + req.data.name + " as you are one of the listed attendees of this event. Description: " + req.data.description + "</b>")
+        text: "This is a reminder to attend the event titled " + req.data.name + " as you are one of the listed attendees of this event. Description: " + req.data.description,
         html: html,
         attachments: [{
             filename: 'CHAI.jpg',
             path: './public/CHAI.jpg',
             cid: 'CHAI'
         }],
-    });
-    logger.log("Message sent:", info.messageId);
-    logger.log(info)
-    if(info.accepted.length > 0)
-        return true
-    else return false
+    }).then((info) => {
+        logger.log("Message sent:", info.messageId);
+        logger.log(info)
+        if(info.accepted.length > 0)
+            return true
+        else return false
+    }).catch(err => { 
+        logger.log("An error has occured while sending email", err)
+        return false 
+    })
 })
