@@ -182,6 +182,8 @@ export function EventPage() {
         await setDoc(addRef, {
           attendance: false,
           who_attended: "Beneficiary", // temp
+          event_name: event!.name,
+          event_start: event!.start_date,
           first_name: notAttendeeList[i].first_name,
           last_name: notAttendeeList[i].last_name,
           email: notAttendeeList[i].guardians[0].email,
