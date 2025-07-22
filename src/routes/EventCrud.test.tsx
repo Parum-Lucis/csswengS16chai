@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { EventCreation } from "./EventCreation";
 import { EventList } from "./EventList";

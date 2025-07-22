@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 .env
+emulator-data
 
 # Editor directories and files
 .vscode/*

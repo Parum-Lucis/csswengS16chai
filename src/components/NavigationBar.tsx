@@ -1,14 +1,14 @@
 import "../css/styles.css";
 import { NavLink } from "react-router-dom";
 import { useContext } from "react";
-import { UserContext } from "../context/userContext.ts";
+import { UserContext } from "../util/userContext.ts";
 import {
-  User,
-  Settings,
-  Users,
-  Handshake,
-  SquareChartGantt,
-  Calendar
+    User,
+    Settings,
+    Users,
+    Handshake,
+    SquareChartGantt,
+    Calendar
 } from 'lucide-react';
 
 function NavigationBar() {
@@ -16,7 +16,7 @@ function NavigationBar() {
 
     const urls = [
         { name: "You", pldt: "/view-profile", icon: User },
-        { name: "Admin", pldt: "/view-admin", icon: Settings },
+        { name: "Admin", pldt: "/admin", icon: Settings },
         { name: "Beneficiaries", pldt: "/view-beneficiary-list", icon: Users },
         { name: "Volunteers", pldt: "/view-volunteer-list", icon: Handshake },
         { name: "Events", pldt: "/view-event-list", icon: SquareChartGantt },

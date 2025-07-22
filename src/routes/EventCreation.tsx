@@ -8,7 +8,7 @@ import { collection, addDoc, Timestamp } from "firebase/firestore"
 import { db } from "../firebase/firebaseConfig"
 
 import { useContext, useEffect } from "react";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 
 
 export function EventCreation() {

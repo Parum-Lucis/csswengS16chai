@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router";
 import "../css/styles.css";
 import ProfileCard from "../components/ProfileCard";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
@@ -48,7 +48,7 @@ export function BeneficiaryList() {
     } else {
       const fetchProfiles = async () => {
         setLoading(true); // display "fetching..."
-        const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
+        const beneficiarySnap = await getDocs(query(collection(db, "beneficiaries"), where("time_to_live", "==", null)));
         const profiles: any[] = [];
         let flag: boolean = false;
 
@@ -59,7 +59,7 @@ export function BeneficiaryList() {
             const data = doc.data();
             const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
             const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
-            const sex = data.sex === "M" || data.sex === "F" ? data.sex : "N/A";
+            const sex = data.sex;
             const type = data.accredited_id == null ? "waitlist" : "student";
 
             // Skip if name missing
@@ -151,7 +151,7 @@ export function BeneficiaryList() {
           className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
-          <option className="bg-secondary text-white" value="last"> 
+          <option className="bg-secondary text-white" value="last">
             Last Name
           </option>
           <option className="bg-secondary text-white" value="first">
@@ -247,20 +247,20 @@ export function VolunteerList() {
     } else {
       const fetchProfiles = async () => {
         setLoading(true); // display "fetching..."
-        const volunteerSnap = await getDocs(collection(db, "volunteers"));
+        const volunteerSnap = await getDocs(query(collection(db, "volunteers"), where("time_to_live", "==", null)));
         const profiles: any[] = [];
         let flag: boolean = false;
 
         // TODO: use db models when pulled in main
         // validate doc fields (allow N/A for now)
-        volunteerSnap.docs.forEach(doc => {
+        volunteerSnap.forEach(doc => {
           try {
             const data = doc.data();
             const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
             const age = birthDate ? differenceInYears(new Date(), birthDate) : "N/A";
-            const sex = data.sex === "M" || data.sex === "F" ? data.sex : "N/A";
+            const sex = data.sex;
             const type = data.is_admin ? "admin" : "volunteer";
-            
+
             // Skip if name missing
             if (!data.first_name || !data.last_name) {
               flag = true;
@@ -338,11 +338,11 @@ export function VolunteerList() {
           className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
-          <option className="bg-secondary text-white" value="student">
-            Students
+          <option className="bg-secondary text-white" value="volunteer">
+            Volunteers
           </option>
-          <option className="bg-secondary text-white" value="waitlist">
-            Waitlisted
+          <option className="bg-secondary text-white" value="admin">
+            Admins
           </option>
         </select>
 
@@ -352,7 +352,7 @@ export function VolunteerList() {
           className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
-          <option className="bg-secondary text-white" value="last"> 
+          <option className="bg-secondary text-white" value="last">
             Last Name
           </option>
           <option className="bg-secondary text-white" value="first">
