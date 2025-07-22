@@ -3,12 +3,13 @@ import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
 import { useEffect, useState } from "react";
 import { db } from "../firebase/firebaseConfig";
-import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
+import { doc, getDoc, getDocs, Timestamp, updateDoc, collectionGroup, where, query } from "firebase/firestore"
 import type { Beneficiary } from "@models/beneficiaryType";
 import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
 import type { Guardian } from "@models/guardianType";
+import type { AttendedEvents } from "@models/attendedEventsType";
 import { emailRegex } from "../util/emailRegex";
 import { add } from "date-fns";
 import type { Event } from "@models/eventType";
@@ -18,6 +19,7 @@ export function BeneficiaryProfile() {
     const params = useParams()
     const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null)
     const [originalBenificiary, setOriginalBeneficiary] = useState<Beneficiary | null>(null)
+    const [attendedEvents, setAttendedEvents] = useState<AttendedEvents[]>([])
     //formState = null, all disabled
     //formState = true, readonly
     //formState = false, edit
@@ -45,9 +47,16 @@ export function BeneficiaryProfile() {
             setDocID(beneficiariesSnap.id)
             setGradeLevel((beneficiariesSnap.data() as Beneficiary).grade_level.toString()) // see commit desc re: this change
             setForm(true)
+
+            const attList: AttendedEvents[] = []
+            const attRef = await getDocs(query(collectionGroup(db, "attendees"), where("beneficiaryID", "==", beneficiariesSnap.id)))
+            attRef.forEach((att) => {
+                attList.push({ ...(att.data() as AttendedEvents), docID: att.id })
+            })
+            setAttendedEvents(attList)
         }
         fetchBeneficiary()
-    }, [setBeneficiary, params.docId])
+    }, [setBeneficiary, setAttendedEvents, params.docId])
     console.log(beneficiary)
     console.log(guardians)
     const navigate = useNavigate();
@@ -409,8 +418,8 @@ export function BeneficiaryProfile() {
                         Attended Events
                     </h3>
                     <div className="space-y-2">
-                        {eventsTest.map(({ start_date, name }, index) => (
-                            <EventCard key={index} date={start_date} name={name} />
+                        {attendedEvents.map((att, index) => (
+                            <EventCard key={index} attEvent={att} />
                         ))}
                     </div>
                 </div>
