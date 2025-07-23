@@ -1,17 +1,12 @@
 import { startTransition, useEffect, useMemo, useOptimistic, useState } from "react";
-import { collection, getDocs, query, QueryDocumentSnapshot, where } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { compareDesc, differenceInDays, differenceInYears } from "date-fns";
 import { db } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import type { Volunteer } from "@models/volunteerType";
 import { DeletedProfileList } from "./DeletedProfileList";
 import { callRestoreDeletedVolunteer } from "../../firebase/cloudFunctions";
-
-const converter = {
-    toFirestore: (data: Volunteer) => data,
-    fromFirestore: (snap: QueryDocumentSnapshot) =>
-        snap.data() as Volunteer
-}
+import { volunteerConverter } from "../../util/converters";
 
 
 export function DeletedVolunteerList() {
@@ -27,9 +22,9 @@ export function DeletedVolunteerList() {
     useEffect(() => {
         async function run() {
             try {
-                const q = query(collection(db, "volunteers"), where("time_to_live", "!=", null)).withConverter(converter);
+                const q = query(collection(db, "volunteers"), where("time_to_live", "!=", null)).withConverter(volunteerConverter);
                 const res = await getDocs(q);
-                setProfiles(res.docs.map(doc => ({ ...doc.data(), docID: doc.id })));
+                setProfiles(res.docs.map(doc => doc.data()));
             } catch (error) {
                 toast.error("Couldn't load volunteers.");
                 console.error(error);

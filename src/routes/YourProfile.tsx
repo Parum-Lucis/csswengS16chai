@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../util/userContext.ts";
+import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
 import { callDeleteVolunteerProfile } from "../firebase/cloudFunctions";
 import { signOut } from "firebase/auth";
-import { emailRegex } from "../util/emailRegex.ts";
+import { emailRegex } from "../util/emailRegex";
 
 export function YourProfile() {
 
@@ -41,17 +41,8 @@ export function YourProfile() {
     }, [setVolunteer, user])
     console.log(volunteer)
     const navigate = useNavigate();
-    const usertest = useContext(UserContext);
     const { sex, contact_number: contact, email, address } = volunteer || {}
     const birthdate = new Date((volunteer?.birthdate.seconds ?? 0) * 1000)
-
-    useEffect(() => {
-
-        // If there is no user logged in, skip this page and redirect to login page.
-        if (usertest === null) {
-            navigate("/");
-        }
-    }, [usertest, navigate]);
 
     useEffect(() => {
         document.body.style.overflow = showDeleteModal ? 'hidden' : 'unset';

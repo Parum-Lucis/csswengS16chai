@@ -5,8 +5,8 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { Calendar } from './Calendar';
-import { UserContext } from '../context/userContext';
-import { collection, getDocs, Timestamp } from 'firebase/firestore';
+import { UserContext } from '../util/userContext';
+import { getDocs, Timestamp } from 'firebase/firestore';
 
 // Mock Firebase
 jest.mock('firebase/firestore', () => ({

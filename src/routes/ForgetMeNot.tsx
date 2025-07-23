@@ -4,14 +4,12 @@ import { useNavigate } from "react-router";
 import { auth } from "../firebase/firebaseConfig";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { useContext, useEffect, useState, useRef } from "react";
-import { UserContext } from "../util/userContext";
+import { useState, useRef } from "react";
 
 function ForgetMeNot() {
     const [formState, setForm] = useState(1);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const navigate = useNavigate();
-    const user = useContext(UserContext);
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -41,13 +39,6 @@ function ForgetMeNot() {
             console.log("HIII")
         }
     }
-
-    // if there is already a user logged in, just skip the login page.
-    useEffect(() => {
-        if (user) {
-            navigate("/view-profile");
-        }
-    }, [user, navigate]);
 
     return (
         <div className="transition-all duration-500 ease-in-out w-full max-w-lg mx-auto h-[90vh] flex flex-col items-center justify-center">

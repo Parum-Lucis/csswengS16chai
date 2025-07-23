@@ -9,8 +9,6 @@ import { Calendar } from "./routes/Calendar";
 import { useEffect, useState } from "react";
 import { auth } from "./firebase/firebaseConfig";
 import { UserContext, type UserStateType } from "./util/userContext";
-import NavigationBar from "./components/NavigationBar";
-import Temp from "./components/Temp";
 import ForgetMeNot from "./routes/ForgetMeNot";
 import Admin from "./routes/Admin"
 import { VolunteerList, BeneficiaryList } from "./routes/ProfileList";
@@ -19,6 +17,8 @@ import { EventPage } from "./routes/EventPage";
 import EventCreation from "./routes/EventCreation"; import { AdminLayout } from "./layouts/AdminLayout.tsx";
 import { DeletedBeneficiaryList } from "./routes/admin/DeletedBeneficiaryList.tsx";
 import { DeletedVolunteerList } from "./routes/admin/DeletedVolunteerList.tsx";
+import { AuthLayout } from "./layouts/AuthLayout.tsx";
+import Temp from "./components/Temp.tsx";
 
 
 function App() {
@@ -37,9 +37,6 @@ function App() {
         else
           setUser({ ...currUser, is_admin: token.claims.is_admin as boolean })
       }
-
-
-
     });
 
     return listener;
@@ -48,22 +45,48 @@ function App() {
   return (
     <UserContext value={user}>
       <Routes>
-        <Route path="admin" element={<AdminLayout />} >
-          <Route index element={<Admin />} />
-          <Route path="deleted-beneficiaries" element={<DeletedBeneficiaryList />} />
-          <Route path="volunteer" >
-            <Route index element={<VolunteerList />} />
-            <Route path="deleted" element={<DeletedVolunteerList />} />
-            <Route path="new" element={<VolunteerProfileCreation />} />
-          </Route>
-        </Route>
-        <Route path="/" element={<Login />} />
+        <Route index element={<Login />} />
         <Route path="/forget-password" element={<ForgetMeNot />} />
-        {/* <Route path="/view-admin" element={<Admin />} /> */}
+
+        <Route element={<AuthLayout />}>
+
+          <Route path="admin" element={<AdminLayout />} >
+            <Route index element={<Admin />} />
+            <Route path="beneficiary">
+              <Route path="deleted" element={<DeletedBeneficiaryList />} />
+              <Route path="" element={<DeletedBeneficiaryList />} />
+            </Route>
+            <Route path="volunteer" >
+              <Route index element={<VolunteerList />} />
+              <Route path=":docId" element={<VolunteerProfile />} />
+              <Route path="deleted" element={<DeletedVolunteerList />} />
+              <Route path="new" element={<VolunteerProfileCreation />} />
+            </Route>
+            <Route path="event">
+              <Route path="new" element={<EventCreation />} />
+            </Route>
+          </Route>
+
+          <Route path="me" element={<YourProfile />} />
+
+          <Route path="beneficiary" >
+            <Route index element={<BeneficiaryList />} />
+            <Route path="new" element={<BeneficiaryProfileCreation />} />
+            <Route path=":docId" element={<BeneficiaryProfile />} />
+          </Route>
+
+          <Route path="event" >
+            <Route index element={<EventList />} />
+            <Route path=":docId" element={<EventPage />} />
+          </Route>
+
+          <Route path="calendar" element={<Calendar />} />
+          <Route path="test" element={<Temp />} />
+        </Route>
+
+        {/* 
         <Route path="/view-profile" element={<YourProfile />} />
         <Route path="/view-beneficiary/:docId" element={<BeneficiaryProfile />} />
-        <Route path="/view-volunteer/:docId" element={<VolunteerProfile />} />
-        <Route path="/create-volunteer-profile" element={<VolunteerProfileCreation />} />
         <Route path="/create-beneficiary-profile" element={<BeneficiaryProfileCreation />} />
         <Route path="/create-event" element={<EventCreation />} />
         <Route path="/view-profile-list" element={<Temp />} />
@@ -71,10 +94,9 @@ function App() {
         <Route path="/view-volunteer-list" element={<VolunteerList />} />
         <Route path="/view-calendar" element={<Calendar />} />
         <Route path="/view-event-list" element={<EventList />} />
-        <Route path="/view-event/:docId" element={<EventPage />} />
-      </Routes>
-      <NavigationBar />
-    </UserContext>
+        <Route path="/view-event/:docId" element={<EventPage />} /> */}
+      </Routes >
+    </UserContext >
   );
 }
 

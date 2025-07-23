@@ -80,7 +80,7 @@ export function VolunteerProfileCreation() {
 
     if (res.data) {
       toast.success("Success!");
-      navigate("/view-profile");
+      navigate("/admin");
     } else {
       toast.error("Couldn't create profile.");
     }
@@ -321,7 +321,7 @@ export function BeneficiaryProfileCreation() {
 
         if (addRef) {
           toast.success("Success!");
-          navigate("/view-profile");
+          navigate("/beneficiary");
         }
         else toast.error("Submission failed.");
       }
