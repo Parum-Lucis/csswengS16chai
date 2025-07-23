@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
 
 export function VolunteerProfile() {
-    // const params = useParams()
+    const params = useParams()
     const [volunteer, setVolunteer] = useState<Volunteer | null>(null)
     const [originalVolunteer, setOriginalVolunteer] = useState<Volunteer | null>(null)
     const [formState, setForm] = useState<boolean | null>(null);
@@ -18,7 +18,7 @@ export function VolunteerProfile() {
     
     useEffect(() =>  {
         const fetchBeneficiary = async () => {
-            const getQuery = doc(db, "volunteers", "test-vol-1")
+            const getQuery = doc(db, "volunteers", params.docId as string)
             const volunteerSnap = await getDoc(getQuery)
             if(volunteerSnap.exists())
             setVolunteer(volunteerSnap.data() as Volunteer)
