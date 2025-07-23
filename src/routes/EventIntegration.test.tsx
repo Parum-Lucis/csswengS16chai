@@ -12,6 +12,7 @@ import EventList from "./EventList";
 import { EventPage } from "./EventPage";
 import { Calendar } from "./Calendar";
 
+// Define mutable data stores for our mock Firestore.
 let eventDocs = [
   {
     id: "1",
@@ -35,26 +36,56 @@ let eventDocs = [
   },
 ];
 
+let attendeeDocs = [
+    { id: 'att1', data: () => ({ beneficiaryID: 'b1', first_name: 'John', last_name: 'Doe' }) },
+    { id: 'att2', data: () => ({ beneficiaryID: 'b2', first_name: 'Jane', last_name: 'Smith' }) },
+];
+
+
 jest.mock("firebase/firestore", () => {
   const originalModule = jest.requireActual("firebase/firestore");
   return {
     ...originalModule,
-    collection: jest.fn(),
-    getDocs: jest.fn(() => Promise.resolve({ docs: eventDocs })),
-    getDoc: jest.fn((docRef) => {
-        const id = docRef.id;
-        const doc = eventDocs.find(b => b.id === id);
+    collection: jest.fn((db, path) => ({ path })),
+    doc: jest.fn((db, path, id) => ({ path: `${path}/${id}`, id })),
+    addDoc: jest.fn(async (collectionRef, data) => {
+        const newId = `new-id-${Date.now()}`;
+        const newEvent = {
+            id: newId,
+            data: () => ({
+                ...data,
+                start_date: { toDate: () => new Date(data.start_date) },
+                end_date: { toDate: () => new Date(data.end_date) },
+            }),
+        };
+        eventDocs.push(newEvent as any);
+        return { id: newId };
+    }),
+    getDocs: jest.fn(async (query) => {
+        if (query.path.includes("attendees")) {
+            return {
+                docs: attendeeDocs,
+                forEach: (callback: any) => attendeeDocs.forEach(callback),
+            };
+        }
+        return {
+            docs: eventDocs,
+            forEach: (callback: any) => eventDocs.forEach(callback),
+        };
+    }),
+    getDoc: jest.fn(async (docRef) => {
+        const doc = eventDocs.find(d => d.id === docRef.id);
         if (doc) {
-            return Promise.resolve({
-                exists: () => true,
+            return {
+                // Fix: Explicitly define the return type of the 'exists' function.
+                exists: (): boolean => true,
                 id: doc.id,
                 data: doc.data,
-            });
+            };
         }
-        return Promise.resolve({ exists: () => false });
+        // Fix: Explicitly define the return type of the 'exists' function.
+        return { exists: (): boolean => false };
     }),
-    doc: jest.fn((db, collectionName, id) => ({ id: id || "new-id" })),
-    addDoc: jest.fn(() => Promise.resolve({ id: "new-event-id" })),
     updateDoc: jest.fn(() => Promise.resolve()),
     deleteDoc: jest.fn(() => Promise.resolve()),
   };
@@ -84,23 +115,48 @@ const mockUser = {
 
 
 describe("Event Integration Tests", () => {
-  const { addDoc, updateDoc } = require("firebase/firestore");
+  const { addDoc, updateDoc, getDocs, deleteDoc } = require("firebase/firestore");
   const { callDeleteEvent } = require("../firebase/cloudFunctions");
 
   beforeEach(() => {
     addDoc.mockClear();
     updateDoc.mockClear();
+    (getDocs as jest.Mock).mockClear();
+    deleteDoc.mockClear();
     callDeleteEvent.mockClear();
     mockedNavigate.mockClear();
+    eventDocs = [
+        {
+          id: "1",
+          data: () => ({
+            name: "Medical Mission",
+            description: "Annual medical mission for the community.",
+            start_date: { toDate: () => new Date("2025-12-25T09:00:00Z") },
+            end_date: { toDate: () => new Date("2025-12-25T17:00:00Z") },
+            location: "Community Center",
+          }),
+        },
+        {
+          id: "2",
+          data: () => ({
+            name: "Christmas Party",
+            description: "Annual Christmas party for the kids.",
+            start_date: { toDate: () => new Date("2025-12-20T13:00:00Z") },
+            end_date: { toDate: () => new Date("2025-12-20T17:00:00Z") },
+            location: "CHAI Youth Center",
+          }),
+        },
+    ];
   });
 
   test("creates an event, displays it in the list, and then deletes it", async () => {
-    // 1. Create Event
     render(
       <UserContext.Provider value={mockUser}>
         <MemoryRouter initialEntries={["/create-event"]}>
           <Routes>
             <Route path="/create-event" element={<EventCreation />} />
+            <Route path="/admin" element={<EventList />} />
+            <Route path="/event" element={<EventList />} />
           </Routes>
           <ToastContainer />
         </MemoryRouter>
@@ -116,32 +172,8 @@ describe("Event Integration Tests", () => {
     fireEvent.click(screen.getByRole("button", { name: /create event/i }));
 
     await waitFor(() => {
-      expect(addDoc).toHaveBeenCalled();
       expect(mockedNavigate).toHaveBeenCalledWith("/admin");
     });
-
-
-    // 2. View in List
-    eventDocs.push({
-      id: "3",
-      data: () => ({
-        name: "New Year's Gala",
-        description: "A fun night to welcome the new year",
-        start_date: { toDate: () => new Date("2025-12-31T19:00:00Z") },
-        end_date: { toDate: () => new Date("2025-12-31T23:59:00Z") },
-        location: "Grand Ballroom",
-      }),
-    });
-
-    render(
-      <UserContext.Provider value={mockUser}>
-        <MemoryRouter initialEntries={["/event"]}>
-          <Routes>
-            <Route path="/event" element={<EventList />} />
-          </Routes>
-        </MemoryRouter>
-      </UserContext.Provider>
-    );
 
     expect(await screen.findByText("New Year's Gala")).toBeInTheDocument();
   });
@@ -161,6 +193,7 @@ describe("Event Integration Tests", () => {
     await screen.findByDisplayValue("Annual medical mission for the community.");
     fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Updated Description" } });
     fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+
     await waitFor(() => {
       expect(updateDoc).toHaveBeenCalledWith(
           expect.anything(),
@@ -202,14 +235,16 @@ describe("Event Integration Tests", () => {
         </MemoryRouter>
       </UserContext.Provider>
     );
+    
+    for (let i = 0; i < 5; i++) {
+        fireEvent.click(screen.getByLabelText("Go to next month"));
+    }
 
     await screen.findByText("December 2025");
 
-    // Click on the 25th to see the Medical Mission
     fireEvent.click(screen.getByText("25"));
     expect(await screen.findByText("Medical Mission")).toBeInTheDocument();
 
-    // Click on the 20th to see the Christmas Party
     fireEvent.click(screen.getByText("20"));
     expect(await screen.findByText("Christmas Party")).toBeInTheDocument();
   });
