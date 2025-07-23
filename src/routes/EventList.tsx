@@ -5,6 +5,9 @@ import { collection, getDocs, QueryDocumentSnapshot, type FirestoreDataConverter
 import { db } from "../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { compareAsc, formatDate } from "date-fns";
+import {
+  EllipsisVertical,
+} from 'lucide-react';
 
 const converter: FirestoreDataConverter<Event> = {
   toFirestore: (event) => event,
@@ -19,7 +22,22 @@ const converter: FirestoreDataConverter<Event> = {
 }
 
 export function EventList() {
+  const [showDropdown, setShowDropdown] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
+
+  // Dropdown export
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const dropdown = document.getElementById("dropdownSearch");
+      if (dropdown && !dropdown.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
 
   useEffect(() => {
     async function fetchEvents() {
@@ -86,7 +104,7 @@ export function EventList() {
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
           <option className="bg-secondary text-white" value="ongoing">Ongoing</option>
@@ -97,7 +115,7 @@ export function EventList() {
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="appearance-none p-2 rounded-md border border-gray-300 text-sm"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
           <option className="bg-secondary text-white" value="name">A - Z</option>
@@ -110,8 +128,31 @@ export function EventList() {
           placeholder="Search"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-4/10"
         />
+
+        <div className="relative w-1/10">
+          <button
+            type="submit"
+            className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+            onClick={() => {
+              setShowDropdown(!showDropdown);
+            }}
+            data-dropdown-toggle="dropdownSearch"
+          >
+            <EllipsisVertical className="w-5 h-5" />
+          </button>
+
+          {showDropdown && (
+            <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
+              <ul className="py-1">
+                <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                  Export
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-4">
