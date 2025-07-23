@@ -9,6 +9,7 @@ import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
 import { callDeleteEvent } from '../firebase/cloudFunctions';
+import { EllipsisVertical } from 'lucide-react';
 
 export function EventPage() {
   const params = useParams()
@@ -18,13 +19,16 @@ export function EventPage() {
   const [attendees, setAttendees] = useState<AttendedEvents[]>([])
   const [docID, setDocID] = useState(event?.docID)
   const [showDeleteModal, setDeleteModal] = useState(false)
-  const [showDropdown, setShowDropdown] = useState(false)
   // for bene list
   const [notAttendeeList, setNotAttendeeList] = useState<Beneficiary[]>([])
   const [checklist, setChecklist] = useState<boolean[]>([])
   const [runQuery, setRunQuery] = useState<boolean>(true)
   // for remove list 
   const [removeChecklist, setRemoveChecklist] = useState<boolean[]>([])
+  // for dropdowns
+  const [showAddDropdown, setShowAddDropdown] = useState(false)
+  const [showRemoveDropdown, setShowRemoveDropdown] = useState(false)
+  const [showOtherDropdown, setShowOtherDropdown] = useState(false)
 
   // use effect for fetch event & fetch attendees
   useEffect(() => {
@@ -71,21 +75,28 @@ export function EventPage() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
       if (
         event.target instanceof HTMLElement &&
-        !event.target.closest('[data-dropdown-toggle="dropdownSearch"]') &&
-        !event.target.closest('#dropdownSearch') &&
-        showDropdown
+        !target.closest("[data-dropdown-toggle='addDropdown']") &&
+        !target.closest("[data-dropdown-toggle='removeDropdown']") &&
+        !target.closest("[data-dropdown-toggle='otherDropdown']") &&
+        !target.closest("#dropdownAdd") &&
+        !target.closest("#dropdownRemove") &&
+        !target.closest("#dropdownOther")
       ) {
-        setShowDropdown(false);
+        setShowAddDropdown(false);
+        setShowRemoveDropdown(false);
+        setShowOtherDropdown(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showDropdown]);
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = showDeleteModal ? 'hidden' : 'unset';
@@ -391,32 +402,17 @@ export function EventPage() {
             <button
               className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 hover:onhover transition-colors w-full lg:w-48"
               onClick={() => {
-                setShowDropdown(!showDropdown)
+                setShowAddDropdown(!showAddDropdown)
                 showBeneficiaryList()
               }}
-              data-dropdown-toggle="dropdownSearch"
+              data-dropdown-toggle="dropdownAdd"
             >
               Add
             </button>
 
-            <button
-              className="mt-2 w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-              type="button"
-              // onClick={() => {
-              //   handleRemoveAttendees()
-              // }} 
-              onClick={() => {
-                setShowDropdown(!showDropdown)
-                showBeneficiaryList()
-              }}
-              data-dropdown-toggle="dropdownSearch"
-            >
-              Remove
-            </button>
-
-            {showDropdown && (
+            {showAddDropdown && (
               <div
-                id="dropdownSearch"
+                id="dropdownAdd"
                 className="flex flex-col absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg w-full px-4 py-3 max-h-60 overflow-y-auto"
               >
                 <input
@@ -459,37 +455,117 @@ export function EventPage() {
             )}
 
             <button
-              className="mt-2 w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+              className="w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer sm:w-3/10"
               type="button"
+              onClick={() => {
+                setShowRemoveDropdown(!showRemoveDropdown)
+                showBeneficiaryList()
+              }}
+              data-dropdown-toggle="dropdownRemove"
             >
-              Update
+              Remove
             </button>
+
+            {showRemoveDropdown && (
+              <div
+                id="dropdownRemove"
+                className="flex flex-col absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg w-full px-4 py-3 max-h-60 overflow-y-auto"
+              >
+                <input
+                  type="text"
+                  placeholder="Search"
+                  className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
+                />
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {
+                    notAttendeeList.length > 0 ? (
+                      notAttendeeList.map((notAtt, i) => (
+                        <div className="space-y-2" key={i}>
+                          <label className="flex items-center px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white mr-3"
+                              onChange={() => {
+                                const updChecklist = [...checklist]
+                                updChecklist[i] = !checklist[i]
+                                setChecklist(updChecklist)
+                              }}
+                            />
+                            <span className="font-semibold text-md text-white">{notAtt.first_name + " " + notAtt.last_name}</span>
+                          </label>
+                        </div>
+                      ))
+                    ) : "No beneficiaries to show"
+                  }
+                </div>
+                <div className="mt-4 text-right">
+                  <button
+                    className="text-secondary font-semibold hover:underline cursor-pointer"
+                    type="button"
+                    onClick={handleRemoveAttendees}
+                  >
+                    Update List
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-4 w-full sm:w-4/10">
+              <button
+                className="w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer sm:w-9/10"
+                type="button"
+              >
+                Update
+              </button>
+
+              <div className="relative w-2/10">
+                <button
+                  type="submit"
+                  className="h-[40px] bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer flex items-center justify-center"
+                  onClick={() => {
+                    setShowOtherDropdown(!showOtherDropdown);
+                  }}
+                  data-dropdown-toggle="dropdownOther"
+                >
+                  <EllipsisVertical className="w-5 h-5" />
+                </button>
+
+                {showOtherDropdown && (
+                  <div id="dropdownOther" className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10">
+                    <ul className="py-1">
+                      <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                        Send SMS
+                      </li>
+                      <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                        Send Email
+                      </li>
+                      <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                        Export
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
 
-        <button
-          className="mt-4 w-full max-w-2xl bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-          type="button"
-        >
-          Export
-        </button>
-
-        <div className="w-full max-w-2xl mt-3">
-          {
-            attendees.length > 0 ? attendees.map((att, i) => (
-              <AttendeesCard
-                key={i}
-                name={attendees[i].first_name + " " + attendees[i].last_name}
-                isPresent={att.attended ?? false}
-                who_attended={att.who_attended ?? "None"}
-                handleToggle={() => {
-                  const updRemoveCkl = [...removeChecklist]
-                  updRemoveCkl[i] = !removeChecklist[i]
-                  setRemoveChecklist(updRemoveCkl)
-                }}
-              />
-            )) : <div className="text-center text-white w-full max-w-2xl items-center mt-2 mr-2 font-sans bg-primary p-5 rounded-[5px] font-semibold mb-2"> "No data to show" </div>
-          }
+          <div className="w-full max-w-2xl mt-3">
+            {
+              attendees.length > 0 ? attendees.map((att, i) => (
+                <AttendeesCard
+                  key={i}
+                  name={attendees[i].first_name + " " + attendees[i].last_name}
+                  isPresent={att.attended ?? false}
+                  who_attended={att.who_attended ?? "None"}
+                  handleToggle={() => {
+                    const updRemoveCkl = [...removeChecklist]
+                    updRemoveCkl[i] = !removeChecklist[i]
+                    setRemoveChecklist(updRemoveCkl)
+                  }}
+                />
+              )) : <div className="text-center text-white w-full max-w-2xl items-center mt-2 mr-2 font-sans bg-primary p-5 rounded-[5px] font-semibold mb-2"> "No data to show" </div>
+            }
+          </div>
         </div>
       </div>
     </div>

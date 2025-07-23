@@ -137,110 +137,111 @@ export function BeneficiaryList() {
           </option>
         </select>
 
-        <input
-          type="text"
-          placeholder="Search"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-4/10"
-        />
+        <div className="flex items-center gap-2 w-full sm:w-5/10">
+          <input
+            type="text"
+            placeholder="Search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-9/10"
+          />
 
-        <div className="relative w-1/10">
-          <button
-            type="submit"
-            className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
-            onClick={() => {
-              setShowDropdown(!showDropdown);
-            }}
-            data-dropdown-toggle="dropdownSearch"
-          >
-            <EllipsisVertical className="w-5 h-5" />
-          </button>
+          <div className="relative w-1/10">
+            <button
+              type="submit"
+              className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+              onClick={() => {
+                setShowDropdown(!showDropdown);
+              }}
+              data-dropdown-toggle="dropdownSearch"
+            >
+              <EllipsisVertical className="w-5 h-5" />
+            </button>
 
-          {showDropdown && (
-            <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
-              <ul className="py-1">
-                <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                  Export
-                </li>
-              </ul>
-            </div>
+            {showDropdown && (
+              <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
+                <ul className="py-1">
+                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                    Export
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <Link to="new" className="flex p-4 gap-2 bg-primary mb-4 rounded-xl">
+            <PlusCircle />
+            Create New Profile
+          </Link>
+          {loading ? (
+            // display loading while fetching from database.
+            <div className="text-center text-white py-8">Fetching...</div>
+          ) : filteredProfiles.length === 0 ? (
+            <div className="text-center text-white py-8">No profiles to show.</div>
+          ) : (
+            // non-empty profiles
+            filteredProfiles.map((profile, index) => (
+
+              <Link
+                key={`${sort}-${index}`}
+                to={profile.docID}
+                className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
+              >
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
+                  <svg
+                    className="w-6 h-6 text-primary"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+                    />
+                  </svg>
+                </div>
+                <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={differenceInYears(new Date(), profile.birthdate.toDate())} sex={profile.sex} sort={sort} />
+              </Link>
+            ))
           )}
         </div>
       </div>
-
-      <div className="flex flex-col gap-4">
-        <Link to="new" className="flex p-4 gap-2 bg-primary mb-4 rounded-xl">
-          <PlusCircle />
-          Create New Profile
-        </Link>
-        {loading ? (
-          // display loading while fetching from database.
-          <div className="text-center text-white py-8">Fetching...</div>
-        ) : filteredProfiles.length === 0 ? (
-          <div className="text-center text-white py-8">No profiles to show.</div>
-        ) : (
-          // non-empty profiles
-          filteredProfiles.map((profile, index) => (
-
-            <Link
-              key={`${sort}-${index}`}
-              to={profile.docID}
-              className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
-            >
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-                <svg
-                  className="w-6 h-6 text-primary"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
-                  />
-                </svg>
-              </div>
-              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={differenceInYears(new Date(), profile.birthdate.toDate())} sex={profile.sex} sort={sort} />
-            </Link>
-          ))
-        )}
-      </div>
-    </div>
-  );
+      );
 }
 
-export function VolunteerList() {
+      export function VolunteerList() {
 
   // List control states
   const [filter, setFilter] = useState<string>("");
-  const [sort, setSort] = useState<string>("");
-  const [search, setSearch] = useState<string>("");
+        const [sort, setSort] = useState<string>("");
+          const [search, setSearch] = useState<string>("");
 
-  // Loading prompt state
-  const [loading, setLoading] = useState(true);
+            // Loading prompt state
+            const [loading, setLoading] = useState(true);
 
-  // Profiles and test profiles flag
-  const [profiles, setProfiles] = useState<Volunteer[]>([]);
+            // Profiles and test profiles flag
+            const [profiles, setProfiles] = useState<Volunteer[]>([]);
 
-  // Dropdown export
-  const [showDropdown, setShowDropdown] = useState(false);
+            // Dropdown export
+            const [showDropdown, setShowDropdown] = useState(false);
 
   // Fetching profiles 
   useEffect(() => {
     const fetchProfiles = async () => {
-      setLoading(true); // display "fetching..."
-      const q = query(collection(db, "volunteers"), where("time_to_live", "==", null));
+              setLoading(true); // display "fetching..."
+            const q = query(collection(db, "volunteers"), where("time_to_live", "==", null));
 
-      try {
+            try {
         const volunteerSnap = await getDocs(q.withConverter(volunteerConverter));
         setProfiles(volunteerSnap.docs.map(profile => profile.data()))
       } catch (error) {
-        console.error(error);
-        toast.error("failed to load volunteers");
+              console.error(error);
+            toast.error("failed to load volunteers");
       } finally {
-        setLoading(false);
+              setLoading(false);
       }
     };
-    fetchProfiles();
+            fetchProfiles();
 
   }, []);
 
@@ -248,145 +249,146 @@ export function VolunteerList() {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const dropdown = document.getElementById("dropdownSearch");
-      if (dropdown && !dropdown.contains(e.target as Node)) {
-        setShowDropdown(false);
+            if (dropdown && !dropdown.contains(e.target as Node)) {
+              setShowDropdown(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+            document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+              document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDropdown]);
 
   // Filter profiles based on filter val
   let filteredprofiles = filter ? profiles.filter(profile => profile.role.toLocaleLowerCase() === filter.toLocaleLowerCase()) : profiles;
 
-  // Sort profiles based on selected sort val
-  if (sort === "last") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.last_name.localeCompare(b.last_name));
+            // Sort profiles based on selected sort val
+            if (sort === "last") {
+              filteredprofiles = [...filteredprofiles].sort((a, b) => a.last_name.localeCompare(b.last_name));
   } else if (sort === "first") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
+              filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
   } else if (sort === "age") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => compareAsc(a.birthdate.toDate(), b.birthdate.toDate()));
+              filteredprofiles = [...filteredprofiles].sort((a, b) => compareAsc(a.birthdate.toDate(), b.birthdate.toDate()));
   }
 
-  // Search filter (partial or exact matches on name and age)
-  if (search.trim() !== "") {
+            // Search filter (partial or exact matches on name and age)
+            if (search.trim() !== "") {
     const searchLower = search.trim().toLowerCase();
-    const terms = searchLower.split(/[\s,]+/).filter(Boolean);
+            const terms = searchLower.split(/[\s,]+/).filter(Boolean);
 
     filteredprofiles = filteredprofiles.filter(profile => {
       const values = [
-        profile.first_name.toLowerCase(),
-        profile.last_name.toLowerCase(),
-        profile.birthdate.toString(),
-        differenceInYears(new Date(), profile.birthdate.toDate()).toString()
-      ];
+            profile.first_name.toLowerCase(),
+            profile.last_name.toLowerCase(),
+            profile.birthdate.toString(),
+            differenceInYears(new Date(), profile.birthdate.toDate()).toString()
+            ];
       return terms.every(term =>
         values.some(value => value.includes(term))
-      );
+            );
     });
   }
 
-  return (
-    <div className="w-full max-w-md mx-auto mt-6 p-4">
-      <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Volunteer List</h1>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
-        <select
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
-        >
-          <option className="bg-secondary text-white" value="">Filter By</option>
-          <option className="bg-secondary text-white" value="volunteer">
-            Volunteers
-          </option>
-          <option className="bg-secondary text-white" value="admin">
-            Admins
-          </option>
-        </select>
-
-        <select
-          value={sort}
-          onChange={e => setSort(e.target.value)}
-          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
-        >
-          <option className="bg-secondary text-white" value="">Sort by</option>
-          <option className="bg-secondary text-white" value="last">
-            Last Name
-          </option>
-          <option className="bg-secondary text-white" value="first">
-            First Name
-          </option>
-          <option className="bg-secondary text-white" value="age">
-            Age
-          </option>
-        </select>
-
-        <input
-          type="text"
-          placeholder="Search"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-4/10"
-        />
-
-        <div className="relative w-1/10">
-          <button
-            type="submit"
-            className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
-            onClick={() => {
-              setShowDropdown(!showDropdown);
-            }}
-            data-dropdown-toggle="dropdownSearch"
-          >
-            <EllipsisVertical className="w-5 h-5" />
-          </button>
-
-          {showDropdown && (
-            <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
-              <ul className="py-1">
-                <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                  Export
-                </li>
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        {loading ? (
-          // display loading while fetching from database.
-          <div className="text-center text-white py-8">Fetching...</div>
-        ) : filteredprofiles.length === 0 ? (
-          <div className="text-center text-white py-8">No profiles to show.</div>
-        ) : (
-          // non-empty profiles
-          filteredprofiles.map((profile, index) => (
-
-            <Link
-              key={`${sort}-${index}`}
-              to={profile.docID}
-              className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
-            >
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-                <svg
-                  className="w-6 h-6 text-primary"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
+            return (
+            <div className="w-full max-w-md mx-auto mt-6 p-4">
+              <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Volunteer List</h1>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+                <select
+                  value={filter}
+                  onChange={e => setFilter(e.target.value)}
+                  className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
-                  <path
-                    d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+                  <option className="bg-secondary text-white" value="">Filter By</option>
+                  <option className="bg-secondary text-white" value="volunteer">
+                    Volunteers
+                  </option>
+                  <option className="bg-secondary text-white" value="admin">
+                    Admins
+                  </option>
+                </select>
+
+                <select
+                  value={sort}
+                  onChange={e => setSort(e.target.value)}
+                  className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
+                >
+                  <option className="bg-secondary text-white" value="">Sort by</option>
+                  <option className="bg-secondary text-white" value="last">
+                    Last Name
+                  </option>
+                  <option className="bg-secondary text-white" value="first">
+                    First Name
+                  </option>
+                  <option className="bg-secondary text-white" value="age">
+                    Age
+                  </option>
+                </select>
+
+                <div className="flex items-center gap-2 w-full sm:w-5/10">
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-9/10"
                   />
-                </svg>
+
+                  <div className="relative w-1/10">
+                    <button
+                      type="submit"
+                      className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+                      onClick={() => {
+                        setShowDropdown(!showDropdown);
+                      }}
+                      data-dropdown-toggle="dropdownSearch"
+                    >
+                      <EllipsisVertical className="w-5 h-5" />
+                    </button>
+
+                    {showDropdown && (
+                      <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
+                        <ul className="py-1">
+                          <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                            Export
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {loading ? (
+                    // display loading while fetching from database.
+                    <div className="text-center text-white py-8">Fetching...</div>
+                  ) : filteredprofiles.length === 0 ? (
+                    <div className="text-center text-white py-8">No profiles to show.</div>
+                  ) : (
+                    // non-empty profiles
+                    filteredprofiles.map((profile, index) => (
+
+                      <Link
+                        key={`${sort}-${index}`}
+                        to={profile.docID}
+                        className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
+                      >
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
+                          <svg
+                            className="w-6 h-6 text-primary"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+                            />
+                          </svg>
+                        </div>
+                        <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={differenceInYears(new Date(), profile.birthdate.toDate())} sex={profile.sex} sort={sort} />
+                      </Link>
+                    ))
+                  )}
+                </div>
               </div>
-              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={differenceInYears(new Date(), profile.birthdate.toDate())} sex={profile.sex} sort={sort} />
-            </Link>
-          ))
-        )}
-      </div>
-    </div>
-  );
+              );
 }
 

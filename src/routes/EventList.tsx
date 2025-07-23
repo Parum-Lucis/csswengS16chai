@@ -5,9 +5,7 @@ import { collection, getDocs, QueryDocumentSnapshot, type FirestoreDataConverter
 import { db } from "../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { compareAsc, formatDate } from "date-fns";
-import {
-  EllipsisVertical,
-} from 'lucide-react';
+import { EllipsisVertical } from 'lucide-react';
 
 const converter: FirestoreDataConverter<Event> = {
   toFirestore: (event) => event,
@@ -123,77 +121,78 @@ export function EventList() {
           <option className="bg-secondary text-white" value="oldest">Oldest Event</option>
         </select>
 
-        <input
-          type="text"
-          placeholder="Search"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-4/10"
-        />
+        <div className="flex items-center gap-2 w-full sm:w-5/10">
+          <input
+            type="text"
+            placeholder="Search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-9/10"
+          />
 
-        <div className="relative w-1/10">
-          <button
-            type="submit"
-            className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
-            onClick={() => {
-              setShowDropdown(!showDropdown);
-            }}
-            data-dropdown-toggle="dropdownSearch"
+          <div className="relative w-1/10">
+            <button
+              type="submit"
+              className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+              onClick={() => {
+                setShowDropdown(!showDropdown);
+              }}
+              data-dropdown-toggle="dropdownSearch"
+            >
+              <EllipsisVertical className="w-5 h-5" />
+            </button>
+
+            {showDropdown && (
+              <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
+                <ul className="py-1">
+                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                    Export
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {modifiedList.map((event, i) => (
+            <EventCard event={event} key={`${i}${event.docID}`} />
+          ))}
+        </div>
+      </div>
+      );
+}
+
+      function EventCard(
+      {event}: {event: Event }
+      ) {
+
+  const {docID, name, start_date, location, description} = event;
+
+      return (
+      <Link
+        to={`/event/${docID}`}
+        className="flex items-center bg-primary text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
+      >
+        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 shrink-0">
+          <svg
+            className="w-6 h-6 text-primary"
+            fill="currentColor"
+            viewBox="0 0 24 24"
           >
-            <EllipsisVertical className="w-5 h-5" />
-          </button>
-
-          {showDropdown && (
-            <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
-              <ul className="py-1">
-                <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                  Export
-                </li>
-              </ul>
-            </div>
-          )}
+            <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
+          </svg>
         </div>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        {modifiedList.map((event, i) => (
-          <EventCard event={event} key={`${i}${event.docID}`} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function EventCard(
-  { event }: { event: Event }
-) {
-
-  const { docID, name, start_date, location, description } = event;
-
-  return (
-    <Link
-      to={`/event/${docID}`}
-      className="flex items-center bg-primary text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
-    >
-      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 shrink-0">
-        <svg
-          className="w-6 h-6 text-primary"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
-        </svg>
-      </div>
-      <div className="grow min-w-0">
-        <div className="text-base font-bold">{name}</div>
-        <div className="text-sm truncate">
-          <span className="">{description}</span>
+        <div className="grow min-w-0">
+          <div className="text-base font-bold">{name}</div>
+          <div className="text-sm truncate">
+            <span className="">{description}</span>
+          </div>
+          <div className="h-1" />
+          <div className="text-sm">Date: {formatDate(start_date.toDate(), "MMMM d, yyyy")}</div>
+          <div className="text-sm">Location: {location}</div>
         </div>
-        <div className="h-1" />
-        <div className="text-sm">Date: {formatDate(start_date.toDate(), "MMMM d, yyyy")}</div>
-        <div className="text-sm">Location: {location}</div>
-      </div>
-    </Link>
-  )
+      </Link>
+      )
 }
-export default EventList;
+      export default EventList;
