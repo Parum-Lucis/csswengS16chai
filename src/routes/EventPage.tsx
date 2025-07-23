@@ -526,9 +526,6 @@ export function EventPage() {
                   <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
                     Send Email
                   </li>
-                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                    Export
-                  </li>
                 </ul>
               </div>
             )}
