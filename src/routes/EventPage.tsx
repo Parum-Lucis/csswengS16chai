@@ -376,12 +376,16 @@ export function EventPage() {
               onClick={async () => {
                 if(!originalEvent) 
                   return;
-                await sendEmailReminder({...originalEvent, docID: docID}).then((success) => {
-                  if(success.data)
-                    toast.success("Email sent!")
-                  else toast.error("Something went wrong.")
-                })
-              }} 
+                else if(attendees.length == 0)
+                  toast.error("Attendees list is empty!")
+                else {
+                    const success = await sendEmailReminder({...originalEvent, docID: docID})
+                    if(success.data)
+                      toast.success("Email sent!")
+                    else toast.error("Something went wrong.")
+                  }
+                }
+              }
             >
               Send Email
             </button>

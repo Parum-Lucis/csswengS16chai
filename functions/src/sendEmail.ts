@@ -114,7 +114,7 @@ export const sendEmailReminder = onCall<Event>(async (req) => {
     })
 
     //
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
         from: 'CHAI-TAGUIG',
         bcc: emailList,
         subject: "Event Reminder for " + req.data.name,
@@ -125,14 +125,10 @@ export const sendEmailReminder = onCall<Event>(async (req) => {
             path: './public/CHAI.jpg',
             cid: 'CHAI'
         }],
-    }).then((info) => {
-        logger.log("Message sent:", info.messageId);
-        logger.log(info)
-        if(info.accepted.length > 0)
-            return true
-        else return false
-    }).catch(err => { 
-        logger.log("An error has occured while sending email", err)
-        return false 
     })
+    logger.log("Message sent:", info.messageId);
+    logger.log(info)
+    if(info.accepted.length > 0)
+        return true
+    else return false
 })
