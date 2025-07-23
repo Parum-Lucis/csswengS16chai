@@ -1,17 +1,11 @@
 import type { Beneficiary } from "@models/beneficiaryType";
 import { startTransition, useEffect, useOptimistic, useState } from "react";
-import { collection, doc, getDocs, query, QueryDocumentSnapshot, updateDoc, where, type FirestoreDataConverter } from "firebase/firestore";
+import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { differenceInDays, differenceInYears } from "date-fns";
 import { db } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { DeletedProfileList } from "./DeletedProfileList";
-
-const converter: FirestoreDataConverter<Beneficiary> = {
-    toFirestore: (data: Beneficiary) => data,
-    fromFirestore: (snap: QueryDocumentSnapshot) =>
-        snap.data() as Beneficiary
-}
-
+import { beneficiaryConverter } from "../../util/converters";
 
 export function DeletedBeneficiaryList() {
 
@@ -30,9 +24,9 @@ export function DeletedBeneficiaryList() {
     useEffect(() => {
         async function run() {
             try {
-                const q = query(collection(db, "beneficiaries"), where("time_to_live", "!=", null)).withConverter(converter);
+                const q = query(collection(db, "beneficiaries"), where("time_to_live", "!=", null)).withConverter(beneficiaryConverter);
                 const res = await getDocs(q);
-                setProfiles(res.docs.map(doc => ({ ...doc.data(), docID: doc.id })));
+                setProfiles(res.docs.map(doc => doc.data()));
             } catch (error) {
                 toast.error("Couldn't load beneficiaries.");
                 console.error(error);

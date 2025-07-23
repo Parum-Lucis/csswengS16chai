@@ -86,12 +86,12 @@ describe('ForgetMeNot Page', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  test('redirects to /view-profile if user is already logged in', async () => {
+  test('redirects to /me if user is already logged in', async () => {
     const user = { uid: 'test-uid', email: 'test@example.com' };
     renderForgetMeNot(user);
 
     await waitFor(() => {
-      expect(mockedNavigate).toHaveBeenCalledWith('/view-profile');
+      expect(mockedNavigate).toHaveBeenCalledWith('/me');
     });
   });
 

@@ -42,6 +42,19 @@ const app = initializeApp();
 const auth = getAuth(app);
 const firestore = getFirestore(app);
 
+export const promoteMetoAdmin = onCall(async (req) => {
+    if (!req.auth) return false;
+    const { uid } = req.auth;
+    await auth.setCustomUserClaims(uid, { is_admin: true });
+    firestore.doc(`volunteers/${uid}`).update(
+        {
+            role: "Admin",
+            is_admin: true
+        }
+    )
+    return true;
+})
+
 export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
     if (!req.auth) return false;
     if (!req.auth.token.is_admin) return false;

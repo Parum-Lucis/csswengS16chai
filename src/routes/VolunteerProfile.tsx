@@ -1,14 +1,14 @@
 import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../util/userContext.ts";
+import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Volunteer } from "@models/volunteerType";
 import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
-import { emailRegex } from "../util/emailRegex.ts";
-import { callDeleteVolunteerProfile, callPromoteVolunteerToAdmin } from "../firebase/cloudFunctions.ts";
+import { emailRegex } from "../util/emailRegex";
+import { callDeleteVolunteerProfile, callPromoteVolunteerToAdmin } from "../firebase/cloudFunctions";
 import { signOut } from "firebase/auth";
 
 export function VolunteerProfile() {
@@ -32,20 +32,11 @@ export function VolunteerProfile() {
             setForm(true)
         }
         fetchBeneficiary()
-    }, [setVolunteer])
+    }, [params.docId])
     console.log(volunteer)
     const navigate = useNavigate();
-    const usertest = useContext(UserContext);
     const { sex, contact_number: contact, email, address } = volunteer || {}
     const birthdate = new Date((volunteer?.birthdate.seconds ?? 0) * 1000)
-
-    useEffect(() => {
-
-        // If there is no user logged in, skip this page and redirect to login page.
-        if (usertest === null) {
-            navigate("/");
-        }
-    }, [usertest, navigate]);
 
     useEffect(() => {
         document.body.style.overflow = showDeleteModal ? 'hidden' : 'unset';
@@ -73,7 +64,7 @@ export function VolunteerProfile() {
                     navigate("/");
                 }
                 else
-                    navigate('/view-volunteer-list')
+                    navigate('../')
             }
 
         } catch (error) {

@@ -205,7 +205,7 @@ describe("Volunteer Creation Page", () => {
       );
 
       expect(require("react-toastify").toast.success).toHaveBeenCalledWith("Success!");
-      expect(mockedUsedNavigate).toHaveBeenCalledWith("/view-profile");
+      expect(mockedUsedNavigate).toHaveBeenCalledWith("/me");
     });
   });
 });

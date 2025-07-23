@@ -1,8 +1,7 @@
 import EventCard from "../components/EventCard";
 import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../util/userContext";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Beneficiary } from "@models/beneficiaryType";
@@ -48,22 +47,13 @@ export function BeneficiaryProfile() {
             setForm(true)
         }
         fetchBeneficiary()
-    }, [setBeneficiary])
+    }, [setBeneficiary, params.docId])
     console.log(beneficiary)
     console.log(guardians)
     const navigate = useNavigate();
-    const usertest = useContext(UserContext);
     const { sex, address } = beneficiary || {}
 
     const birthdate = new Date((beneficiary?.birthdate.seconds ?? 0) * 1000)
-
-    useEffect(() => {
-
-        // If there is no user logged in, skip this page and redirect to login page.
-        if (usertest === null) {
-            navigate("/");
-        }
-    }, [usertest, navigate]);
 
     useEffect(() => {
         document.body.style.overflow = showDeleteModal ? 'hidden' : 'unset';
@@ -148,7 +138,7 @@ export function BeneficiaryProfile() {
                 time_to_live: Timestamp.fromDate(add(new Date(), { days: 30 }))
             })
             toast.success("Account delete success!")
-            navigate("/view-beneficiary-list")
+            navigate("/beneficiary")
         }
         catch {
             toast.error("Something went wrong")
