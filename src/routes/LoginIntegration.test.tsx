@@ -7,7 +7,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Login from './Login';
 import ForgetMeNot from './ForgetMeNot';
 import { YourProfile } from './YourProfile';
-import { UserContext } from '../context/userContext';
+import { UserContext } from '../util/userContext';
 import { ToastContainer } from 'react-toastify';
 import { FirebaseError } from 'firebase/app';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';

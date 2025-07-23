@@ -8,7 +8,7 @@ import { BeneficiaryProfileCreation } from "../routes/ProfileCreation";
 import { BeneficiaryList } from "../routes/ProfileList";
 import { BeneficiaryProfile } from "../routes/BeneficiaryProfile";
 import { ToastContainer } from "react-toastify";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 import type { User } from "firebase/auth";
 
 let beneficiaryDocs = [
