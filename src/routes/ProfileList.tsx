@@ -8,7 +8,7 @@ import { db } from "../firebase/firebaseConfig";
 import { differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
 import {
-  Upload,
+  EllipsisVertical,
 } from 'lucide-react';
 
 export function BeneficiaryList() {
@@ -32,6 +32,9 @@ export function BeneficiaryList() {
   // Profiles and test profiles flag
   const [profiles, setProfiles] = useState<any[]>([]);
   const useTestProfiles = false; // false if db query
+
+  // Dropdown export
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Fetching profiles 
   // RUNS TWICE while in development because of React's strict mode
@@ -99,6 +102,19 @@ export function BeneficiaryList() {
     }
   }, []);
 
+  // Dropdown export
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const dropdown = document.getElementById("dropdownSearch");
+      if (dropdown && !dropdown.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
 
   // Filter profiles based on filter val
   let filteredprofiles = filter ? profiles.filter(profile => profile.type === filter) : profiles;
@@ -132,12 +148,11 @@ export function BeneficiaryList() {
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Beneficiary List</h1>
-
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/3"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
           <option className="bg-secondary text-white" value="student">
@@ -151,7 +166,7 @@ export function BeneficiaryList() {
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/3"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
           <option className="bg-secondary text-white" value="last"> 
@@ -170,17 +185,33 @@ export function BeneficiaryList() {
           placeholder="Search"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/3"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-4/10"
         />
 
-        <button
-          type="submit"
-          className="font-sans font-semibold text-white bg-primary rounded-md w-[42px] h-[37px] shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
-        >
-          <Upload className="w-5 h-5" />
-        </button>
+        <div className="relative w-1/10">
+          <button
+            type="submit"
+            className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+            onClick={() => {
+              setShowDropdown(!showDropdown);
+            }}
+            data-dropdown-toggle="dropdownSearch"
+          >
+            <EllipsisVertical className="w-5 h-5"/>
+          </button>
+          
+          {showDropdown && (
+            <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
+              <ul className="py-1">
+                <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                  Export
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
-
+      
       <div className="flex flex-col gap-4">
         {loading ? (
           // display loading while fetching from database.
@@ -240,6 +271,9 @@ export function VolunteerList() {
   // Profiles and test profiles flag
   const [profiles, setProfiles] = useState<any[]>([]);
   const useTestProfiles = false; // false if db query
+
+  // Dropdown export
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Fetching profiles 
   useEffect(() => {
@@ -307,6 +341,19 @@ export function VolunteerList() {
     }
   }, []);
 
+  // Dropdown export
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const dropdown = document.getElementById("dropdownSearch");
+      if (dropdown && !dropdown.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
 
   // Filter profiles based on filter val
   let filteredprofiles = filter ? profiles.filter(profile => profile.type === filter) : profiles;
@@ -340,12 +387,11 @@ export function VolunteerList() {
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Volunteer List</h1>
-
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
           <option className="bg-secondary text-white" value="student">
@@ -359,7 +405,7 @@ export function VolunteerList() {
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
           <option className="bg-secondary text-white" value="last"> 
@@ -378,15 +424,31 @@ export function VolunteerList() {
           placeholder="Search"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/2"
+          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-4/10"
         />
 
-        <button
-          type="submit"
-          className="font-sans font-semibold text-white bg-primary rounded-md w-[42px] h-[37px] shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
-        >
-          <Upload className="w-5 h-5" />
-        </button>
+        <div className="relative w-1/10">
+          <button
+            type="submit"
+            className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+            onClick={() => {
+              setShowDropdown(!showDropdown);
+            }}
+            data-dropdown-toggle="dropdownSearch"
+          >
+            <EllipsisVertical className="w-5 h-5"/>
+          </button>
+          
+          {showDropdown && (
+            <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
+              <ul className="py-1">
+                <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                  Export
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-4">
