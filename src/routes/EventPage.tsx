@@ -375,13 +375,16 @@ export function EventPage() {
         </div>
 
         <h2 className="text-primary text-2xl font-bold font-sans text-center mt-5">List of Attendees:</h2>
-        <div className="relative w-full max-w-2xl mt-3">
-          <div className="flex flex-col gap-4 sm:flex-row">
+        <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-2xl mt-4 sm:gap-4">
+        <div className="relative w-full max-w-2xl">
+          <div className="flex flex-row gap-4">
             <button
-              className="w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer sm:w-3/10"
+              className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 cursor-pointer w-1/2"
               onClick={() => {
                 setShowAddDropdown(!showAddDropdown)
                 showBeneficiaryList()
+                setShowRemoveDropdown(false)
+                setShowOtherDropdown(false)
               }}
               data-dropdown-toggle="dropdownAdd"
             >
@@ -391,8 +394,7 @@ export function EventPage() {
             {showAddDropdown && (
               <div
                 id="dropdownAdd"
-                className="flex flex-col absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg w-full px-4 py-3 max-h-60 overflow-y-auto"
-              >
+                className="absolute top-full mt-2 left-0 w-full bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60">
                 <input
                   type="text"
                   placeholder="Search"
@@ -433,11 +435,13 @@ export function EventPage() {
             )}
 
             <button
-              className="w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer sm:w-3/10"
+              className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 cursor-pointer w-1/2"
               type="button"
               onClick={() => {
                 setShowRemoveDropdown(!showRemoveDropdown)
                 showBeneficiaryList()
+                setShowAddDropdown(false)
+                setShowOtherDropdown(false)
               }}
               data-dropdown-toggle="dropdownRemove"
             >
@@ -447,8 +451,7 @@ export function EventPage() {
             {showRemoveDropdown && (
               <div
                 id="dropdownRemove"
-                className="flex flex-col absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg w-full px-4 py-3 max-h-60 overflow-y-auto"
-              >
+                className="absolute top-full mt-2 left-0 w-full max-w-2xl bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60">
                 <input
                   type="text"
                   placeholder="Search"
@@ -476,6 +479,8 @@ export function EventPage() {
                     ) : "No beneficiaries to show"
                   }
                 </div>
+                
+
                 <div className="mt-4 text-right">
                   <button
                     className="text-secondary font-semibold hover:underline cursor-pointer"
@@ -487,46 +492,50 @@ export function EventPage() {
                 </div>
               </div>
             )}
-
-            <div className="flex items-center gap-4 w-full sm:w-4/10">
-              <button
-                className="w-full bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer sm:w-9/10"
-                type="button"
-              >
-                Update
-              </button>
-
-              <div className="relative w-2/10">
-                <button
-                  type="submit"
-                  className="h-[40px] bg-primary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer flex items-center justify-center"
-                  onClick={() => {
-                    setShowOtherDropdown(!showOtherDropdown);
-                  }}
-                  data-dropdown-toggle="dropdownOther"
-                >
-                  <EllipsisVertical className="w-5 h-5"/>
-                </button>
-                
-                {showOtherDropdown && (
-                  <div id="dropdownOther" className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10">
-                    <ul className="py-1">
-                      <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                        Send SMS
-                      </li>
-                      <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                        Send Email
-                      </li>
-                      <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                        Export
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
-          
+        </div>
+
+        <div className="flex flex-row gap-4 w-full max-w-2xl justify-between">
+          <button
+            className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 cursor-pointer w-8/10 sm:w-1/2"
+            type="button"
+          >
+            Update
+          </button>
+
+          <div className="relative w-2/10 max-w-2xl">
+            <button
+              type="submit"
+              className="mt-3 font-sans font-semibold text-white bg-primary rounded-md h-[40px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+              onClick={() => {
+                setShowOtherDropdown(!showOtherDropdown);
+                setShowAddDropdown(false)
+                setShowRemoveDropdown(false)
+              }}
+              data-dropdown-toggle="dropdownOther"
+            >
+              <EllipsisVertical className="w-5 h-5"/>
+            </button>
+            
+            {showOtherDropdown && (
+              <div id="dropdownOther" className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2">
+                <ul className="py-1">
+                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                    Send SMS
+                  </li>
+                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                    Send Email
+                  </li>
+                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                    Export
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
         <div className="w-full max-w-2xl mt-3">
           { 
             // todo: refactor
@@ -545,7 +554,6 @@ export function EventPage() {
             )) : <div className="text-center text-white w-full max-w-2xl items-center mt-2 mr-2 font-sans bg-primary p-5 rounded-[5px] font-semibold mb-2"> "No data to show" </div>
           }
         </div>
-      </div>
     </div>
   </div>
   );
