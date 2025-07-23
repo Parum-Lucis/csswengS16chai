@@ -146,7 +146,7 @@ describe("Event Module Integration Test", () => {
 
     await waitFor(() => {
       expect(addDoc).toHaveBeenCalled();
-      expect(mockedNavigate).toHaveBeenCalledWith("/view-admin");
+      expect(mockedNavigate).toHaveBeenCalledWith("/admin");
     });
 
     // Add the new event to our mock database
