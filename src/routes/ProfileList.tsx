@@ -7,9 +7,9 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
-import {
-  EllipsisVertical,
-} from 'lucide-react';
+import { EllipsisVertical} from 'lucide-react';
+import { callExportBeneficiaries, callExportVolunteers } from '../firebase/cloudFunctions';
+
 
 export function BeneficiaryList() {
   const navigate = useNavigate();
@@ -64,9 +64,10 @@ export function BeneficiaryList() {
           try {
             const data = doc.data();
             const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
-            const age = birthDate ? differenceInYears(new Date(), birthDate) : 0;
+            const age = birthDate ? differenceInYears(new Date(), birthDate) : "N/A";
             const sex = data.sex === "M" || data.sex === "F" ? data.sex : "N/A";
-            const type = data.accredited_id == null ? "waitlist" : "student";
+            const type = Number.isNaN(data.accredited_id) ? "waitlist" : "student";
+            const accredited_id = Number.isNaN(data.accredited_id) ? "waitlisted" : Number(data.accredited_id).toString();
 
             // Skip if name missing
             if (!data.first_name || !data.last_name) {
@@ -74,7 +75,7 @@ export function BeneficiaryList() {
               console.error("Error fetching beneficiary: " + doc.id, "Missing name fields");
               return;
             }
-
+            
             profiles.push({
               docId: doc.id,
               first_name: data.first_name,
@@ -82,6 +83,7 @@ export function BeneficiaryList() {
               sex: sex,
               age,
               type,
+              accredited_id,
             });
           } catch (error) {
             flag = true;
@@ -116,6 +118,39 @@ export function BeneficiaryList() {
     };
   }, [showDropdown]);
 
+  // Export handler for beneficiaries
+  const handleExport = async () => {
+    console.log("Export clicked!")
+    try {
+      // create date and time string for filename
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
+      const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+      const filename = `beneficiaries-${dateStr}-${timeStr}.csv`;
+
+      // call cloud function, return csv string
+      const result = await callExportBeneficiaries();
+      const csvString = result.data as string;
+
+      // create csv file to send
+      const blob = new Blob([csvString], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Exported beneficiaries to csv file.");
+    } catch (error) {
+      toast.error("Failed to export beneficiaries.");
+      console.error("Export error:", error);
+    }
+  };
+
   // Filter profiles based on filter val
   let filteredprofiles = filter ? profiles.filter(profile => profile.type === filter) : profiles;
 
@@ -137,13 +172,15 @@ export function BeneficiaryList() {
       const values = [
         profile.first_name.toLowerCase(),
         profile.last_name.toLowerCase(),
-        profile.age.toString()
+        profile.age.toString(),
+        profile.accredited_id,
       ];
       return terms.every(term =>
         values.some(value => value.includes(term))
       );
     });
   }
+
 
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
@@ -204,7 +241,9 @@ export function BeneficiaryList() {
             {showDropdown && (
               <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
                 <ul className="py-1">
-                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
+                    onClick={handleExport}
+                  >
                     Export
                   </li>
                 </ul>
@@ -243,7 +282,8 @@ export function BeneficiaryList() {
                   />
                 </svg>
               </div>
-              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
+              {/* QA - please keep the change below. */}
+              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} id={profile.accredited_id} />
             </div>
           ))
         )}
@@ -386,6 +426,39 @@ export function VolunteerList() {
     });
   }
 
+  // Export handler for beneficiaries
+  const handleExport = async () => {
+    console.log("Export clicked!")
+    try {
+      // create date and time string for filename
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
+      const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+      const filename = `volunteers-${dateStr}-${timeStr}.csv`;
+
+      // call cloud function, return csv string
+      const result = await callExportVolunteers();
+      const csvString = result.data as string;
+
+      // create csv file to send
+      const blob = new Blob([csvString], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Exported volunteers to csv file.");
+    } catch (error) {
+      toast.error("Failed to export volunteers.");
+      console.error("Export error:", error);
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Volunteer List</h1>
@@ -445,7 +518,9 @@ export function VolunteerList() {
             {showDropdown && (
               <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
                 <ul className="py-1">
-                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
+                    onClick={handleExport}
+                  >
                     Export
                   </li>
                 </ul>
@@ -483,7 +558,8 @@ export function VolunteerList() {
                   />
                 </svg>
               </div>
-              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} />
+              {/* QA - please keep the change below. */}
+              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} id={null} />
             </div>
           ))
         )}

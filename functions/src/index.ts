@@ -10,7 +10,7 @@
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { setGlobalOptions } from "firebase-functions";
-import { onCall } from "firebase-functions/https";
+import { HttpsError, onCall } from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 
 import { Volunteer } from "@models/volunteerType";
@@ -20,7 +20,10 @@ import { generateRandomPassword } from "./utils/generatePassword";
 import { onSchedule } from "firebase-functions/scheduler";
 import { createTimestampFromNow } from "./utils/time";
 import { onDocumentUpdated } from "firebase-functions/firestore";
-import { Beneficiary } from "@models/beneficiaryType";
+import { Beneficiary as BeneficiaryFrontend } from "@models/beneficiaryType";
+import { Guardian } from "@models/guardianType"
+import { Event} from "@models/eventType";
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -41,6 +44,27 @@ setGlobalOptions({ maxInstances: 10 });
 const app = initializeApp();
 const auth = getAuth(app);
 const firestore = getFirestore(app);
+
+// issue with Timestamp type used; dapat from firebase-admin package but our model
+// uses the one from non-admin, so they dont match. my workaround for now: 
+type Beneficiary = Omit<BeneficiaryFrontend, "birthdate"> & { birthdate: Timestamp };
+
+// helpers :3
+
+/**
+ * Splits a CSV string into non-empty lines.
+ * Ignores first header
+ * Throws if there are less than 2 lines (header + at least one data row).
+ */
+function splitToLines(csv: string): string[] {
+    const ignoreHeader = true; // adjust if need
+
+    const lines = csv.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) {
+        throw new HttpsError("invalid-argument", "CSV must contain at least one data row.");
+    }
+    return ignoreHeader ? lines.slice(1) : lines;
+}
 
 export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
     if (!req.auth) return false;
@@ -192,3 +216,502 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
         logger.error(error)
     }
 })
+
+// done...?
+export const importBeneficiaries = onCall<string>(async (req) => {
+    logger.log("importBeneficiaries called");
+    console.log("importBeneficiaries called");
+    
+    // should be logged in & user is admin
+    if (!req.auth || !req.auth.token.is_admin) {
+        throw new HttpsError("permission-denied", "Authentication and admin privileges required!");
+    }
+
+    /*
+     * CSV FORMAT
+     * - 1st line of csv (header) is SKIPPED.
+     * - accredited_id, fn, ln, sex, grade, address, (guardian name, relation, cnum, email) x3
+     */
+
+    // split csv by row/line
+    const lines = splitToLines(req.data);
+
+    // SKIP FIRST ROW. assume it is header row
+    // process each line as one beneficiary
+    var skipped = 0;
+    const importedBeneficiaries: Beneficiary[] = lines.map((line, index) => {
+        // tokenize line by cell (handles quoted commas)
+        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, ""));
+
+        // build guardians array: 7-10, 11-14, 15-18
+        const guardians: Guardian[] = [0, 1, 2].map(i => {
+            const name = values[7 + i * 4] ?? "";
+            const relation = values[8 + i * 4] ?? "";
+            const contact_number = values[9 + i * 4] ?? "";
+            const email = values[10 + i * 4] ?? "";
+
+            // skip guardian if at least one field is empty
+            if (name.trim() === "" ||  relation.trim() === "" || contact_number.trim() === "" ||  email.trim() === "") {
+                return null;
+            }
+            return { name, relation, contact_number, email };
+        }).filter(Boolean) as Guardian[];
+
+        // build beneficiary object (remove whitespaces)
+        let b: Omit<Beneficiary, "birthdate"> = {
+            docID: "",
+            attended_events: [],
+            accredited_id: values[0] ? Number(values[0]) : NaN, // NaN = waitlist
+            first_name: values[1].trim(),
+            last_name: values[2].trim(),
+            sex: values[3].trim(),
+            grade_level: Number(values[5]),
+            address: values[6].trim(),
+            guardians,
+        };
+
+        // skip if name is incomplete or invalid
+        if (!b.first_name || !b.last_name || !isNaN(Number(b.first_name)) || !isNaN(Number(b.last_name))) {
+            logger.warn(`Line ${index+2} skipped: Missing or invalid name fields.`);
+            skipped++;
+            return null;
+        }
+
+        // properly capitalize first and last names
+        b.first_name = b.first_name
+            .split(" ")
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(" ");
+        b.last_name = b.last_name
+            .split(" ")
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(" ");
+        
+
+        // if no guardian info, add 1 placeholder
+        if (b.guardians.length === 0) {
+            let placeholder = {
+                name: "",
+                relation: "",
+                contact_number: "",
+                email: ""
+            }
+            b.guardians.push(placeholder);
+            logger.warn(`Line ${index+2}: No guardian information provided, added placeholder.`);
+
+        }
+
+        // handle missing birthdate
+        if (values[4].trim() === "") {
+            const sentinelDate = new Date(1900, 0, 1); // January is 0 in JS Date
+            
+            // set as sentinel date to be edited later
+            (b as Beneficiary).birthdate = Timestamp.fromDate(sentinelDate); 
+            logger.warn(`Line ${index+2}: Missing birthdate, added sentinel birthdate.`);
+        } else {
+            const birthdate = new Date(values[4].trim());
+            if (!birthdate || isNaN(birthdate.getTime())) {
+                logger.warn(`Line ${index+2} skipped: Invalid birthdate "${values[4].trim()}".`);
+                skipped++;
+                return null;
+            }
+            (b as Beneficiary).birthdate = Timestamp.fromDate(birthdate);
+        }
+
+        // handle invalid sex
+        if (b.sex !== "" && !(b.sex === "M" || b.sex === "F")) {
+            logger.warn(`Line ${index+2} skipped: Invalid sex value "${b.sex}".`);
+            skipped++;
+            return null;
+        }
+
+        // handle invalid grade level
+        // TODO: grade level string to allow N, K
+        const validGradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, "nursery", "kindergarten"];
+        const gradeLevelValue = typeof b.grade_level === "number" ? b.grade_level : String(b.grade_level).toLowerCase();
+        if (!validGradeLevels.includes(gradeLevelValue)) {
+            logger.warn(`Line ${index+2} skipped: Invalid grade level "${b.grade_level}".`);
+            skipped++;
+            return null;
+        }
+
+        // handle invalid cnum & email
+        const emailRegEx = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/);
+        for (const [i, g] of b.guardians.entries()) {
+            
+            // invalid contact number
+            if (g.contact_number && g.contact_number !== "") {
+                if (
+                    g.contact_number.length !== 11 ||
+                    g.contact_number.slice(0, 2) !== "09"
+                ) {
+                    logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid contact number "${g.contact_number}".`);
+                    skipped++;
+                    return null;
+                }
+            }
+
+            // invalid email
+            if (g.email && g.email !== "") {
+                if (!emailRegEx.test(g.email)) {
+                    logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid email "${g.email}".`);
+                    skipped++;
+                    return null;
+                }
+            }
+        }
+
+        return b;
+    }).filter(Boolean) as Beneficiary[];
+
+    // no beneficiaries to add
+    if (!importedBeneficiaries.length) {
+        throw new HttpsError("invalid-argument", "Failed to import any beneficiaries. Please ensure your file contains valid data.");
+    }
+
+    logger.info("Imported beneficiaries", { count: importedBeneficiaries.length });
+
+    // for incoming ids
+    const importedIds = new Set<number>();
+
+    try {
+        const batch = firestore.batch();
+        // get all existing ids in db
+        const existingBeneficiaries = await firestore.collection("beneficiaries").get();
+        const existingIds = new Set<number>();
+        existingBeneficiaries.forEach(doc => {
+            existingIds.add(Number(doc.data().accredited_id));
+        });
+
+        // check each incoming benef if id already exists = skip
+        importedBeneficiaries.forEach(b => {
+            // only add if id is not already in the database (skip NaN)
+            if (!Number.isNaN(b.accredited_id) && (existingIds.has(b.accredited_id as number) || importedIds.has(b.accredited_id as number))) {
+                logger.warn(`Incoming beneficiary with id ${b.accredited_id} already exists. Skipping.`);
+                skipped++;
+                return;
+            }
+            
+            // add to batch
+            const docRef = firestore.collection("beneficiaries").doc();
+            batch.set(docRef, {
+                ...b,
+            });
+            
+            // add id to list to reference for other incoming beneficiaries
+            importedIds.add(b.accredited_id as number);
+        });
+        
+        if (importedIds.size === 0) {
+            throw new HttpsError("invalid-argument", "No beneficiaries imported. Ensure that you are not trying to import existing IDs!");
+        }
+        
+        // successful adding of beneficiaries
+        await batch.commit();
+        logger.info(`New beneficiaries imported successfully! Added: ${importedIds.size}, Skipped: ${skipped}`);
+    } catch (err: any) {
+        logger.error("Failed to import CSV", err);
+        throw new HttpsError("internal", err.message ?? "Failed to import CSV due to internal error. Please contact an admin or developer for assistance.");
+    }
+
+    return true;
+});
+
+// not done
+export const importEvents = onCall<string>(async (req) => {
+    logger.log("importEvents called");
+    console.log("importEvents called");
+    if (!req.auth) return false;
+    
+    // split and skip header
+    const lines = splitToLines(req.data);
+
+    const importedEvents = lines.map((line, index) => {
+        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, ""));
+
+        const [name, description, dateStr, startTimeStr, endTimeStr, location] = values;
+
+        // Parse date and times
+        const date = dateStr.trim();
+        const startTime = startTimeStr.trim();
+        const endTime = endTimeStr.trim();
+
+        var startDateTime, endDateTime;
+
+        try {
+            startDateTime = new Date(date);
+            endDateTime = new Date(date);
+
+            // Set hours and minutes for start and end times
+            const [startHourStr, startMinuteStr] = (startTime as string).split(":");
+            const [endHourStr, endMinuteStr] = (endTime as string).split(":");
+            const startHour = Number(startHourStr);
+            const startMinute = Number(startMinuteStr);
+            const endHour = Number(endHourStr);
+            const endMinute = Number(endMinuteStr);
+
+            if (
+                isNaN(startHour) || isNaN(startMinute) ||
+                isNaN(endHour) || isNaN(endMinute)
+            ) {
+                logger.warn(`Line ${index + 2} skipped: Invalid start or end time format.`);
+                return null;
+            }
+            startDateTime.setUTCHours(startHour - 8, startMinute, 0, 0);
+            endDateTime.setUTCHours(endHour - 8, endMinute, 0, 0);
+
+            logger.log(startDateTime, endDateTime)
+        } catch (err) {
+            logger.warn(`Line ${index + 2} skipped: Error parsing date or time.`);
+            return null;
+        }
+
+
+        const trimmedDescription = description.trim().slice(0, 255);
+
+        return {
+            name: name.trim(),
+            description: trimmedDescription,
+            start_date: Timestamp.fromDate(startDateTime),
+            end_date: Timestamp.fromDate(endDateTime),
+            location: location.trim(),
+        };
+    }).filter(Boolean);
+
+    if (!importedEvents.length) {
+        throw new HttpsError("invalid-argument", "No valid events to import.");
+    }
+
+    try {
+        const batch = firestore.batch();
+        importedEvents.forEach(event => {
+            const docRef = firestore.collection("events").doc();
+            batch.set(docRef, event);
+        });
+        await batch.commit();
+        logger.info(`Imported ${importedEvents.length} events successfully.`);
+    } catch (err: any) {
+        logger.error("Failed to import events CSV", err);
+        throw new HttpsError("internal", err.message ?? "Failed to import events.");
+    }
+
+    return true;
+});
+
+// not done
+export const importVolunteers = onCall<string>(async (req) => {
+    logger.log("importVolunteers called");
+    console.log("importVolunteers called");
+    if (!req.auth) return false;
+    if (!req.auth.token.is_admin) return false;
+
+    const lines = splitToLines(req.data);
+
+    const importedVolunteers: Volunteer[] = lines.map((line, index) => {
+        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, ""));
+        const [email, first_name, last_name, sex, birthdateStr, contact_number, address, is_adminStr] = values;
+        logger.log("email: "+email);
+        if (!email || !first_name || !last_name || !is_adminStr) {
+            logger.warn(`Line ${index + 2} skipped: Missing required fields.`);
+            return null;
+        }
+
+        let birthdate: Timestamp;
+        if (birthdateStr.trim() === "") {
+            birthdate = Timestamp.fromDate(new Date(1900, 0, 1));
+        } else {
+            const date = new Date(birthdateStr.trim());
+            if (isNaN(date.getTime())) {
+                logger.warn(`Line ${index + 2} skipped: Invalid birthdate.`);
+                return null;
+            }
+            birthdate = Timestamp.fromDate(date);
+        }
+
+        const is_admin = is_adminStr.trim().toLowerCase() === "true";
+        return {
+            email: email.trim(),
+            first_name: first_name.trim(),
+            last_name: last_name.trim(),
+            sex: sex.trim(),
+            birthdate,
+            address: address.trim(),
+            contact_number: contact_number.trim(),
+            is_admin,
+            role: is_admin ? "Admin" : "Volunteer",
+        } as Volunteer;
+    }).filter(Boolean) as Volunteer[];
+
+    for (const volunteer of importedVolunteers) {
+        try {
+            // doing this instead of createVolunteerProfile coz idt u can within cloudfunc
+            const { uid } = await auth.createUser({
+                email: volunteer.email,
+                password: generateRandomPassword(10),
+            });
+            await Promise.all([
+                auth.setCustomUserClaims(uid, { is_admin: volunteer.is_admin }),
+                firestore.doc(`volunteers/${uid}`).create(volunteer)
+            ]);
+
+        } catch (error) {
+            logger.warn(`Failed to import volunteer ${volunteer.email}: ${error}`);
+        }
+    }
+    return true;
+});
+
+// done
+export const exportBeneficiaries = onCall<void>(async (req) => {
+    logger.log("exportBeneficiaries called");
+    console.log("exportBeneficiaries called");
+    if (!req.auth) return false;
+
+    // fetch all beneficiaries
+    const snapshot = await firestore.collection("beneficiaries").get();
+    const docs = snapshot.docs.map(doc => doc.data());
+    if (!docs.length) {
+        throw new HttpsError("not-found", "There are no beneficiaries to export.");
+    }
+
+    // map fields to headers
+    const beneficiaryCols = [
+        { label: "Child Number (ID)", field: "accredited_id" },
+        { label: "First Name", field: "first_name" },
+        { label: "Last Name", field: "last_name" },
+        { label: "Sex", field: "sex" },
+        { label: "Birthdate", field: "birthdate" },
+        { label: "Grade Level", field: "grade_level" },
+        { label: "Address", field: "address" },
+    ];
+
+    // add guardian columns (for 3)
+    const guardianCols = [];
+    for (let i = 1; i <= 3; i++) {
+        guardianCols.push(
+            { label: `Name (Guardian ${i})`, field: "" },
+            { label: `Relation (Guardian ${i})`, field: "" },
+            { label: `Contact Number (Guardian ${i})`, field: "" },
+            { label: `Email (Guardian ${i})`, field: "" }
+        );
+    }
+
+    const headers = [...beneficiaryCols, ...guardianCols];
+
+    // build CSV string
+    const csvRows = [
+        headers.map(header => `"${header.label}"`).join(","), // create header row string
+
+        // data rows string
+        ...docs.map(doc => {
+            const guardians: Guardian[] = doc.guardians;
+            return [
+                ...beneficiaryCols.map(header => {
+                    let value = doc[header.field];
+
+                    // handle waitlist ids
+                    if (header.field === "accredited_id") {
+                        if (!value || Number.isNaN(value)) return "";
+                    }
+
+                    // handle birthdate format mm/dd/yyyy
+                    if (header.field === "birthdate") {
+                        const dateObj = (value as Timestamp).toDate();
+                        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const dd = String(dateObj.getDate()).padStart(2, '0');
+                        const yyyy = dateObj.getFullYear();
+                        const date = `${mm}/${dd}/${yyyy}`;
+                        return `"${date}"`;
+                    }
+
+                    // csv tingz, handles excess double quotes if meron
+                    if (typeof value === "string") {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return `"${value !== undefined ? value : ""}"`;
+                }),
+
+                // traverse guardian array and format 
+                ...[0, 1, 2].flatMap(idx => {
+                    const g = guardians[idx] || {};
+                    return [
+                        `"${g.name ? String(g.name).replace(/"/g, '""') : ""}"`,
+                        `"${g.relation ? String(g.relation).replace(/"/g, '""') : ""}"`,
+                        `"${g.contact_number ? String(g.contact_number).replace(/"/g, '""') : ""}"`,
+                        `"${g.email ? String(g.email).replace(/"/g, '""') : ""}"`
+                    ];
+                })
+            ].join(",");
+        })
+    ];
+    const csvContent = csvRows.join("\r\n");
+    return csvContent;
+});
+
+export const exportEvents = onCall<void>(async (req) => {
+    logger.log("exportEvents called");
+    console.log("exportEvents called");
+    if (!req.auth) return false;
+
+    // fetch all events
+    const snapshot = await firestore.collection("events").get();
+    const docs = snapshot.docs.map(doc => doc.data());
+    if (!docs.length) {
+        throw new HttpsError("not-found", "There are no events to export.");
+    }
+
+    // define headers
+    const headers = [
+        "Name", "Description", "Date", "Start Time", "End Time", "Location"
+    ];
+
+    // build rows
+    type Event = {
+        name: string;
+        description: string;
+        start_date: Timestamp;
+        end_date: Timestamp;
+        location: string;
+    };
+
+    const csvRows = [
+        headers.map(h => `"${h}"`).join(","),
+        ...docs.map(doc => {
+            const event = doc as Event;
+            const startDateObj = event.start_date.toDate();
+            const endDateObj = event.end_date.toDate();
+
+            // format date  mm/dd/yyyy
+            const mm = String(startDateObj.getMonth() + 1).padStart(2, '0');
+            const dd = String(startDateObj.getDate()).padStart(2, '0');
+            const yyyy = startDateObj.getFullYear();
+            const date = `${mm}/${dd}/${yyyy}`;
+
+            // format time hh:mm 24-hr
+            const formatTime = (d: Date) => {
+                const hr = String(d.getHours()).padStart(2, '0');
+                const min = String(d.getMinutes()).padStart(2, '0');
+                return `${hr}:${min}`;
+            };
+
+            return [
+                `"${(event.name || "").replace(/"/g, '""')}"`,
+                `"${(event.description || "").replace(/"/g, '""')}"`,
+                `"${date}"`,
+                `"${formatTime(startDateObj)}"`,
+                `"${formatTime(endDateObj)}"`,
+                `"${(event.location || "").replace(/"/g, '""')}"`
+            ].join(",");
+        })
+    ];
+    const csvContent = csvRows.join("\r\n");
+    return csvContent;
+});
+
+export const exportVolunteers = onCall<void>(async (req) => {
+    logger.log("exportVolunteers called");
+    console.log("exportVolunteers called");
+    if (!req.auth) return false;
+    
+    return true;
+});
