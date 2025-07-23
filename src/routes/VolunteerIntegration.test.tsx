@@ -8,7 +8,7 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { VolunteerProfileCreation } from "../routes/ProfileCreation";
 import { VolunteerList } from "../routes/ProfileList";
 import { ToastContainer } from "react-toastify";
-import { UserContext } from "../context/userContext";
+import { UserContext } from '../util/userContext';
 import type { User } from "firebase/auth";
 
 let volunteerDocs = [

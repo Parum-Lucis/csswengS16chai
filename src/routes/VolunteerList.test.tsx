@@ -4,7 +4,7 @@
 import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'; 
 import { BrowserRouter } from 'react-router-dom';
-import { UserContext } from '../context/userContext';
+import { UserContext } from '../util/userContext';
 import { getDocs } from 'firebase/firestore';
 import { VolunteerList } from './ProfileList';
 
