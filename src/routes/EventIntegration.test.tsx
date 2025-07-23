@@ -12,11 +12,26 @@ import EventList from "./EventList";
 import { EventPage } from "./EventPage";
 import { Calendar } from "./Calendar";
 
-// Define mutable data stores for our mock Firestore.
+interface MockEventData {
+  name: string;
+  description: string;
+  start_date: { toDate: () => Date };
+  end_date: { toDate: () => Date };
+  location: string;
+}
+
+interface MockAttendeeData {
+    beneficiaryID: string;
+    first_name: string;
+    last_name: string;
+    attended: boolean;
+    who_attended: string;
+}
+
 let eventDocs = [
   {
     id: "1",
-    data: () => ({
+    data: (): MockEventData => ({
       name: "Medical Mission",
       description: "Annual medical mission for the community.",
       start_date: { toDate: () => new Date("2025-12-25T09:00:00Z") },
@@ -26,7 +41,7 @@ let eventDocs = [
   },
   {
     id: "2",
-    data: () => ({
+    data: (): MockEventData => ({
       name: "Christmas Party",
       description: "Annual Christmas party for the kids.",
       start_date: { toDate: () => new Date("2025-12-20T13:00:00Z") },
@@ -37,8 +52,8 @@ let eventDocs = [
 ];
 
 let attendeeDocs = [
-    { id: 'att1', data: () => ({ beneficiaryID: 'b1', first_name: 'John', last_name: 'Doe' }) },
-    { id: 'att2', data: () => ({ beneficiaryID: 'b2', first_name: 'Jane', last_name: 'Smith' }) },
+    { id: 'att1', data: (): MockAttendeeData => ({ beneficiaryID: 'b1', first_name: 'John', last_name: 'Doe', attended: true, who_attended: "Beneficiary" }) },
+    { id: 'att2', data: (): MockAttendeeData => ({ beneficiaryID: 'b2', first_name: 'Jane', last_name: 'Smith', attended: false, who_attended: "None" }) },
 ];
 
 
@@ -46,30 +61,36 @@ jest.mock("firebase/firestore", () => {
   const originalModule = jest.requireActual("firebase/firestore");
   return {
     ...originalModule,
-    collection: jest.fn((db, path) => ({ path })),
+    collection: jest.fn((db, path, ...segments) => {
+      const collectionRef = {
+        path: [path, ...segments].join('/'),
+        withConverter: jest.fn(function(this, converter) {
+          return this;
+        }),
+      };
+      return collectionRef;
+    }),
     doc: jest.fn((db, path, id) => ({ path: `${path}/${id}`, id })),
     addDoc: jest.fn(async (collectionRef, data) => {
         const newId = `new-id-${Date.now()}`;
         const newEvent = {
             id: newId,
-            data: () => ({
-                ...data,
-                start_date: { toDate: () => new Date(data.start_date) },
-                end_date: { toDate: () => new Date(data.end_date) },
-            }),
+            data: () => data,
         };
         eventDocs.push(newEvent as any);
-        return { id: newId };
+        return Promise.resolve({ id: newId });
     }),
     getDocs: jest.fn(async (query) => {
         if (query.path.includes("attendees")) {
             return {
                 docs: attendeeDocs,
+                empty: attendeeDocs.length === 0,
                 forEach: (callback: any) => attendeeDocs.forEach(callback),
             };
         }
         return {
             docs: eventDocs,
+            empty: eventDocs.length === 0,
             forEach: (callback: any) => eventDocs.forEach(callback),
         };
     }),
@@ -77,14 +98,15 @@ jest.mock("firebase/firestore", () => {
         const doc = eventDocs.find(d => d.id === docRef.id);
         if (doc) {
             return {
-                // Fix: Explicitly define the return type of the 'exists' function.
                 exists: (): boolean => true,
                 id: doc.id,
                 data: doc.data,
             };
         }
-        // Fix: Explicitly define the return type of the 'exists' function.
-        return { exists: (): boolean => false };
+        return {
+            exists: (): boolean => false,
+            data: (): undefined => undefined
+        };
     }),
     updateDoc: jest.fn(() => Promise.resolve()),
     deleteDoc: jest.fn(() => Promise.resolve()),
@@ -128,7 +150,7 @@ describe("Event Integration Tests", () => {
     eventDocs = [
         {
           id: "1",
-          data: () => ({
+          data: (): MockEventData => ({
             name: "Medical Mission",
             description: "Annual medical mission for the community.",
             start_date: { toDate: () => new Date("2025-12-25T09:00:00Z") },
@@ -138,7 +160,7 @@ describe("Event Integration Tests", () => {
         },
         {
           id: "2",
-          data: () => ({
+          data: (): MockEventData => ({
             name: "Christmas Party",
             description: "Annual Christmas party for the kids.",
             start_date: { toDate: () => new Date("2025-12-20T13:00:00Z") },
@@ -149,14 +171,12 @@ describe("Event Integration Tests", () => {
     ];
   });
 
-  test("creates an event, displays it in the list, and then deletes it", async () => {
-    render(
+  test("creates an event and displays it in the list", async () => {
+    const { unmount } = render(
       <UserContext.Provider value={mockUser}>
         <MemoryRouter initialEntries={["/create-event"]}>
           <Routes>
             <Route path="/create-event" element={<EventCreation />} />
-            <Route path="/admin" element={<EventList />} />
-            <Route path="/event" element={<EventList />} />
           </Routes>
           <ToastContainer />
         </MemoryRouter>
@@ -174,6 +194,18 @@ describe("Event Integration Tests", () => {
     await waitFor(() => {
       expect(mockedNavigate).toHaveBeenCalledWith("/admin");
     });
+
+    unmount();
+
+    render(
+      <UserContext.Provider value={mockUser}>
+        <MemoryRouter initialEntries={["/admin"]}>
+          <Routes>
+            <Route path="/admin" element={<EventList />} />
+          </Routes>
+        </MemoryRouter>
+      </UserContext.Provider>
+    );
 
     expect(await screen.findByText("New Year's Gala")).toBeInTheDocument();
   });
@@ -209,6 +241,7 @@ describe("Event Integration Tests", () => {
           <MemoryRouter initialEntries={["/event/1"]}>
             <Routes>
               <Route path="/event/:docId" element={<EventPage />} />
+              <Route path="/event" element={<div>Event Page</div>} />
             </Routes>
             <ToastContainer />
           </MemoryRouter>
@@ -217,6 +250,8 @@ describe("Event Integration Tests", () => {
 
     await screen.findByText("Medical Mission");
     fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+
+    await screen.findByText("Confirm Deletion");
     fireEvent.click(screen.getByRole("button", { name: /confirm delete/i }));
 
     await waitFor(() => {
@@ -235,6 +270,8 @@ describe("Event Integration Tests", () => {
         </MemoryRouter>
       </UserContext.Provider>
     );
+    
+    await waitFor(() => screen.getByText(/july 2025/i));
     
     for (let i = 0; i < 5; i++) {
         fireEvent.click(screen.getByLabelText("Go to next month"));
