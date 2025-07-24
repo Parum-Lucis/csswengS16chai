@@ -7,6 +7,7 @@ import { db } from "../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { compareAsc, formatDate } from "date-fns";
 import { EllipsisVertical } from 'lucide-react';
+import { callExportEvents } from "../firebase/cloudFunctions";
 
 const converter: FirestoreDataConverter<Event> = {
   toFirestore: (event) => event,
@@ -104,6 +105,38 @@ export function EventList() {
     return filteredprofiles
   }, [events, filter, sort, search])
 
+  const handleExport = async () => {
+    console.log("Export clicked!")
+    try {
+      // create date and time string for filename
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
+      const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+      const filename = `events-${dateStr}-${timeStr}.csv`;
+
+      // call cloud function, return csv string
+      const result = await callExportEvents();
+      const csvString = result.data as string;
+
+      // create csv file to send
+      const blob = new Blob([csvString], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Exported events to csv file.");
+    } catch (error) {
+      toast.error("Failed to export events.");
+      console.error("Export error:", error);
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Event List</h1>
@@ -155,9 +188,12 @@ export function EventList() {
             {showDropdown && (
               <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
                 <ul className="py-1">
-                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                    <li
+                    className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
+                    onClick={handleExport}
+                    >
                     Export
-                  </li>
+                    </li>
                 </ul>
               </div>
             )}

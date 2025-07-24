@@ -22,7 +22,7 @@ import { createTimestampFromNow } from "./utils/time";
 import { onDocumentUpdated } from "firebase-functions/firestore";
 import { Beneficiary as BeneficiaryFrontend } from "@models/beneficiaryType";
 import { Guardian } from "@models/guardianType"
-import { Event} from "@models/eventType";
+import { Event } from "@models/eventType";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -47,17 +47,22 @@ const firestore = getFirestore(app);
 
 // issue with Timestamp type used; dapat from firebase-admin package but our model
 // uses the one from non-admin, so they dont match. my workaround for now: 
-type Beneficiary = Omit<BeneficiaryFrontend, "birthdate"> & { birthdate: Timestamp };
+type Beneficiary = Omit<BeneficiaryFrontend, "birthdate" | "grade_level"> & { birthdate: Timestamp; grade_level: string };
 
-// helpers :3
 
 /**
- * Splits a CSV string into non-empty lines.
- * Ignores first header
- * Throws if there are less than 2 lines (header + at least one data row).
+ * Helper that splits a CSV string into non-empty lines.
+ * Ignores first header.
+ * Throws error if there are less than 2 lines (header + at least one data row).
  */
 function splitToLines(csv: string): string[] {
     const ignoreHeader = true; // adjust if need
+
+    // remove blank rows
+    csv = csv
+        .split(/\r?\n/)
+        .filter(line => line.split(",").some(cell => cell.trim() !== ""))
+        .join("\n");
 
     const lines = csv.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) {
@@ -65,6 +70,43 @@ function splitToLines(csv: string): string[] {
     }
     return ignoreHeader ? lines.slice(1) : lines;
 }
+
+/**
+ * Helper that properly capitalizes names.
+ * Splits names by " " and "-".
+ * Makes the first letter of each atomic name uppercase, while the rest are lowercase.
+ */
+const capitalize = (str: string) =>
+    str.split(" ").map(word =>
+        word
+            .split("-")
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join("-")
+    ).join(" ");
+
+/**
+ * Helper that checks if guardian has all fields.
+ * Requires name, relation, contact_number, and email.
+ */
+const isValidGuardian = (g: Guardian) =>
+    g.name && g.relation && g.contact_number && g.email;
+
+/**
+ * Helper that checks if contact_number is valid.
+ * Requires number to be 11 characters and to start with "09".
+ */
+const isValidContact = (num: string) =>
+    num.length === 11 && num.startsWith("09");
+
+// regex used for emails
+const emailRegEx = new RegExp(
+    /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+); // from https://emailregex.com/
+
+// list of valid grade levels
+const validGradeLevels = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, "nursery", "kindergarten"
+];
 
 export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
     if (!req.auth) return false;
@@ -217,204 +259,165 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
     }
 })
 
-// done...?
 export const importBeneficiaries = onCall<string>(async (req) => {
     logger.log("importBeneficiaries called");
-    console.log("importBeneficiaries called");
-    
-    // should be logged in & user is admin
     if (!req.auth || !req.auth.token.is_admin) {
         throw new HttpsError("permission-denied", "Authentication and admin privileges required!");
     }
 
-    /*
-     * CSV FORMAT
-     * - 1st line of csv (header) is SKIPPED.
-     * - accredited_id, fn, ln, sex, grade, address, (guardian name, relation, cnum, email) x3
-     */
-
-    // split csv by row/line
     const lines = splitToLines(req.data);
+    let skipped = 0;
 
-    // SKIP FIRST ROW. assume it is header row
-    // process each line as one beneficiary
-    var skipped = 0;
+    // process beneficiaries by line
     const importedBeneficiaries: Beneficiary[] = lines.map((line, index) => {
-        // tokenize line by cell (handles quoted commas)
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, ""));
 
-        // build guardians array: 7-10, 11-14, 15-18
+        // parse guardians
         const guardians: Guardian[] = [0, 1, 2].map(i => {
-            const name = values[7 + i * 4] ?? "";
-            const relation = values[8 + i * 4] ?? "";
-            const contact_number = values[9 + i * 4] ?? "";
-            const email = values[10 + i * 4] ?? "";
-
-            // skip guardian if at least one field is empty
-            if (name.trim() === "" ||  relation.trim() === "" || contact_number.trim() === "" ||  email.trim() === "") {
-                return null;
-            }
-            return { name, relation, contact_number, email };
+            const [name, relation, contact_number, email] = [
+                values[7 + i * 4] ?? "",
+                values[8 + i * 4] ?? "",
+                values[9 + i * 4] ?? "",
+                values[10 + i * 4] ?? ""
+            ];
+            const g = { name, relation, contact_number, email };
+            return isValidGuardian(g) ? g : null;
         }).filter(Boolean) as Guardian[];
 
-        // build beneficiary object (remove whitespaces)
-        let b: Omit<Beneficiary, "birthdate"> = {
-            docID: "",
-            attended_events: [],
-            accredited_id: values[0] ? Number(values[0]) : NaN, // NaN = waitlist
-            first_name: values[1].trim(),
-            last_name: values[2].trim(),
-            sex: values[3].trim(),
-            grade_level: Number(values[5]),
-            address: values[6].trim(),
+        // parse beneficiary. add birthdate later, remove unnecessary fields
+        let b: Omit<Beneficiary, "birthdate" | "attended_events" | "docID"> = {
+            accredited_id: values[0] ? Number(values[0]) : NaN,
+            first_name: values[1]?.trim() ?? "",
+            last_name: values[2]?.trim() ?? "",
+            sex: values[3]?.trim() ?? "",
+            grade_level: values[4]?.trim() ?? "",
+            address: values[6]?.trim() ?? "",
             guardians,
         };
 
-        // skip if name is incomplete or invalid
+        // validate and format names. skip if missing
         if (!b.first_name || !b.last_name || !isNaN(Number(b.first_name)) || !isNaN(Number(b.last_name))) {
-            logger.warn(`Line ${index+2} skipped: Missing or invalid name fields.`);
+            logger.warn(`Line ${index + 2} skipped: Missing or invalid name fields.`);
             skipped++;
             return null;
         }
+        b.first_name = capitalize(b.first_name);
+        b.last_name = capitalize(b.last_name);
 
-        // properly capitalize first and last names
-        b.first_name = b.first_name
-            .split(" ")
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(" ");
-        b.last_name = b.last_name
-            .split(" ")
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(" ");
-        
-
-        // if no guardian info, add 1 placeholder
+        // ensure at least one guardian. add placeholder if none
         if (b.guardians.length === 0) {
-            let placeholder = {
-                name: "",
-                relation: "",
-                contact_number: "",
-                email: ""
-            }
-            b.guardians.push(placeholder);
-            logger.warn(`Line ${index+2}: No guardian information provided, added placeholder.`);
-
+            b.guardians.push({ name: "", relation: "", contact_number: "", email: "" });
+            logger.warn(`Line ${index + 2}: No guardian information provided, added placeholder.`);
         }
 
-        // handle missing birthdate
-        if (values[4].trim() === "") {
-            const sentinelDate = new Date(1900, 0, 1); // January is 0 in JS Date
-            
-            // set as sentinel date to be edited later
-            (b as Beneficiary).birthdate = Timestamp.fromDate(sentinelDate); 
-            logger.warn(`Line ${index+2}: Missing birthdate, added sentinel birthdate.`);
+        // parse and validate birthdate. add placeholder if none, skip if invalid
+        const birthdateStr = values[4]?.trim() ?? "";
+        let birthdate: Timestamp;
+        if (!birthdateStr) {
+            birthdate = Timestamp.fromDate(new Date(1900, 0, 1));
+            logger.warn(`Line ${index + 2}: Missing birthdate, added sentinel birthdate.`);
         } else {
-            const birthdate = new Date(values[4].trim());
-            if (!birthdate || isNaN(birthdate.getTime())) {
-                logger.warn(`Line ${index+2} skipped: Invalid birthdate "${values[4].trim()}".`);
+            const date = new Date(birthdateStr);
+            if (isNaN(date.getTime())) {
+                logger.warn(`Line ${index + 2} skipped: Invalid birthdate "${birthdateStr}".`);
                 skipped++;
                 return null;
             }
-            (b as Beneficiary).birthdate = Timestamp.fromDate(birthdate);
+            birthdate = Timestamp.fromDate(date);
         }
 
-        // handle invalid sex
-        if (b.sex !== "" && !(b.sex === "M" || b.sex === "F")) {
-            logger.warn(`Line ${index+2} skipped: Invalid sex value "${b.sex}".`);
+        // validate sex. skip if invalid
+        if (b.sex && b.sex !== "M" && b.sex !== "F") {
+            logger.warn(`Line ${index + 2} skipped: Invalid sex value "${b.sex}".`);
             skipped++;
             return null;
         }
 
-        // handle invalid grade level
-        // TODO: grade level string to allow N, K
-        const validGradeLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, "nursery", "kindergarten"];
-        const gradeLevelValue = typeof b.grade_level === "number" ? b.grade_level : String(b.grade_level).toLowerCase();
-        if (!validGradeLevels.includes(gradeLevelValue)) {
-            logger.warn(`Line ${index+2} skipped: Invalid grade level "${b.grade_level}".`);
+        // validate grade level
+        const gradeLevelValue = !Number.isNaN(b.grade_level) ? Number(b.grade_level) : String(b.grade_level).toLowerCase();
+        if (gradeLevelValue && !validGradeLevels.includes(gradeLevelValue)) {
+            logger.warn(`Line ${index + 2} skipped: Invalid grade level "${b.grade_level}".`);
             skipped++;
             return null;
         }
 
-        // handle invalid cnum & email
-        const emailRegEx = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/);
+        // validate guardians' number & email. skip if invalid
         for (const [i, g] of b.guardians.entries()) {
-            
-            // invalid contact number
-            if (g.contact_number && g.contact_number !== "") {
-                if (
-                    g.contact_number.length !== 11 ||
-                    g.contact_number.slice(0, 2) !== "09"
-                ) {
-                    logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid contact number "${g.contact_number}".`);
-                    skipped++;
-                    return null;
-                }
+            if (g.contact_number && !isValidContact(g.contact_number)) {
+                logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid contact number "${g.contact_number}".`);
+                skipped++;
+                return null;
             }
-
-            // invalid email
-            if (g.email && g.email !== "") {
-                if (!emailRegEx.test(g.email)) {
-                    logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid email "${g.email}".`);
-                    skipped++;
-                    return null;
-                }
+            if (g.email && !emailRegEx.test(g.email)) {
+                logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid email "${g.email}".`);
+                skipped++;
+                return null;
             }
         }
 
-        return b;
+        return { ...b, birthdate } as Beneficiary;
     }).filter(Boolean) as Beneficiary[];
 
-    // no beneficiaries to add
     if (!importedBeneficiaries.length) {
         throw new HttpsError("invalid-argument", "Failed to import any beneficiaries. Please ensure your file contains valid data.");
     }
 
     logger.info("Imported beneficiaries", { count: importedBeneficiaries.length });
 
-    // for incoming ids
+    // prepare for batch import and count.
     const importedIds = new Set<number>();
-
+    let importedWaitlist = 0;
     try {
         const batch = firestore.batch();
-        // get all existing ids in db
-        const existingBeneficiaries = await firestore.collection("beneficiaries").get();
-        const existingIds = new Set<number>();
-        existingBeneficiaries.forEach(doc => {
-            existingIds.add(Number(doc.data().accredited_id));
-        });
+        const existingSnapshot = await firestore.collection("beneficiaries").get();
+        const existingIds = new Set<number>(existingSnapshot.docs.map(doc => Number(doc.data().accredited_id)));
 
-        // check each incoming benef if id already exists = skip
         importedBeneficiaries.forEach(b => {
-            // only add if id is not already in the database (skip NaN)
-            if (!Number.isNaN(b.accredited_id) && (existingIds.has(b.accredited_id as number) || importedIds.has(b.accredited_id as number))) {
+
+            if (Number.isNaN(b.accredited_id)) {
+                // if no id, skip if name already exist
+                const duplicate = Array.from(existingSnapshot.docs).find(doc => {
+                    const data = doc.data();
+                    return (
+                        data.first_name?.toLowerCase() === b.first_name.toLowerCase() &&
+                        data.last_name?.toLowerCase() === b.last_name.toLowerCase()
+                    );
+                });
+                
+                if (duplicate) {
+                    logger.warn(`Beneficiary "${b.first_name} ${b.last_name}" already exists. Skipping.`);
+                    skipped++;
+                    return;
+                }
+
+                importedWaitlist++;
+            } else if (existingIds.has(b.accredited_id as number) || importedIds.has(b.accredited_id as number)) {
+                // if id provided but already exists, skip
                 logger.warn(`Incoming beneficiary with id ${b.accredited_id} already exists. Skipping.`);
                 skipped++;
                 return;
             }
             
-            // add to batch
             const docRef = firestore.collection("beneficiaries").doc();
-            batch.set(docRef, {
-                ...b,
-            });
-            
-            // add id to list to reference for other incoming beneficiaries
-            importedIds.add(b.accredited_id as number);
+            batch.set(docRef, b);
+            // dont add blank id to list of imported ids
+            if (!Number.isNaN(b.accredited_id)) importedIds.add(b.accredited_id as number);
         });
-        
-        if (importedIds.size === 0) {
-            throw new HttpsError("invalid-argument", "No beneficiaries imported. Ensure that you are not trying to import existing IDs!");
+
+        // check if there are any beneficiaries to add
+        if ((importedIds.size + importedWaitlist) === 0) {
+            throw new HttpsError("invalid-argument", "No beneficiaries imported. Ensure that your data does not already exist!");
         }
-        
-        // successful adding of beneficiaries
+
+        // add beneficiaries
         await batch.commit();
-        logger.info(`New beneficiaries imported successfully! Added: ${importedIds.size}, Skipped: ${skipped}`);
+        logger.info(`New beneficiaries imported successfully! Added: ${importedIds.size + importedWaitlist}, Skipped: ${skipped}`);
     } catch (err: any) {
         logger.error("Failed to import CSV", err);
         throw new HttpsError("internal", err.message ?? "Failed to import CSV due to internal error. Please contact an admin or developer for assistance.");
     }
 
-    return true;
+    return { imported: importedIds.size + importedWaitlist, skipped };
 });
 
 // not done
@@ -422,7 +425,7 @@ export const importEvents = onCall<string>(async (req) => {
     logger.log("importEvents called");
     console.log("importEvents called");
     if (!req.auth) return false;
-    
+
     // split and skip header
     const lines = splitToLines(req.data);
 
@@ -431,7 +434,7 @@ export const importEvents = onCall<string>(async (req) => {
 
         const [name, description, dateStr, startTimeStr, endTimeStr, location] = values;
 
-        // Parse date and times
+        // parse date and times
         const date = dateStr.trim();
         const startTime = startTimeStr.trim();
         const endTime = endTimeStr.trim();
@@ -442,7 +445,7 @@ export const importEvents = onCall<string>(async (req) => {
             startDateTime = new Date(date);
             endDateTime = new Date(date);
 
-            // Set hours and minutes for start and end times
+            // set hours and minutes for start and end times
             const [startHourStr, startMinuteStr] = (startTime as string).split(":");
             const [endHourStr, endMinuteStr] = (endTime as string).split(":");
             const startHour = Number(startHourStr);
@@ -465,7 +468,6 @@ export const importEvents = onCall<string>(async (req) => {
             logger.warn(`Line ${index + 2} skipped: Error parsing date or time.`);
             return null;
         }
-
 
         const trimmedDescription = description.trim().slice(0, 255);
 
@@ -510,7 +512,7 @@ export const importVolunteers = onCall<string>(async (req) => {
     const importedVolunteers: Volunteer[] = lines.map((line, index) => {
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, ""));
         const [email, first_name, last_name, sex, birthdateStr, contact_number, address, is_adminStr] = values;
-        logger.log("email: "+email);
+        logger.log("email: " + email);
         if (!email || !first_name || !last_name || !is_adminStr) {
             logger.warn(`Line ${index + 2} skipped: Missing required fields.`);
             return null;
@@ -665,15 +667,6 @@ export const exportEvents = onCall<void>(async (req) => {
         "Name", "Description", "Date", "Start Time", "End Time", "Location"
     ];
 
-    // build rows
-    type Event = {
-        name: string;
-        description: string;
-        start_date: Timestamp;
-        end_date: Timestamp;
-        location: string;
-    };
-
     const csvRows = [
         headers.map(h => `"${h}"`).join(","),
         ...docs.map(doc => {
@@ -712,6 +705,40 @@ export const exportVolunteers = onCall<void>(async (req) => {
     logger.log("exportVolunteers called");
     console.log("exportVolunteers called");
     if (!req.auth) return false;
-    
-    return true;
+    // fetch all volunteers
+    const snapshot = await firestore.collection("volunteers").get();
+    const docs = snapshot.docs.map(doc => doc.data() as Volunteer);
+    if (!docs.length) {
+        throw new HttpsError("not-found", "There are no volunteers to export.");
+    }
+
+    // define headers
+    const headers = [
+        "Email", "First Name", "Last Name", "Sex", "Birthdate", "Contact Number", "Address", "Admin"
+    ];
+
+    // build rows
+    const csvRows = [
+        headers.join("\t"),
+        ...docs.map(vol => {
+            // format date mm/dd/yyyy
+            const birthdateObj = vol.birthdate.toDate();
+            const mm = String(birthdateObj.getMonth() + 1).padStart(2, '0');
+            const dd = String(birthdateObj.getDate()).padStart(2, '0');
+            const yyyy = birthdateObj.getFullYear();
+            const birthdateStr = `${mm}/${dd}/${yyyy}`;
+            return [
+                vol.email,
+                vol.first_name,
+                vol.last_name,
+                vol.sex,
+                birthdateStr,
+                vol.contact_number,
+                vol.address,
+                vol.is_admin ? "TRUE" : "FALSE"
+            ].join("\t");
+        })
+    ];
+    const csvContent = csvRows.join("\r\n");
+    return csvContent;
 });

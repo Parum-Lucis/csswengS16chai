@@ -185,6 +185,10 @@ export function BeneficiaryList() {
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Beneficiary List</h1>
+      {/* Beneficiary count */}
+      <div className="text-center text-lg text-white-200 mb-2">
+      Total Beneficiaries: {profiles.length}
+      </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select
           value={filter}
@@ -426,7 +430,7 @@ export function VolunteerList() {
     });
   }
 
-  // Export handler for beneficiaries
+  // Export handler for volunteers
   const handleExport = async () => {
     console.log("Export clicked!")
     try {

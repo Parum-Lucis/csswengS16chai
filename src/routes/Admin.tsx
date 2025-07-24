@@ -62,8 +62,12 @@ function Admin(){
                 
                     try {
                         if (type === 0) {
-                            await callImportBeneficiaries(csvContent);
-                            toast.success("Import beneficiaries successful!");
+                            const result = await callImportBeneficiaries(csvContent);
+                            const { imported, skipped } = result.data;
+
+                            skipped === 0 ?
+                                toast.success(`All beneficiaries were imported successfully! Total imported: ${imported}`) :
+                                toast.warn(`Some beneficiaries were skipped due to invalid data (success: ${imported}, skipped: ${skipped}`);
                         } else if (type === 1) {
                             await callImportVolunteers(csvContent);
                             toast.success("Import volunteers successful!");
