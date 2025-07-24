@@ -88,7 +88,7 @@ export function VolunteerProfileCreation() {
       callCreateVolunteerProfile(data)
     ])
 
-    if (createRes.data && uploadRes) {
+    if (createRes.data && uploadRes.ref) {
       toast.success("Success!");
       navigate(-1);
     } else {
