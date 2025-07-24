@@ -6,17 +6,17 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { UserContext } from "../util/userContext";
-import { getDocs, getDoc, setDoc, deleteDoc, Timestamp } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { EventPage } from "./EventPage";
 import type { User } from "firebase/auth";
 
 jest.mock("firebase/firestore", () => ({
   ...jest.requireActual("firebase/firestore"),
-  collection: jest.fn((...pathSegments) => ({
+  collection: jest.fn((db, ...pathSegments) => ({
     path: pathSegments.join('/'),
   })),
   getDocs: jest.fn(),
-  doc: jest.fn((...pathSegments) => ({
+  doc: jest.fn((db, ...pathSegments) => ({
     path: pathSegments.join('/'),
     id: pathSegments[pathSegments.length - 1],
   })),
