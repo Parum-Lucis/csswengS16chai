@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import "../css/styles.css";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import { toast } from "react-toastify";
 import { callDeleteVolunteerProfile } from "../firebase/cloudFunctions";
 import { signOut } from "firebase/auth";
+import { emailRegex } from "../util/emailRegex";
 
 export function YourProfile() {
 
@@ -40,17 +41,8 @@ export function YourProfile() {
     }, [setVolunteer, user])
     console.log(volunteer)
     const navigate = useNavigate();
-    const usertest = useContext(UserContext);
     const { sex, contact_number: contact, email, address } = volunteer || {}
     const birthdate = new Date((volunteer?.birthdate.seconds ?? 0) * 1000)
-
-    useEffect(() => {
-
-        // If there is no user logged in, skip this page and redirect to login page.
-        if (usertest === null) {
-            navigate("/");
-        }
-    }, [usertest, navigate]);
 
     useEffect(() => {
         document.body.style.overflow = showDeleteModal ? 'hidden' : 'unset';
@@ -90,73 +82,33 @@ export function YourProfile() {
         setForm(!formState)
     }
 
-    /* Modified this function
-    const handleSave = 
-    async () => {
-        setForm(!formState)
-        if(!(sex!.toString().trim()) || !(contact!.toString().trim()) || !(email!.toString().trim()) || !(address!.toString().trim())) {
-            toast.error("Please fill up all fields!")
-            return
-        }
-        const emailRegEx = new RegExp(
-            /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-        ); // from https://emailregex.com/
-        if (!emailRegEx.test(email!)) {
-            toast.error("Please input a proper email!");
-            return
-        }
-        const updateRef = doc(db, "volunteers", docID!)
-        console.log(volunteer)
-        try {
-            await updateDoc(updateRef, {
-            ...volunteer
-            })
-            setOriginalVolunteer(volunteer)
-            toast.success("Account update success!")
-            setTimeout(function() {
-                location.reload();
-            }, 1000);
-        } catch {
-            toast.error("Something went wrong")
-        }
-    }*/
+    const handleSave =
+        async () => {
+            setForm(!formState)
+            if (!(sex!.toString().trim()) || !(contact!.toString().trim()) || !(email!.toString().trim()) || !(address!.toString().trim())) {
+                toast.error("Please fill up all fields!")
+                return
+            }
 
-    const handleSave = 
-    async () => {
-        if(!(sex?.toString().trim()) || !(contact?.toString().trim()) || !(email?.toString().trim()) || !(address?.toString().trim())) {
-            toast.error("Please fill up all fields!")
-            setForm(!formState)
-            return
+            if (!emailRegex.test(email!)) {
+                toast.error("Please input a proper email!");
+                return
+            }
+            const updateRef = doc(db, "volunteers", docID!)
+            console.log(volunteer)
+            try {
+                await updateDoc(updateRef, {
+                    ...volunteer
+                })
+                setOriginalVolunteer(volunteer)
+                toast.success("Account update success!")
+                setTimeout(function () {
+                    location.reload();
+                }, 1000);
+            } catch {
+                toast.error("Something went wrong")
+            }
         }
-        if (sex.toUpperCase() !== 'M' && sex.toUpperCase() !== 'F') {
-            toast.error("Invalid sex input. Please use 'M' or 'F'.");
-            setForm(!formState)
-            return;
-        }
-        const emailRegEx = new RegExp(
-            /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-        ); // from https://emailregex.com/
-        if (!emailRegEx.test(email!)) {
-            toast.error("Please input a proper email!");
-            setForm(!formState)
-            return
-        }
-        setForm(!formState)
-        const updateRef = doc(db, "volunteers", docID!)
-        console.log(volunteer)
-        try {
-            await updateDoc(updateRef, {
-            ...volunteer
-            })
-            setOriginalVolunteer(volunteer)
-            toast.success("Account update success!")
-            setTimeout(function() {
-                location.reload();
-            }, 1000);
-        } catch {
-            toast.error("Something went wrong")
-        }
-    }
 
     return (
         <div className="w-full min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">

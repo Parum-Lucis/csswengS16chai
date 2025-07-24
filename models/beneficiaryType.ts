@@ -13,4 +13,5 @@ export interface Beneficiary {
   grade_level: number;
   attended_events: AttendedEvents[];
   guardians: Guardian[];
+  time_to_live?: Timestamp;
 }

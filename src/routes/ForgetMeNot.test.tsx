@@ -7,7 +7,7 @@ import ForgetMeNot from './ForgetMeNot';
 import { BrowserRouter } from 'react-router-dom';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
-import { UserContext } from '../context/userContext';
+import { UserContext } from '../util/userContext';
 import { ToastContainer } from 'react-toastify';
 
 jest.mock('firebase/auth', () => ({
@@ -63,7 +63,7 @@ describe('ForgetMeNot Page', () => {
   });
 
   test('handles error when sendPasswordResetEmail fails', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleErrorSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
     (sendPasswordResetEmail as jest.Mock).mockRejectedValue({
       code: 'auth/invalid-email',
       message: 'Invalid email',
@@ -86,12 +86,12 @@ describe('ForgetMeNot Page', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  test('redirects to /view-profile if user is already logged in', async () => {
+  test('redirects to /me if user is already logged in', async () => {
     const user = { uid: 'test-uid', email: 'test@example.com' };
     renderForgetMeNot(user);
 
     await waitFor(() => {
-      expect(mockedNavigate).toHaveBeenCalledWith('/view-profile');
+      expect(mockedNavigate).toHaveBeenCalledWith('/me');
     });
   });
 
@@ -102,7 +102,7 @@ describe('ForgetMeNot Page', () => {
     fireEvent.click(continueButton);
 
     await waitFor(() => {
-        expect(screen.getByLabelText(/enter confirmation code/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/enter confirmation code/i)).toBeInTheDocument();
     });
   });
 });

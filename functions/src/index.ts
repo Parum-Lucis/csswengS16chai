@@ -42,11 +42,24 @@ const app = initializeApp();
 const auth = getAuth(app);
 const firestore = getFirestore(app);
 
+export const promoteMetoAdmin = onCall(async (req) => {
+    if (!req.auth) return false;
+    const { uid } = req.auth;
+    await auth.setCustomUserClaims(uid, { is_admin: true });
+    firestore.doc(`volunteers/${uid}`).update(
+        {
+            role: "Admin",
+            is_admin: true
+        }
+    )
+    return true;
+})
+
 export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
     if (!req.auth) return false;
     if (!req.auth.token.is_admin) return false;
 
-    const { email, is_admin } = req.data;
+    const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate } = req.data;
     try {
 
         const { uid } = await auth.createUser({
@@ -56,7 +69,18 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 
         await Promise.all([
             auth.setCustomUserClaims(uid, { is_admin }),
-            firestore.doc(`volunteers/${uid}`).create(req.data)
+            firestore.doc(`volunteers/${uid}`).create({
+                first_name,
+                last_name,
+                contact_number,
+                email,
+                role,
+                is_admin,
+                sex,
+                address,
+                birthdate: new Timestamp(birthdate.seconds, birthdate.nanoseconds),
+                time_to_live: null
+            })
         ])
 
         return true;
@@ -74,6 +98,9 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
     const uid = req.data;
     try {
 
+        await auth.updateUser(uid, {
+            disabled: true
+        })
         await firestore.doc(`volunteers/${uid}`).update(
             { time_to_live: createTimestampFromNow({ seconds: 30 }) }
         )
@@ -192,3 +219,7 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
         logger.error(error)
     }
 })
+
+
+export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
+export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"

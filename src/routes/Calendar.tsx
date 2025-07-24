@@ -1,43 +1,31 @@
 import "../css/styles.css";
-import { NavLink, useNavigate } from "react-router";
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore"
-import { UserContext } from "../context/userContext";
 import EventCalendarCard from "../components/EventCalendarCard";
 import type { Event } from "@models/eventType";
 import { toast } from "react-toastify";
 import { CircleArrowLeft, ChevronDown, CircleArrowRight } from 'lucide-react';
-import { render } from "@testing-library/react";
+import { format } from "date-fns";
 
-export function Calendar(){
-    const navigate = useNavigate()
-    const usertest = useContext(UserContext)
+export function Calendar() {
     const [minimizeState, setMinimize] = useState(false)
     const [eventsList, setEventsList] = useState<Event[]>([])
-    const [prevMonthSnap, setPrevMonthSnap] = useState<React.JSX.Element | null>()
-    const [nextMonthSnap, setNextMonthSnap] = useState<React.JSX.Element | null>()
+    // const [prevMonthSnap, setPrevMonthSnap] = useState<React.JSX.Element | null>()
+    // const [nextMonthSnap, setNextMonthSnap] = useState<React.JSX.Element | null>()
 
-    useEffect(() => {
-    
-        // If there is no user logged in, skip this page and redirect to login page.
-        if (usertest === null) {
-        navigate("/");
-        }
-    }, [usertest, navigate]);
-    
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const monthsOfYear = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-    useEffect(() =>{
+    useEffect(() => {
         const fetchEvents = async () => {
             let flag = false
-            const getQuery = collection(db,"events")
+            const getQuery = collection(db, "events")
             const eventsSnap = await getDocs(getQuery)
-            const events: Event[]= []
+            const events: Event[] = []
             eventsSnap.forEach((event) => {
-                try{
-                    events.push({ docID: event.id, ...(event.data() as Event)})
+                try {
+                    events.push({ docID: event.id, ...(event.data() as Event) })
                 } catch (e) {
                     flag = true
                     console.error("Error fetching beneficiary: " + event.id, e)
@@ -99,7 +87,7 @@ export function Calendar(){
         setSelectedDate(currentDate)
     }
 
-    const selectedEvents = eventsList.filter((event) => 
+    const selectedEvents = eventsList.filter((event) =>
         event.start_date.toDate().getDate() === selectedDate.getDate() &&
         event.start_date.toDate().getMonth() === selectedDate.getMonth() &&
         event.start_date.toDate().getFullYear() === selectedDate.getFullYear()
@@ -112,116 +100,114 @@ export function Calendar(){
 
         const daysPerMonth = [
             ...Array(firstDayOfMonth).fill(0),
-            ... [...Array(daysInMonth).keys()].map((index) => index+1)
+            ...[...Array(daysInMonth).keys()].map((index) => index + 1)
         ]
 
         const lastDaysOfPrevMonth = [...Array(daysInPrevMonth - (daysInPrevMonth - firstDayOfMonth)).keys()].map(
-                                    (_,index) => 
-                                        (daysInPrevMonth - firstDayOfMonth) + index + 1
-                                    )
-        const firstDaysOfNextMonth:number[] = []
+            (_, index) =>
+                (daysInPrevMonth - firstDayOfMonth) + index + 1
+        )
+        const firstDaysOfNextMonth: number[] = []
 
         const weekNumbers: (number)[][] = []
-        for (let i = 0; i < daysPerMonth.length; i+=7){
-            let week = daysPerMonth.slice(i, i+7)
-            if (week.length < 7){
+        for (let i = 0; i < daysPerMonth.length; i += 7) {
+            const week = daysPerMonth.slice(i, i + 7)
+            if (week.length < 7) {
                 const extraDays = []
                 for (let i = 1; i <= 7 - week.length; i++) {
                     extraDays.push(0);
                     firstDaysOfNextMonth.push(i)
                 }
                 weekNumbers.push([...week, ...extraDays])
-            } 
+            }
             else {
                 weekNumbers.push(week)
             }
         }
-        
+
         const visibleWeeks: (number)[][] = minimizeState ? weekNumbers.filter((week) => week.includes(selectedDate.getDate())) : weekNumbers
 
         return (
-            <div className={`grid grid-cols-7 gap-2`}> 
+            <div className={`grid grid-cols-7 gap-2`}>
                 {!minimizeState || (minimizeState && visibleWeeks[0][0] === 0) ? (
-                    lastDaysOfPrevMonth.map((day,dayIndex) => 
-                        <button 
-                            type="button" 
-                            className="grid h-10 py-2 text-center border rounded-full transition-all duration-200 text-gray-400"  
+                    lastDaysOfPrevMonth.map((day, dayIndex) =>
+                        <button
+                            type="button"
+                            className="grid h-10 py-2 text-center border rounded-full transition-all duration-200 text-gray-400"
                             key={`day-${dayIndex}`}
                             onClick={() => handlePrevMonthDayClick(day)}
                         >
                             {day}
                         </button>
                     )) : (
-                        null
-                    )
+                    null
+                )
                 }
                 {visibleWeeks.map((week, weekIndex) =>
-                    (week.map((day,dayIndex) =>
-                        <>
-                            {day !== 0 ? (
-                                <button 
-                                    type="button"
-                                    className={`grid h-10 py-2 text-center border rounded-full transition-all duration-200
-                                                ${
-                                                    day === selectedDate.getDate() &&
-                                                    currentMonth === selectedDate.getMonth() &&
-                                                    currentYear === selectedDate.getFullYear() ?
-                                                    "text-white bg-secondary" : ""
-                                                }
-                                                ${
-                                                    day === currentDate.getDate() &&
-                                                    currentMonth === currentDate.getMonth() &&
-                                                    currentYear === currentDate.getFullYear() ?
-                                                    "text-primary" : ""
-                                                }`} 
-                                    key={`${weekIndex}-${day}`}
-                                    onClick={() => handleDayClick(day)}>
-                                    {day}
-                                    {eventsList.some(event =>
-                                        event?.start_date.toDate().getDate() === day &&
-                                        event?.start_date.toDate().getMonth() === currentMonth &&
-                                        event?.start_date.toDate().getFullYear() === currentYear
-                                        ) && (
+                (week.map((day, dayIndex) =>
+                    <>
+                        {day !== 0 ? (
+                            <button
+                                type="button"
+                                className={`grid h-10 py-2 text-center border rounded-full transition-all duration-200
+                                                ${day === selectedDate.getDate() &&
+                                        currentMonth === selectedDate.getMonth() &&
+                                        currentYear === selectedDate.getFullYear() ?
+                                        "text-black bg-white" : ""
+                                    }
+                                                ${day === currentDate.getDate() &&
+                                        currentMonth === currentDate.getMonth() &&
+                                        currentYear === currentDate.getFullYear() ?
+                                        "text-primary" : ""
+                                    }`}
+                                key={`${dayIndex}-${weekIndex}-${day}`}
+                                onClick={() => handleDayClick(day)}>
+                                {day}
+                                {eventsList.some(event =>
+                                    event?.start_date.toDate().getDate() === day &&
+                                    event?.start_date.toDate().getMonth() === currentMonth &&
+                                    event?.start_date.toDate().getFullYear() === currentYear
+                                ) && (
                                         <span className="-translate-x-1.5 w-2 h-2 bg-primary rounded-full"></span>
                                     )}
-                                </button>
-                            ) : (
-                                null
-                            )}
-                        </>
-                    ))
+                            </button>
+                        ) : (
+                            null
+                        )}
+                    </>
+                ))
                 )}
-                {!minimizeState || (minimizeState && visibleWeeks[0][visibleWeeks[0].length-1] === 0) ? (
-                    firstDaysOfNextMonth.map((day,dayIndex) => 
-                        <button 
-                            type="button" 
-                            className="grid h-10 py-2 text-center border rounded-full transition-all duration-200 text-gray-400"  
+                {!minimizeState || (minimizeState && visibleWeeks[0][visibleWeeks[0].length - 1] === 0) ? (
+                    firstDaysOfNextMonth.map((day, dayIndex) =>
+                        <button
+                            type="button"
+                            className="grid h-10 py-2 text-center border rounded-full transition-all duration-200 text-gray-400"
                             key={`${dayIndex}-${day}`}
                             onClick={() => handleNextMonthDayClick(day)}
                         >
                             {day}
                         </button>
                     )) : (
-                        null
-                    )
+                    null
+                )
                 }
             </div>
         )
     }
 
-    return(
+    return (
         <div className={`transition-all duration-300 animate-fade overflow-hidden`}>
             <div className="flex flex-col items-start justify-start min-h-screen w-full p-4 sm:p-6">
                 <div className={`w-full transition-all duration-300 animate-fade overflow-hidden ${minimizeState ? "max-h-40" : "max-h-screen"}`}>
                     <div className="w-full flex justify-between">
                         <button aria-label="Go to previous month" // added for accessibility
-                                className="" onClick={HandlePrevMonth}><CircleArrowLeft/></button>
+                            className="" onClick={HandlePrevMonth}><CircleArrowLeft /></button>
                         <div className="flex flex-row items-center gap-6">
                             <span className="inline-block w-35 text-center ">{monthsOfYear[currentMonth]} {currentYear}</span>
                             <button className="transition-colors duration-300 ease-out text-white px-4 py-2 rounded-sm w-24 h-10 bg-gradient-to-r from-emerald-300 to-green-500 active:from-green-400 active:to-emerald-400" onClick={handleToday}>today</button>
                         </div>
                         <button aria-label="Go to next month" // added for accessibility
-                                className="" onClick={() => HandleNextMonth()}><CircleArrowRight/></button>
+                            className="" onClick={() => HandleNextMonth()}><CircleArrowRight /></button>
                     </div>
                     <div className="w-full">
                         <div className="grid grid-cols-7 gap-2 border-b mb-4">
@@ -233,18 +219,18 @@ export function Calendar(){
                     </div>
                 </div>
                 <button aria-label="Minimize or expand calendar" // added for accessibility
-                        onClick={handleMinimize} className={`w-full text-2xl flex justify-center items-center transition-all duration-200 animate-fade ${minimizeState ? "rotate-180 " : "rotate-0"}`}><ChevronDown /></button>
+                    onClick={handleMinimize} className={`w-full text-2xl flex justify-center items-center transition-all duration-200 animate-fade ${minimizeState ? "rotate-180 " : "rotate-0"}`}><ChevronDown /></button>
                 <button onClick={handleMinimize} className={`w-full border-b text-2xl transition-all duration-300 animate-fade`}></button>
                 <div className={`w-full animate-fade mt-4`}
                     key={selectedDate.toISOString()} >
                     <div className="flex flex-col justify-center space-y-2">
                         {selectedEvents.map((event) => (
-                            <EventCalendarCard 
-                                key={event.docID} 
-                                date={event.start_date.toDate().toDateString().slice(event.start_date.toDate().toDateString().indexOf(' ') + 1)} 
-                                /*onClick={() => navigate(`/view-event/${event.docID}`)}*/ // use when eventPage works
-                                event={event.name} 
-                                time={event.start_date.toDate().getHours().toString() + ':' + event.start_date.toDate().getMinutes().toString()}/>
+                            <EventCalendarCard
+                                key={event.docID}
+                                date={event.start_date.toDate().toDateString().slice(event.start_date.toDate().toDateString().indexOf(' ') + 1)}
+                                event={event.name}
+                                uid={event.docID ?? "sdfsdf"}
+                                time={format(event.start_date.toDate(), "hh:mm a")} />
                         ))}
                         {selectedEvents.length === 0 ? "No Events!" : ""}
                     </div>
