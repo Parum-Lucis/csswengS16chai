@@ -290,9 +290,10 @@ export const importBeneficiaries = onCall<string>(async (req) => {
             first_name: values[1]?.trim() ?? "",
             last_name: values[2]?.trim() ?? "",
             sex: values[3]?.trim() ?? "",
-            grade_level: values[4]?.trim() ?? "",
+            grade_level: values[5]?.trim() ?? "",
             address: values[6]?.trim() ?? "",
             guardians,
+            time_to_live: null,
         };
 
         // validate and format names. skip if missing
@@ -326,14 +327,14 @@ export const importBeneficiaries = onCall<string>(async (req) => {
             birthdate = Timestamp.fromDate(date);
         }
 
-        // validate sex. skip if invalid
+        // validate sex. skip if invalid, allow if blank
         if (b.sex && b.sex !== "M" && b.sex !== "F") {
             logger.warn(`Line ${index + 2} skipped: Invalid sex value "${b.sex}".`);
             skipped++;
             return null;
         }
 
-        // validate grade level
+        // validate grade level. skip if invalid, allow if blank
         const gradeLevelValue = !Number.isNaN(b.grade_level) ? Number(b.grade_level) : String(b.grade_level).toLowerCase();
         if (gradeLevelValue && !validGradeLevels.includes(gradeLevelValue)) {
             logger.warn(`Line ${index + 2} skipped: Invalid grade level "${b.grade_level}".`);
@@ -369,7 +370,7 @@ export const importBeneficiaries = onCall<string>(async (req) => {
     let importedWaitlist = 0;
     try {
         const batch = firestore.batch();
-        const existingSnapshot = await firestore.collection("beneficiaries").get();
+        const existingSnapshot = await firestore.collection("beneficiaries").where("time_to_live", "==", null).get();
         const existingIds = new Set<number>(existingSnapshot.docs.map(doc => Number(doc.data().accredited_id)));
 
         importedBeneficiaries.forEach(b => {
@@ -406,7 +407,7 @@ export const importBeneficiaries = onCall<string>(async (req) => {
 
         // check if there are any beneficiaries to add
         if ((importedIds.size + importedWaitlist) === 0) {
-            throw new HttpsError("invalid-argument", "No beneficiaries imported. Ensure that your data does not already exist!");
+            throw new HttpsError("invalid-argument", "No valid beneficiaries were imported. Please ensure your data does not already exist in the system.");
         }
 
         // add beneficiaries
@@ -453,10 +454,8 @@ export const importEvents = onCall<string>(async (req) => {
             const endHour = Number(endHourStr);
             const endMinute = Number(endMinuteStr);
 
-            if (
-                isNaN(startHour) || isNaN(startMinute) ||
-                isNaN(endHour) || isNaN(endMinute)
-            ) {
+            // check if parsing went ok
+            if (isNaN(startHour) || isNaN(startMinute) || isNaN(endHour) || isNaN(endMinute)) {
                 logger.warn(`Line ${index + 2} skipped: Invalid start or end time format.`);
                 return null;
             }
@@ -469,6 +468,7 @@ export const importEvents = onCall<string>(async (req) => {
             return null;
         }
 
+        // cut to 255 characters, as per specs
         const trimmedDescription = description.trim().slice(0, 255);
 
         return {
@@ -477,18 +477,55 @@ export const importEvents = onCall<string>(async (req) => {
             start_date: Timestamp.fromDate(startDateTime),
             end_date: Timestamp.fromDate(endDateTime),
             location: location.trim(),
-        };
+            time_to_live: null,
+        } as Event;
     }).filter(Boolean);
 
     if (!importedEvents.length) {
         throw new HttpsError("invalid-argument", "No valid events to import.");
     }
 
+    let imported = 0;
+    let skipped = 0;
+
     try {
+        const eventsSnapshot = await firestore.collection("events").where("time_to_live", "==", null).get();
+    
+        var existingEvents = eventsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                name: data.name,
+                start_date: data.start_date,
+                end_date: data.end_date
+            };
+        });
+
         const batch = firestore.batch();
         importedEvents.forEach(event => {
+            if (!event) return;
+            
+            const existing = existingEvents.filter(existingEvent => {
+                return (
+                    existingEvent.name.trim().toLowerCase() === event.name.trim().toLowerCase() &&
+                    existingEvent.start_date.toMillis() === event.start_date.toMillis() &&
+                    existingEvent.end_date.toMillis() === event.end_date.toMillis()
+                );
+            });
+
+            if (existing.length > 0) {
+                logger.warn(`Event "${event.name}" with same start and end date already exists. Skipping.`);
+                skipped++;
+                return;
+            }
+
             const docRef = firestore.collection("events").doc();
             batch.set(docRef, event);
+            existingEvents.push({
+                name: event.name,
+                start_date: event.start_date,
+                end_date: event.end_date
+            });
+            imported++;
         });
         await batch.commit();
         logger.info(`Imported ${importedEvents.length} events successfully.`);
@@ -497,7 +534,11 @@ export const importEvents = onCall<string>(async (req) => {
         throw new HttpsError("internal", err.message ?? "Failed to import events.");
     }
 
-    return true;
+    if (imported === 0) {
+        throw new HttpsError("invalid-argument", "No valid events were imported. Please ensure your data does not already exist in the system.");
+    }
+    
+    return { imported, skipped };
 });
 
 // not done
@@ -511,13 +552,29 @@ export const importVolunteers = onCall<string>(async (req) => {
 
     const importedVolunteers: Volunteer[] = lines.map((line, index) => {
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, ""));
-        const [email, first_name, last_name, sex, birthdateStr, contact_number, address, is_adminStr] = values;
-        logger.log("email: " + email);
+        var [email, first_name, last_name, sex, birthdateStr, contact_number, address, is_adminStr] = values;
+        
+        // check if all required fields exist
         if (!email || !first_name || !last_name || !is_adminStr) {
             logger.warn(`Line ${index + 2} skipped: Missing required fields.`);
             return null;
         }
 
+        // validate email. skip if invalid
+        if (!emailRegEx.test(email.trim())) {
+            logger.warn(`Line ${index + 2} skipped: Invalid email format.`);
+            return null;
+        }
+
+        // validate name and 
+        if (!first_name.trim() || !last_name.trim() || !isNaN(Number(first_name.trim())) || !isNaN(Number(last_name.trim()))) {
+            logger.warn(`Line ${index + 2} skipped: Missing or invalid name fields.`);
+            return null;
+        }
+        first_name = capitalize(first_name.trim());
+        last_name = capitalize(last_name.trim());
+
+        // validate birthdate. skip if invalid, placeholder if blank
         let birthdate: Timestamp;
         if (birthdateStr.trim() === "") {
             birthdate = Timestamp.fromDate(new Date(1900, 0, 1));
@@ -530,6 +587,7 @@ export const importVolunteers = onCall<string>(async (req) => {
             birthdate = Timestamp.fromDate(date);
         }
 
+        // validate admin bool. if blank/invalid = false
         const is_admin = is_adminStr.trim().toLowerCase() === "true";
         return {
             email: email.trim(),
@@ -541,26 +599,48 @@ export const importVolunteers = onCall<string>(async (req) => {
             contact_number: contact_number.trim(),
             is_admin,
             role: is_admin ? "Admin" : "Volunteer",
+            time_to_live: null,
         } as Volunteer;
     }).filter(Boolean) as Volunteer[];
 
-    for (const volunteer of importedVolunteers) {
+    if (importedVolunteers.length === 0) {
+        throw new HttpsError("invalid-argument", "No valid volunteers to import.");
+    }
+
+    const existingSnapshot = await firestore.collection("volunteers").where("time_to_live", "==", null).get();
+    const existingEmails = new Set<string>(existingSnapshot.docs.map(doc => String(doc.data().email).toLowerCase()));
+    
+    let skipped = 0;
+    let imported = 0;
+
+    await Promise.all(importedVolunteers.map(async volunteer => {
+        if (existingEmails.has(volunteer.email.toLowerCase())) {
+            logger.warn(`Volunteer with email ${volunteer.email} already exists. Skipping.`);
+            skipped++;
+            return;
+        }
         try {
-            // doing this instead of createVolunteerProfile coz idt u can within cloudfunc
             const { uid } = await auth.createUser({
                 email: volunteer.email,
                 password: generateRandomPassword(10),
             });
             await Promise.all([
                 auth.setCustomUserClaims(uid, { is_admin: volunteer.is_admin }),
-                firestore.doc(`volunteers/${uid}`).create(volunteer)
+                firestore.doc(`volunteers/${uid}`).create(volunteer),
             ]);
-
+            imported++;
+            existingEmails.add(volunteer.email.toLowerCase());
         } catch (error) {
             logger.warn(`Failed to import volunteer ${volunteer.email}: ${error}`);
+            skipped++;
         }
+    }));
+
+    if (imported === 0) {
+        throw new HttpsError("invalid-argument", "No valid volunteers were imported. Please ensure your data does not already exist in the system.");
     }
-    return true;
+
+    return { imported, skipped };
 });
 
 // done
@@ -571,7 +651,10 @@ export const exportBeneficiaries = onCall<void>(async (req) => {
 
     // fetch all beneficiaries
     const snapshot = await firestore.collection("beneficiaries").get();
-    const docs = snapshot.docs.map(doc => doc.data());
+    const docs = snapshot.docs
+        .map(doc => doc.data())
+        .filter(doc => doc.time_to_live == null);
+        
     if (!docs.length) {
         throw new HttpsError("not-found", "There are no beneficiaries to export.");
     }
@@ -657,7 +740,9 @@ export const exportEvents = onCall<void>(async (req) => {
 
     // fetch all events
     const snapshot = await firestore.collection("events").get();
-    const docs = snapshot.docs.map(doc => doc.data());
+    const docs = snapshot.docs
+        .map(doc => doc.data())
+        .filter(doc => doc.time_to_live == null);
     if (!docs.length) {
         throw new HttpsError("not-found", "There are no events to export.");
     }
@@ -707,7 +792,9 @@ export const exportVolunteers = onCall<void>(async (req) => {
     if (!req.auth) return false;
     // fetch all volunteers
     const snapshot = await firestore.collection("volunteers").get();
-    const docs = snapshot.docs.map(doc => doc.data() as Volunteer);
+    const docs = snapshot.docs
+        .map(doc => doc.data() as Volunteer)
+        .filter(vol => vol.time_to_live == null);
     if (!docs.length) {
         throw new HttpsError("not-found", "There are no volunteers to export.");
     }
@@ -719,7 +806,7 @@ export const exportVolunteers = onCall<void>(async (req) => {
 
     // build rows
     const csvRows = [
-        headers.join("\t"),
+        headers.map(h => `"${h}"`).join(","),
         ...docs.map(vol => {
             // format date mm/dd/yyyy
             const birthdateObj = vol.birthdate.toDate();
@@ -728,15 +815,15 @@ export const exportVolunteers = onCall<void>(async (req) => {
             const yyyy = birthdateObj.getFullYear();
             const birthdateStr = `${mm}/${dd}/${yyyy}`;
             return [
-                vol.email,
-                vol.first_name,
-                vol.last_name,
-                vol.sex,
+                (vol.email || "").replace(/"/g, '""'),
+                (vol.first_name || "").replace(/"/g, '""'),
+                (vol.last_name || "").replace(/"/g, '""'),
+                (vol.sex || "").replace(/"/g, '""'),
                 birthdateStr,
-                vol.contact_number,
-                vol.address,
+                (vol.contact_number || "").replace(/"/g, '""'),
+                (vol.address || "").replace(/"/g, '""'),
                 vol.is_admin ? "TRUE" : "FALSE"
-            ].join("\t");
+            ].map(val => `"${val}"`).join(",");
         })
     ];
     const csvContent = csvRows.join("\r\n");

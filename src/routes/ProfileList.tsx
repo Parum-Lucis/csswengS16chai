@@ -195,7 +195,9 @@ export function BeneficiaryList() {
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Beneficiary List</h1>
       {/* Beneficiary count */}
       <div className="text-center text-lg text-white-200 mb-2">
-      Showing {filteredprofiles.length} of {profiles.length} beneficiaries
+        {filteredprofiles.length === profiles.length
+          ? `Showing all ${profiles.length} beneficiaries`
+          : `Showing ${filteredprofiles.length} of ${profiles.length} beneficiaries`}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select

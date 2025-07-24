@@ -66,14 +66,22 @@ function Admin(){
                             const { imported, skipped } = result.data;
 
                             skipped === 0 ?
-                                toast.success(`All beneficiaries were imported successfully! Total imported: ${imported}`) :
-                                toast.warn(`Some beneficiaries were skipped due to invalid data (success: ${imported}, skipped: ${skipped}`);
+                                toast.success(`Beneficiaries imported successfully! (${imported} added)`) :
+                                toast.warn(`Beneficiaries partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
                         } else if (type === 1) {
-                            await callImportVolunteers(csvContent);
-                            toast.success("Import volunteers successful!");
+                            const result = await callImportVolunteers(csvContent);
+                            const { imported, skipped } = result.data;
+
+                            skipped === 0 ?
+                                toast.success(`Volunteers imported successfully! (${imported} added)`) :
+                                toast.warn(`Volunteers partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
                         } else if (type === 2) {
-                            await callImportEvents(csvContent);
-                            toast.success("Import events successful!");
+                            const result = await callImportEvents(csvContent);
+                            const { imported, skipped } = result.data;
+
+                            skipped === 0 ?
+                                toast.success(`Beneficiaries imported successfully! (${imported} added)`) :
+                                toast.warn(`Beneficiaries partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
                         }
                     } catch (error: any) {
                         console.error(error);

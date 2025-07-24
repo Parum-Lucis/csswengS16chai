@@ -1,5 +1,4 @@
 import type { Timestamp } from "firebase/firestore";
-import type { AttendedEvents } from "./attendedEventsType";
 
 export interface Event {
   docID?: string;
@@ -8,5 +7,5 @@ export interface Event {
   start_date: Timestamp;
   end_date: Timestamp;
   location: string;
-  attendees: AttendedEvents[];
+  time_to_live: Timestamp | null;
 }
