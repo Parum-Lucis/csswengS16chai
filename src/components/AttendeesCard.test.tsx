@@ -10,7 +10,7 @@ describe("AttendeesCard", () => {
   const defaultProps = {
     name: "Juan Dela Cruz",
     who_attended: "Parent",
-    attendance: true, 
+    isPresent: true, 
     handleToggle: jest.fn(),
   };
 
@@ -31,7 +31,7 @@ describe("AttendeesCard", () => {
   it("calls handleToggle when checkbox is clicked", async () => {
     const user = userEvent.setup();
     render(<AttendeesCard {...defaultProps} />);
-    const checkbox = screen.getByRole("checkbox"); 
+    const checkbox = screen.getByRole("checkbox");
     await user.click(checkbox);
     expect(defaultProps.handleToggle).toHaveBeenCalledTimes(1);
   });
