@@ -12,7 +12,6 @@ import { UserContext } from '../util/userContext';
 import type { UserStateType } from '../util/userContext';
 import type { User } from "firebase/auth";
 
-// Define a type for our mock Firestore documents
 type MockDoc = {
   id: string;
   data: () => {
@@ -297,7 +296,6 @@ describe("Volunteer Integration Tests", () => {
             expect(callCreateVolunteerProfile).toHaveBeenCalled();
         });
 
-        // This is the fix: ensure all necessary data is present in the new mock document
         volunteerDocs.push({
             id: "3",
             data: () => ({
