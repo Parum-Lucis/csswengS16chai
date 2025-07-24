@@ -65,7 +65,7 @@ jest.mock("firebase/firestore", () => {
             }
             return Promise.resolve({ exists: () => false });
         }),
-        doc: jest.fn((path, id) => ({
+        doc: jest.fn((db, path, id) => ({
             id: id,
             path: `${path}/${id}`,
             withConverter: jest.fn().mockReturnThis(),
