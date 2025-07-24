@@ -161,6 +161,15 @@ export function BeneficiaryList() {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
   } else if (sort === "age") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.age - b.age);
+  } else if (sort === "id") {
+    filteredprofiles = [...filteredprofiles].sort((a, b) => {
+      const aIsWaitlisted = a.accredited_id === "waitlisted";
+      const bIsWaitlisted = b.accredited_id === "waitlisted";
+      if (aIsWaitlisted && bIsWaitlisted) return 0;
+      if (aIsWaitlisted) return 1;
+      if (bIsWaitlisted) return -1;
+      return Number(a.accredited_id) - Number(b.accredited_id);
+    });
   }
 
   // Search filter (partial or exact matches on name and age)
@@ -172,7 +181,6 @@ export function BeneficiaryList() {
       const values = [
         profile.first_name.toLowerCase(),
         profile.last_name.toLowerCase(),
-        profile.age.toString(),
         profile.accredited_id,
       ];
       return terms.every(term =>
@@ -187,7 +195,7 @@ export function BeneficiaryList() {
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Beneficiary List</h1>
       {/* Beneficiary count */}
       <div className="text-center text-lg text-white-200 mb-2">
-      Total Beneficiaries: {profiles.length}
+      Showing {filteredprofiles.length} of {profiles.length} beneficiaries
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select
@@ -216,6 +224,9 @@ export function BeneficiaryList() {
           <option className="bg-secondary text-white" value="first">
             First Name
           </option>
+          <option className="bg-secondary text-white" value="id">
+            Child ID
+          </option>
           <option className="bg-secondary text-white" value="age">
             Age
           </option>
@@ -224,7 +235,7 @@ export function BeneficiaryList() {
         <div className="flex items-center gap-2 w-full sm:w-5/10">
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search (Name or ID)"
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-9/10"
