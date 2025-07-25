@@ -29,10 +29,6 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
 
     const { cost, phoneNumbers, eventDetails, smsProtocolLink } = useMemo(() => {
 
-        // hardcoded computation. Very difficult. I think this is O(n / n)
-        const cost = 1 * attendees.length;
-
-
         // I'm currently not checking if the numbers are fine.
         const phoneNumbers = attendees.reduce((prev, curr) => (prev + "," + curr.contact_number), "").replace(/^,/, "");
 
@@ -48,7 +44,7 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
             smsProtocolLink += `open?addresses=`
         smsProtocolLink += `${phoneNumbers};?&body=${encodeURI(eventDetails)}`;
 
-        console.log(eventDetails.length)
+        const cost = Math.ceil(eventDetails.length * attendees.length / 160);
 
         return { cost, phoneNumbers, eventDetails, smsProtocolLink }
 
