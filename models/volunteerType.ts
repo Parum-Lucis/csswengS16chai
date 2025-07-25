@@ -11,5 +11,5 @@ export interface Volunteer {
   sex: string;
   address: string;
   birthdate: Timestamp;
-  time_to_live: Timestamp | null;
+  time_to_live?: Timestamp | null;
 }

@@ -11,5 +11,5 @@ export interface Beneficiary {
   sex: string;
   grade_level: number;
   guardians: Guardian[];
-  time_to_live: Timestamp | null;
+  time_to_live?: Timestamp | null;
 }

@@ -7,5 +7,5 @@ export interface Event {
   start_date: Timestamp;
   end_date: Timestamp;
   location: string;
-  time_to_live: Timestamp | null;
+  time_to_live?: Timestamp | null;
 }
