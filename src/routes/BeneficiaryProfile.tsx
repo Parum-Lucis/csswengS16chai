@@ -228,20 +228,12 @@ export function BeneficiaryProfile() {
 
     const handleSave = 
     async () => {
-        // convert string input to number, if valid
-        const gradeLevelNum = Number(gradeLevel);
-
-        /* changed */
-        // gradeLevelNum != 0 will only be true if gradeLevelNum is 0
-        // modified others rin, it still checks for empty strings/whitespaces
-        /*if(!(sex!.toString().trim()) || !gradeLevel || gradeLevelNum != 0 || !(address!.toString().trim()) || !birthdate){*/
         if (!sex?.trim() || !gradeLevel.trim() || !address?.trim() || !birthdate) {
             toast.error("Please fill up all fields!")
             return
         }       
-        /* end of change */
 
-        if(gradeLevelNum > 12 || gradeLevelNum < 1 || isNaN(gradeLevelNum)){
+        if(!gradeLevel.trim()){
             toast.error("Please put a valid Grade Number")
             return 
         }
@@ -281,9 +273,9 @@ export function BeneficiaryProfile() {
             await updateDoc(updateRef, {
                 ...beneficiary,
                 guardians: guardians,
-                grade_level: gradeLevelNum
+                grade_level: gradeLevel
             })
-            setOriginalBeneficiary({...beneficiary as Beneficiary, grade_level: gradeLevelNum,guardians: guardians})
+            setOriginalBeneficiary({...beneficiary as Beneficiary, grade_level: gradeLevel ,guardians: guardians})
             toast.success("Account update success!")
             setTimeout(function() {
                 location.reload();
@@ -449,6 +441,8 @@ export function BeneficiaryProfile() {
                     onChange={(e) => setGradeLevel(e.target.value)}
                     value={gradeLevel}
                 >
+                    <option className="bg-secondary text-white" value="N">N</option>
+                    <option className="bg-secondary text-white" value="K">K</option>
                     <option className="bg-secondary text-white" value="1">1</option>
                     <option className="bg-secondary text-white" value="2">2</option>
                     <option className="bg-secondary text-white" value="3">3</option>

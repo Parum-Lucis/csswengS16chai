@@ -10,7 +10,7 @@ export interface Beneficiary {
   birthdate: Timestamp;
   address: string;
   sex: string;
-  grade_level: number;
+  grade_level: string;
   attended_events: AttendedEvents[];
   guardians: Guardian[];
 }
