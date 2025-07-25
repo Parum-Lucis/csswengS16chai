@@ -1,6 +1,6 @@
 import "../css/styles.css";
 import { NavLink } from "react-router";
-import { Baby, BookUser, CalendarPlus, Undo2, UserPlus } from "lucide-react";
+import { Baby, BookUser, CalendarPlus, Undo2, UserPlus, Wallet } from "lucide-react";
 
 const volunteerURLs = [
     { name: "View", pldt: "volunteer/", Icon: BookUser },
@@ -16,6 +16,7 @@ const beneficiaryURLs = [
 
 const eventURLs = [
     { name: "Create", pldt: "event/new", Icon: CalendarPlus },
+    { name: "SMS", pldt: "event/smscredits", Icon: Wallet },
 ]
 
 

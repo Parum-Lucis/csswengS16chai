@@ -246,3 +246,4 @@ export { sendEmailReminder } from "./sendEmail";
 export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
 export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"
+export { getSMSCredits } from "./event/getSMSCredits"

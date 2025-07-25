@@ -19,6 +19,7 @@ import { DeletedBeneficiaryList } from "./routes/admin/DeletedBeneficiaryList.ts
 import { DeletedVolunteerList } from "./routes/admin/DeletedVolunteerList.tsx";
 import { AuthLayout } from "./layouts/AuthLayout.tsx";
 import Temp from "./components/Temp.tsx";
+import { SMSCreditView } from "./routes/SMSCreditView.tsx";
 
 
 function App() {
@@ -64,6 +65,7 @@ function App() {
             </Route>
             <Route path="event">
               <Route path="new" element={<EventCreation />} />
+              <Route path="smscredits" element={<SMSCreditView />} />
             </Route>
           </Route>
 
