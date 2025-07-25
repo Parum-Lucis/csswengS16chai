@@ -43,12 +43,8 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
         const eventTime = `between ${format(add(event.start_date.toDate(), { hours: -8 }), "h:mm bb")} and ${format(add(event.end_date.toDate(), { hours: -8 }), "h:mm bb")} on ${format(add(event.start_date.toDate(), { hours: -8 }), "MMMM d, yyyy")}.`
         const eventBlurb = `About the event: ${event.description}`
         const eventDetails = [eventTitle, eventTime, eventBlurb].reduce((prev, curr) => prev + "\n" + curr, "");
-        /**
-         * formatInTimeZone(start_date, "Asia/Manila", "h:mm bb") +  ' and ' 
-                                        + formatInTimeZone(end_date, "Asia/Manila", "h:mm bb") + ' on ' 
-                                        + formatInTimeZone(start_date, "Asia/Manila", "MMMM d, yyyy.")
-         */
 
+        // building the sms link. This is like fucking magic. here: https://stackoverflow.com/a/58131833/19171356
         let smsProtocolLink = "sms://"
         if (getMobileOperatingSystem() === "iOS")
             smsProtocolLink += `open?addresses=`
