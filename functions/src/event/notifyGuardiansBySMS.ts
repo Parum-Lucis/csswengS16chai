@@ -1,32 +1,37 @@
-import { AttendedEvents } from "@models/attendedEventsType";
+import { IProgSMSResObject } from "@models/IProgSMSResObject";
+import { notifyGuardiansBySMSProps } from "@models/notifyGuardiansBySMSProps";
 import { onCall } from "firebase-functions/https";
 
-type PhilSMSResponse = {
-    status: "success" | "error";
-    data: string
-}
 
-export const notifyGuardiansBySMS = onCall<AttendedEvents[]>(async (req) => {
-    const contactList = req.data.map(({ contact_number, first_name, last_name }) => ({ contact_number, first_name, last_name }))
-    const contacts = contactList.reduce((prev, curr) => `${prev},63${curr.contact_number.replace(/^0/, "")}`, "")
 
-    const headers = new Headers();
-    headers.set("Authorization", `Bearer ${process.env.PHILSMS_API_TOKEN}`);
-    headers.set("Content-Type", "application/json");
-    headers.set("Accept", "application/json");
+export const notifyGuardiansBySMS = onCall<notifyGuardiansBySMSProps, Promise<IProgSMSResObject>>(async (req) => {
 
-    const message = "THIS IS A TEST. If you receive this message, please disregard. -rdbt"
+    const { phoneNumbers, eventDetails } = req.data;
+    const url = 'https://sms.iprogtech.com/api/v1/sms_messages/send_bulk';
+    const data = new URLSearchParams({
+        api_token: process.env.IPROG_API_TOKEN ?? "",
+        message: eventDetails,
+        phone_number: phoneNumbers
+    });
 
-    const body = {
-        recipient: contacts,
-        sender_id: "RDBT TEST",
-        type: "plain",
-        message
+    console.log(url + data.toString())
+    try {
+        const res = await fetch(url + "?" + data.toString(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+
+        const j = await res.json() as IProgSMSResObject;
+        return j;
+
+    } catch (e) {
+        console.error(e);
+        return {
+            status: 400,
+            message: "Something went wrong"
+        };
     }
-
-    const res = await fetch("https://app.philsms.com/api/v3/sms/send", {
-        headers: headers,
-        body: JSON.stringify(body)
-    })
 
 })

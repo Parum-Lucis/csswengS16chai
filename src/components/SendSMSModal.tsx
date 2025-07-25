@@ -1,11 +1,12 @@
 import type { AttendedEvents } from "@models/attendedEventsType";
 import { Bell, FilesIcon, MessageSquareReply, X } from "lucide-react";
-import { useMemo, useRef, type ReactEventHandler } from "react";
+import { useMemo, useRef, useState, type ReactEventHandler } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getMobileOperatingSystem } from "../util/getMobileOperatingSystem";
 import type { Event } from "@models/eventType";
 import { add, format } from "date-fns";
+import { callNotifyGuardiansBySMS } from "../firebase/cloudFunctions";
 
 // currying magic.
 function handleCopy(text: string) {
@@ -23,26 +24,23 @@ function handleCopy(text: string) {
 
 export function SendSMSModal({ event, attendees, showModal, onClose }: { event: Event, attendees: AttendedEvents[], showModal: boolean, onClose: ReactEventHandler }) {
 
+    const [isAttemptingSMS, setIsAttemptingSMS] = useState(false);
     const dialogRef = useRef<HTMLDialogElement>(null);
-    if (showModal) {
-        dialogRef.current?.showModal()
-    } else {
-        dialogRef.current?.close()
-    }
 
     const { cost, phoneNumbers, eventDetails, smsProtocolLink } = useMemo(() => {
 
         // hardcoded computation. Very difficult. I think this is O(n / n)
         const cost = 1 * attendees.length;
 
+
         // I'm currently not checking if the numbers are fine.
         const phoneNumbers = attendees.reduce((prev, curr) => (prev + "," + curr.contact_number), "").replace(/^,/, "");
 
         // reused Jericho's template, but I refused to install another package and hacked the system
-        const eventTitle = `This is a reminder to attend the event titled ${event.name}`
-        const eventTime = `between ${format(add(event.start_date.toDate(), { hours: -8 }), "h:mm bb")} and ${format(add(event.end_date.toDate(), { hours: -8 }), "h:mm bb")} on ${format(add(event.start_date.toDate(), { hours: -8 }), "MMMM d, yyyy")}.`
+        const eventTitle = `This is a reminder to attend the event titled ${event.name}.`
+        const eventTime = `It will happen between ${format(add(event.start_date.toDate(), { hours: -8 }), "h:mm bb")} and ${format(add(event.end_date.toDate(), { hours: -8 }), "h:mm bb")} on ${format(add(event.start_date.toDate(), { hours: -8 }), "MMMM d, yyyy")}.`
         const eventBlurb = `About the event: ${event.description}`
-        const eventDetails = [eventTitle, eventTime, eventBlurb].reduce((prev, curr) => prev + "\n" + curr, "");
+        const eventDetails = [eventTitle, eventTime, eventBlurb].reduce((prev, curr) => prev + "\n\n" + curr, "").replace(/^\n\n/, "");
 
         // building the sms link. This is like fucking magic. here: https://stackoverflow.com/a/58131833/19171356
         let smsProtocolLink = "sms://"
@@ -50,10 +48,35 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
             smsProtocolLink += `open?addresses=`
         smsProtocolLink += `${phoneNumbers};?&body=${encodeURI(eventDetails)}`;
 
+        console.log(eventDetails.length)
+
         return { cost, phoneNumbers, eventDetails, smsProtocolLink }
 
     }, [attendees, event])
 
+    async function handleNotify() {
+        setIsAttemptingSMS(true);
+        try {
+            const res = await callNotifyGuardiansBySMS({ phoneNumbers, eventDetails });
+
+            if (res.data.status === 200) {
+                toast.success(`Successfully sent notifcation to beneficiaries! -${cost} credits`)
+            } else {
+                toast.error("Couldn't send notifcation. Try again. (possible credit lost!)");
+            }
+        } catch (e) {
+            toast.error("Couldn't send notifcation. Try again. (possible credit lost!)");
+            console.error(e);
+        }
+
+        setIsAttemptingSMS(false);
+    }
+
+    if (showModal) {
+        dialogRef.current?.showModal()
+    } else {
+        dialogRef.current?.close()
+    }
 
     return (
         <dialog ref={dialogRef} className="w-full max-w-3xl inset-0 fixed m-auto" onClose={onClose} >
@@ -77,7 +100,11 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
                                 </p>
                             </div>
                         </div>
-                        <button className="hover:opacity-80 focus:opacity-50 p-4 bg-primary text-white rounded-md cursor-pointer text-nowrap">Notify</button>
+                        <button
+                            disabled={isAttemptingSMS}
+                            onClick={handleNotify}
+                            className={`hover:opacity-80 focus:opacity-50 p-4 bg-primary text-white
+                            rounded-md cursor-pointer text-nowrap ` + (isAttemptingSMS ? "cursor-not-allowed opacity-30" : "")}>Notify</button>
                     </div>
                     <div className="flex justify-center items-center w-4/5 gap-4 mx-auto my-6">
                         <hr className="border-gray-400 border-2 flex-grow" />
