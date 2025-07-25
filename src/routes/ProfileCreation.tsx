@@ -19,70 +19,59 @@ export function VolunteerProfileCreation() {
 
   const submitDetails = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const formData = new FormData(e.target as HTMLFormElement);
 
-    const data: Volunteer = {
-      docID: "nonsense",
-      contact_number: formData.get("cNum") as string,
-      email: formData.get("email") as string,
-      first_name: formData.get("fName") as string,
-      last_name: formData.get("lName") as string,
-      is_admin: formData.get("dropdown") as string == "Admin",
-      birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
-      address: formData.get("address") as string,
-      sex: formData.get("SexDropdown") as string,
-      role: formData.get("dropdown") as string,
-      time_to_live: null
-    }
-    /*
-    Error:
-    whitespaces are allowed in the form
+    // get submit button, disable to stop multiple submissions
+    const submitBtn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
+    if (submitBtn) submitBtn.disabled = true; 
 
-    Possibile Solution:
-    let err = false;
-    for (const [, value] of formData.entries()) {
-      // Trim the value if it's a string before checking
-      if (typeof value === 'string' && !value.trim()) {
-        err = true;
-      } else if (!value) {
-        err = true;
+    try {
+      const data: Volunteer = {
+        contact_number: formData.get("cNum") as string,
+        email: formData.get("email") as string,
+        first_name: formData.get("fName") as string,
+        last_name: formData.get("lName") as string,
+        is_admin: formData.get("dropdown") as string == "Admin",
+        birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
+        address: formData.get("address") as string,
+        sex: formData.get("SexDropdown") as string,
+        role: formData.get("dropdown") as string,
+        time_to_live: null
       }
-    }
-    */
 
-    let err = false;
-    for (const [, value] of formData.entries()) {
-      console.log(value.toString(), err);
-      if (!(value.toString().trim())) err = true;
-    }
+      let err = false;
+      for (const [, value] of formData.entries()) {
+        if (!(value.toString().trim())) err = true;
+      }
 
-    if (err) {
-      toast.error("Please fill up all fields!");
-      return;
-    }
+      if (err) {
+        toast.error("Please fill up all fields!");
+        return;
+      }
 
 
-    if (!emailRegex.test(data.email)) {
-      toast.error("Please input a proper email.");
-      return;
-    }
+      if (!emailRegex.test(data.email)) {
+        toast.error("Please input a proper email.");
+        return;
+      }
 
-    if (data.contact_number.length != 11 ||
-      formData.get("cNum")?.slice(0, 2) != "09") {
-      toast.error("Please input a valid phone number.");
-      return
-    }
+      if (data.contact_number.length != 11 ||
+        formData.get("cNum")?.slice(0, 2) != "09") {
+        toast.error("Please input a valid phone number.");
+        return
+      }
 
+      const res = await callCreateVolunteerProfile(data);
 
-
-    const res = await callCreateVolunteerProfile(data);
-
-    if (res.data) {
-      toast.success("Success!");
-      navigate("/admin");
-    } else {
-      toast.error("Couldn't create profile.");
+      if (res.data) {
+        toast.success("Success!");
+        navigate("/admin/volunteer");
+      } else {
+        toast.error("Couldn't create profile.");
+        return;
+      }
+    } finally {
+      submitBtn.disabled = false;
     }
   };
 
@@ -234,98 +223,95 @@ export function BeneficiaryProfileCreation() {
 
   const submitDetails = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const formData = new FormData(e.target as HTMLFormElement);
+
+    const submitBtn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
+    if (submitBtn) submitBtn.disabled = true; // disable the button; stop multiple submissions
 
     let err = false;
     let is_waitlisted = false;
 
-    /* changed */
-    /*
-    for (const [key, value] of formData.entries()) {
-      console.log(value.toString(), err);
-      if (!(value.toString().trim()))
-        key == "idNum" ? is_waitlisted = true : err = true
-    }
-    */
 
     // gemini suggested this, better logic daw
     const formValues: { [key: string]: FormDataEntryValue } = {};
     for (const [key, value] of formData.entries()) {
       formValues[key] = value;
     }
-
-    for (const key in formValues) {
-      const value = formValues[key];
-      if (typeof value === 'string' && !value.trim()) {
-        if (key === "idNum") {
-          is_waitlisted = true;
-        } else {
+    try {
+      for (const key in formValues) {
+        const value = formValues[key];
+        if (typeof value === 'string' && !value.trim()) {
+          if (key === "idNum") {
+            is_waitlisted = true;
+          } else {
+            err = true;
+          }
+        } else if (!value && key !== "idNum") {
           err = true;
         }
-      } else if (!value && key !== "idNum") {
-        err = true;
       }
-    }
-    /* end of change */
+      /* end of change */
 
-    if (!err) {
+      if (!err) {
 
-      let test = false
-      guardians.forEach((guardian, i) => {
-        Object.values(guardian).forEach((val) => {
-          if (!(val.toString().trim())) {
-            toast.error("Please fill up all fields for Guardian " + (i + 1));
+        let test = false
+        guardians.forEach((guardian, i) => {
+          Object.values(guardian).forEach((val) => {
+            if (!(val.toString().trim())) {
+              toast.error("Please fill up all fields for Guardian " + (i + 1));
+              test = true
+              return
+            }
+          })
+          if (test)
+            return
+          else if (!emailRegex.test(guardian.email)) {
+            toast.error("Please input a proper email for Guardian " + (i + 1));
             test = true
             return
           }
-        })
+          else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
+            toast.error("Please input a proper contact number for Guardian " + (i + 1));
+            test = true
+            return
+          }
+        });
         if (test)
           return
-        else if (!emailRegex.test(guardian.email)) {
-          console.log(guardian.email)
-          toast.error("Please input a proper email for Guardian " + (i + 1));
-          test = true
-          return
-        }
-        else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
-          toast.error("Please input a proper contact number for Guardian " + (i + 1));
-          test = true
-          return
-        }
-      });
-      if (test)
-        return
-      else {
-        /* changed */
-        /*
-        const accredited_id = Number((formData.get("idNum") as string).trim())
-        const addRef = await addDoc(collection(db, "beneficiaries"), {
-        */
-        const idNumValue = (formData.get("idNum") as string);
-        const accredited_id = idNumValue.trim() ? Number(idNumValue) : NaN;
-        /* end of change */
-        const addRef = await addDoc(collection(db, "beneficiaries"), {
-          /* accredited_id: accredited_id == 0 ? accredited_id : NaN,*/ // already converts an empty string to NaN
-          accredited_id: accredited_id,
-          first_name: formData.get("fName") as string,
-          last_name: formData.get("lName") as string,
-          address: formData.get("address") as string,
-          birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
-          grade_level: Number(formData.get("gradelevel") as string),
-          is_waitlisted: is_waitlisted,
-          guardians: guardians,
-          sex: formData.get("SexDropdown") as string, /* this was missing pala? */
-          time_to_live: null,
-        });
+        else {
+          /* changed */
+          /*
+          const accredited_id = Number((formData.get("idNum") as string).trim())
+          const addRef = await addDoc(collection(db, "beneficiaries"), {
+          */
+          const idNumValue = (formData.get("idNum") as string);
+          const accredited_id = idNumValue.trim() ? Number(idNumValue) : NaN;
+          /* end of change */
+          const addRef = await addDoc(collection(db, "beneficiaries"), {
+            /* accredited_id: accredited_id == 0 ? accredited_id : NaN,*/ // already converts an empty string to NaN
+            accredited_id: accredited_id,
+            first_name: formData.get("fName") as string,
+            last_name: formData.get("lName") as string,
+            address: formData.get("address") as string,
+            birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
+            grade_level: Number(formData.get("gradelevel") as string),
+            is_waitlisted: is_waitlisted,
+            guardians: guardians,
+            sex: formData.get("SexDropdown") as string, /* this was missing pala? */
+            time_to_live: null,
+          });
 
-        if (addRef) {
-          toast.success("Success!");
-          navigate("/beneficiary");
+          if (addRef) {
+            toast.success("Success!");
+            navigate("/beneficiary");
+          }
+          else toast.error("Submission failed.");
         }
-        else toast.error("Submission failed.");
-      }
-    } else toast.error("Please fill up all fields!");
+      } else toast.error("Please fill up all fields!");
+
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
   };
 
   function handleAdd() {
