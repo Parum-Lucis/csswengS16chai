@@ -35,13 +35,20 @@ function Admin(){
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.csv';
-        
+                
         input.onchange = async (e: Event) => {
             const target = e.target as HTMLInputElement;
             // when at least one file is uploaded
             if (target.files && target.files.length > 0) {
                 const file = target.files[0];
                 const reader = new FileReader();
+
+                // check file size
+                const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+                if (file.size > maxSize) {
+                    toast.error("File size exceeds 10MB limit. Please upload a smaller file.");
+                    return;
+                }
 
                 // check file extension before reading
                 if (!file.name.endsWith('.csv')) {
