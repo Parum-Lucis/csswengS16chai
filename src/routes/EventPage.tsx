@@ -600,7 +600,15 @@ export function EventPage() {
         </div>
       </div>
       {/* just shoving my modals down here cause it doesn't matter where they are technically. */}
-      <SendSMSModal onClose={() => { console.log("hi"); setIsShowSMSModal(false) }} attendees={attendees} showModal={isShowSMSModal} event={event ?? {} as Event} />
+      <SendSMSModal onClose={() => { console.log("hi"); setIsShowSMSModal(false) }} attendees={attendees} showModal={isShowSMSModal}
+        event={event ?? {
+          description: "",
+          end_date: new Timestamp(0, 0),
+          start_date: new Timestamp(0, 0),
+          location: "",
+          name: "",
+          attendees: []
+        } as Event} />
     </>
   );
 }

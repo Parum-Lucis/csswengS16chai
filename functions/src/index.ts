@@ -151,10 +151,15 @@ export const deleteEvent = onCall<string>(async (req) => {
 export const updateAttendeesBeneficiary = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
     const batch = firestore.batch()
     const attRef = firestore.collectionGroup("attendees").where("beneficiaryID", "==", event.data?.after.id);
-    (await attRef.get()).forEach((att) => batch.update(att.ref, {
-        "first_name": (event.data?.after.data() as Beneficiary).first_name,
-        "last_name": (event.data?.after.data() as Beneficiary).last_name
-    }))
+    (await attRef.get()).forEach((att) => {
+        const data = event.data?.after.data() as Beneficiary;
+        batch.update(att.ref, {
+            "first_name": data.first_name,
+            "last_name": data.last_name,
+            "contact_number": data.guardians[0].contact_number,
+            "email": data.guardians[0].email
+        })
+    })
 
     await batch.commit()
 })

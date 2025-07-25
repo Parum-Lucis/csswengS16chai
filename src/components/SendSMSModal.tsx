@@ -1,10 +1,11 @@
 import type { AttendedEvents } from "@models/attendedEventsType";
-import { Bell, ClipboardIcon, MessageSquareReply, X } from "lucide-react";
+import { Bell, FilesIcon, MessageSquareReply, X } from "lucide-react";
 import { useMemo, useRef, type ReactEventHandler } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getMobileOperatingSystem } from "../util/getMobileOperatingSystem";
 import type { Event } from "@models/eventType";
+import { add, format } from "date-fns";
 
 // currying magic.
 function handleCopy(text: string) {
@@ -29,37 +30,33 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
         dialogRef.current?.close()
     }
 
-    const { cost, phoneNumbers, eventDetails } = useMemo(() => {
+    const { cost, phoneNumbers, eventDetails, smsProtocolLink } = useMemo(() => {
 
         // hardcoded computation. Very difficult. I think this is O(n / n)
         const cost = 1 * attendees.length;
 
         // I'm currently not checking if the numbers are fine.
-        const phoneNumbers = attendees.reduce((prev, curr) => (prev + "," + curr.contact_number), "")
+        const phoneNumbers = attendees.reduce((prev, curr) => (prev + "," + curr.contact_number), "").replace(/^,/, "");
 
-        // reused Jericho's template
-        const eventDetails = `This is a reminder to attend the event titled ${event.name} between 2:59 PM and 3:00 PM on July 19, 2025.
-About the event: ${event.description}`
+        // reused Jericho's template, but I refused to install another package and hacked the system
+        const eventTitle = `This is a reminder to attend the event titled ${event.name}`
+        const eventTime = `between ${format(add(event.start_date.toDate(), { hours: -8 }), "h:mm bb")} and ${format(add(event.end_date.toDate(), { hours: -8 }), "h:mm bb")} on ${format(add(event.start_date.toDate(), { hours: -8 }), "MMMM d, yyyy")}.`
+        const eventBlurb = `About the event: ${event.description}`
+        const eventDetails = [eventTitle, eventTime, eventBlurb].reduce((prev, curr) => prev + "\n" + curr, "");
+        /**
+         * formatInTimeZone(start_date, "Asia/Manila", "h:mm bb") +  ' and ' 
+                                        + formatInTimeZone(end_date, "Asia/Manila", "h:mm bb") + ' on ' 
+                                        + formatInTimeZone(start_date, "Asia/Manila", "MMMM d, yyyy.")
+         */
 
-        return { cost, phoneNumbers, eventDetails }
+        let smsProtocolLink = "sms://"
+        if (getMobileOperatingSystem() === "iOS")
+            smsProtocolLink += `open?addresses=`
+        smsProtocolLink += `${phoneNumbers};?&body=${encodeURI(eventDetails)}`;
+
+        return { cost, phoneNumbers, eventDetails, smsProtocolLink }
 
     }, [attendees, event])
-
-    switch (getMobileOperatingSystem()) {
-        case "iOS":
-
-
-            break;
-
-        case "Android":
-        case "Windows Phone":
-        default:
-            break;
-
-
-    }
-
-    const smsProtocolLink = "sms://"
 
 
     return (
@@ -114,7 +111,7 @@ About the event: ${event.description}`
                         <div className="flex flex-col gap-2">
                             <div className="flex flex-row gap-2">
                                 <button onClick={handleCopy(phoneNumbers)} className="hover:opacity-80 focus:opacity-50">
-                                    <ClipboardIcon />
+                                    <FilesIcon />
                                 </button>
                                 <details className="border-black border-2 flex-grow p-2">
                                     <summary>Phone numbers</summary>
@@ -125,11 +122,11 @@ About the event: ${event.description}`
                         <div className="flex flex-col gap-2">
                             <div className="flex flex-row gap-2">
                                 <button onClick={handleCopy(eventDetails)} className="hover:opacity-80 focus:opacity-50">
-                                    <ClipboardIcon />
+                                    <FilesIcon />
                                 </button>
                                 <details className="border-black border-2 flex-grow p-2">
                                     <summary>Event Details</summary>
-                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+                                    {eventDetails}
                                 </details>
                             </div>
                         </div>
