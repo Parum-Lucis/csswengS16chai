@@ -50,10 +50,17 @@ This function can be found in the **admin page** under the Beneficiary section, 
 **Optional Fields:** All others can be left blank
 - If `Birthdate` is blank, the placeholder `1/1/1900` will be given to the beneficiary
 - If `Child Number (ID)` already exists, the beneficiary will not be added
-- If a guardian's contact info is invalid → that guardian is skipped
-- If no guardian is provided → one empty guardian slot is saved
+- If no guardian is provided → one empty guardian slot is saved for later
+
+**Guardian Fields:** requires `Guardian Name`, `Relation`, and `Contact Number`
+- If `Contact Number` is invalid, guardian will be skipped
+- If `Email` is invalid, it will be blank for later
 
 Note that if any other fields are not blank but do not follow the required format (`sex, birthdate, grade level, contact numbers, and emails`), the beneficiary will not be added to the system.
+
+NOTES
+- i made it accept no contact/email guardians for now, kasi why allow 0 guardians if this we dont allow?
+
 
 **Sample Data**
 

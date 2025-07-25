@@ -63,7 +63,7 @@ function splitToLines(csv: string): string[] {
         .split(/\r?\n/)
         .filter(line => line.split(",").some(cell => cell.trim() !== ""))
         .join("\n");
-
+    csv = csv.replace(/\t/g, ",");
     const lines = csv.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) {
         throw new HttpsError("invalid-argument", "CSV must contain at least one data row.");
@@ -85,13 +85,6 @@ const capitalize = (str: string) =>
     ).join(" ");
 
 /**
- * Helper that checks if guardian has all fields.
- * Requires name, relation, contact_number, and email.
- */
-const isValidGuardian = (g: Guardian) =>
-    g.name && g.relation && g.contact_number && g.email;
-
-/**
  * Helper that checks if contact_number is valid.
  * Requires number to be 11 characters and to start with "09".
  */
@@ -105,7 +98,7 @@ const emailRegEx = new RegExp(
 
 // list of valid grade levels
 const validGradeLevels = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, "nursery", "kindergarten"
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "nursery", "kindergarten"
 ];
 
 export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
@@ -271,7 +264,7 @@ export const importBeneficiaries = onCall<string>(async (req) => {
     // process beneficiaries by line
     const importedBeneficiaries: Beneficiary[] = lines.map((line, index) => {
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, ""));
-
+        
         // parse guardians
         const guardians: Guardian[] = [0, 1, 2].map(i => {
             const [name, relation, contact_number, email] = [
@@ -281,9 +274,20 @@ export const importBeneficiaries = onCall<string>(async (req) => {
                 values[10 + i * 4] ?? ""
             ];
             const g = { name, relation, contact_number, email };
-            return isValidGuardian(g) ? g : null;
+            if (!g.name && !g.relation && !g.contact_number && !g.email) {
+                return null;
+            }
+
+            return g;
         }).filter(Boolean) as Guardian[];
 
+        // validate accredited_id: must be blank or a valid number
+        if (values[0] && values[0].trim() !== "" && isNaN(Number(values[0]))) {
+            logger.warn(`Line ${index + 2} skipped: Invalid accredited_id "${values[0]}".`);
+            skipped++;
+            return null;
+        }
+        
         // parse beneficiary. add birthdate later, remove unnecessary fields
         let b: Omit<Beneficiary, "birthdate" | "attended_events" | "docID"> = {
             accredited_id: values[0] ? Number(values[0]) : NaN,
@@ -295,9 +299,11 @@ export const importBeneficiaries = onCall<string>(async (req) => {
             guardians,
             time_to_live: null,
         };
+        
+
 
         // validate and format names. skip if missing
-        if (!b.first_name || !b.last_name || !isNaN(Number(b.first_name)) || !isNaN(Number(b.last_name))) {
+        if (!b.first_name || !b.last_name ) {
             logger.warn(`Line ${index + 2} skipped: Missing or invalid name fields.`);
             skipped++;
             return null;
@@ -328,31 +334,31 @@ export const importBeneficiaries = onCall<string>(async (req) => {
         }
 
         // validate sex. skip if invalid, allow if blank
-        if (b.sex && b.sex !== "M" && b.sex !== "F") {
+        if (b.sex && b.sex.toLowerCase() !== "m" && b.sex.toLowerCase() !== "f") {
             logger.warn(`Line ${index + 2} skipped: Invalid sex value "${b.sex}".`);
             skipped++;
             return null;
         }
 
         // validate grade level. skip if invalid, allow if blank
-        const gradeLevelValue = !Number.isNaN(b.grade_level) ? Number(b.grade_level) : String(b.grade_level).toLowerCase();
-        if (gradeLevelValue && !validGradeLevels.includes(gradeLevelValue)) {
+        if (b.grade_level && !validGradeLevels.includes(b.grade_level)) {
             logger.warn(`Line ${index + 2} skipped: Invalid grade level "${b.grade_level}".`);
             skipped++;
             return null;
         }
 
-        // validate guardians' number & email. skip if invalid
+        // validate guardians' number & email. skip if contact invalid (if invalid email save blank)
         for (const [i, g] of b.guardians.entries()) {
-            if (g.contact_number && !isValidContact(g.contact_number)) {
-                logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid contact number "${g.contact_number}".`);
+            const invalidContact = g.contact_number && !isValidContact(g.contact_number);
+            const invalidEmail = g.email && !emailRegEx.test(g.email);
+
+            if (invalidContact) {
+                logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid contact number \"${g.contact_number}\"".`);
                 skipped++;
                 return null;
-            }
-            if (g.email && !emailRegEx.test(g.email)) {
-                logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid email "${g.email}".`);
-                skipped++;
-                return null;
+            } else if (invalidEmail) {
+                logger.warn(`Line ${index + 2}: Guardian ${i + 1} has invalid email "${g.email}". Placeholder used.`);
+                g.email = "";
             }
         }
 
