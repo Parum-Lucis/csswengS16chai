@@ -685,9 +685,9 @@ export const exportBeneficiaries = onCall<void>(async (req) => {
 
     // build CSV string
     const csvRows = [
-        headers.map(header => `"${header.label}"`).join(","), // create header row string
+        headers.map(header => header.label).join(","), // header row without quotes
 
-        // data rows string
+        // data rows
         ...docs.map(doc => {
             const guardians: Guardian[] = doc.guardians;
             return [
@@ -705,25 +705,24 @@ export const exportBeneficiaries = onCall<void>(async (req) => {
                         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
                         const dd = String(dateObj.getDate()).padStart(2, '0');
                         const yyyy = dateObj.getFullYear();
-                        const date = `${mm}/${dd}/${yyyy}`;
-                        return `"${date}"`;
+                        return `${mm}/${dd}/${yyyy}`;
                     }
 
-                    // csv tingz, handles excess double quotes if meron
+                    // remove quotes, just plain value
                     if (typeof value === "string") {
-                        return `"${value.replace(/"/g, '""')}"`;
+                        return value.replace(/"/g, '');
                     }
-                    return `"${value !== undefined ? value : ""}"`;
+                    return value !== undefined ? value : "";
                 }),
 
-                // traverse guardian array and format 
+                // traverse guardian array and format
                 ...[0, 1, 2].flatMap(idx => {
                     const g = guardians[idx] || {};
                     return [
-                        `"${g.name ? String(g.name).replace(/"/g, '""') : ""}"`,
-                        `"${g.relation ? String(g.relation).replace(/"/g, '""') : ""}"`,
-                        `"${g.contact_number ? String(g.contact_number).replace(/"/g, '""') : ""}"`,
-                        `"${g.email ? String(g.email).replace(/"/g, '""') : ""}"`
+                        g.name ? String(g.name).replace(/"/g, '') : "",
+                        g.relation ? String(g.relation).replace(/"/g, '') : "",
+                        g.contact_number ? String(g.contact_number).replace(/"/g, '') : "",
+                        g.email ? String(g.email).replace(/"/g, '') : ""
                     ];
                 })
             ].join(",");
@@ -753,13 +752,13 @@ export const exportEvents = onCall<void>(async (req) => {
     ];
 
     const csvRows = [
-        headers.map(h => `"${h}"`).join(","),
+        headers.join(","),
         ...docs.map(doc => {
             const event = doc as Event;
             const startDateObj = event.start_date.toDate();
             const endDateObj = event.end_date.toDate();
 
-            // format date  mm/dd/yyyy
+            // format date mm/dd/yyyy
             const mm = String(startDateObj.getMonth() + 1).padStart(2, '0');
             const dd = String(startDateObj.getDate()).padStart(2, '0');
             const yyyy = startDateObj.getFullYear();
@@ -773,12 +772,12 @@ export const exportEvents = onCall<void>(async (req) => {
             };
 
             return [
-                `"${(event.name || "").replace(/"/g, '""')}"`,
-                `"${(event.description || "").replace(/"/g, '""')}"`,
-                `"${date}"`,
-                `"${formatTime(startDateObj)}"`,
-                `"${formatTime(endDateObj)}"`,
-                `"${(event.location || "").replace(/"/g, '""')}"`
+                event.name || "",
+                event.description || "",
+                date,
+                formatTime(startDateObj),
+                formatTime(endDateObj),
+                event.location || ""
             ].join(",");
         })
     ];
@@ -806,7 +805,7 @@ export const exportVolunteers = onCall<void>(async (req) => {
 
     // build rows
     const csvRows = [
-        headers.map(h => `"${h}"`).join(","),
+        headers.join(","),
         ...docs.map(vol => {
             // format date mm/dd/yyyy
             const birthdateObj = vol.birthdate.toDate();
@@ -815,15 +814,15 @@ export const exportVolunteers = onCall<void>(async (req) => {
             const yyyy = birthdateObj.getFullYear();
             const birthdateStr = `${mm}/${dd}/${yyyy}`;
             return [
-                (vol.email || "").replace(/"/g, '""'),
-                (vol.first_name || "").replace(/"/g, '""'),
-                (vol.last_name || "").replace(/"/g, '""'),
-                (vol.sex || "").replace(/"/g, '""'),
+                vol.email || "",
+                vol.first_name || "",
+                vol.last_name || "",
+                vol.sex || "",
                 birthdateStr,
-                (vol.contact_number || "").replace(/"/g, '""'),
-                (vol.address || "").replace(/"/g, '""'),
+                vol.contact_number || "",
+                vol.address || "",
                 vol.is_admin ? "TRUE" : "FALSE"
-            ].map(val => `"${val}"`).join(",");
+            ].join(",");
         })
     ];
     const csvContent = csvRows.join("\r\n");
