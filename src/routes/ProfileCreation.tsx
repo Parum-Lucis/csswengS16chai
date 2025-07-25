@@ -58,7 +58,7 @@ export function VolunteerProfileCreation() {
 
     let err = false;
     for (const [, value] of formData.entries()) {
-      console.log(value.toString(), err);
+      // console.log(value.toString(), err);
       if (!(value.toString().trim())) err = true;
     }
 
@@ -87,6 +87,9 @@ export function VolunteerProfileCreation() {
       uploadBytes(ref(store, pfpName), formData.get("pfp") as File),
       callCreateVolunteerProfile(data)
     ])
+
+    console.log(uploadRes)
+    console.log(createRes)
 
     if (createRes.data && uploadRes.ref) {
       toast.success("Success!");
