@@ -9,7 +9,7 @@ import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
 import { callDeleteEvent } from '../firebase/cloudFunctions';
-import { EllipsisVertical } from 'lucide-react';
+import { SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound, Baby, UserRound, MessageSquareMore, Mail } from 'lucide-react';
 
 export function EventPage() {
   const params = useParams()
@@ -21,7 +21,7 @@ export function EventPage() {
   const [showDeleteModal, setDeleteModal] = useState(false)
   // for bene list
   const [notAttendeeList, setNotAttendeeList] = useState<Beneficiary[]>([])
-  const [checklist, setChecklist] = useState<boolean[]>([])
+  const [checklist, setChecklist] = useState<number[]>([])
   const [runQuery, setRunQuery] = useState<boolean>(true)
   // for remove list 
   const [removeChecklist, setRemoveChecklist] = useState<boolean[]>([])
@@ -165,7 +165,7 @@ export function EventPage() {
 
     if (runQuery) {
       const updList: Beneficiary[] = []
-      const updChecklist: boolean[] = []
+      const updChecklist: number[] = []
       const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
       
       attendees.forEach((att) => {
@@ -175,23 +175,28 @@ export function EventPage() {
       if (beneficiaryRefList.length > 0) {
         beneficiaryRefList.forEach((notAtt) => {
           updList.push({ ...(notAtt.data() as Beneficiary), docID: notAtt.id })
-          updChecklist.push(false)
+          updChecklist.push(0)
         })
         setNotAttendeeList(updList)
         setChecklist(updChecklist)
-      }
-      setRunQuery(false)
+      }else {
+        const updChecklist: number[] = []
+          notAttendeeList.forEach(() => {
+            updChecklist.push(0)
+          })
+      setChecklist(updChecklist)
+     }
     }
   }
 
   const handleAddAttendees = async () => {
     let upd = false
     for (let i = 0; i < checklist.length; i++) {
-      if (checklist[i]) {
+      if (checklist[i] != 0) {
         const addRef = doc(collection(db, 'events/' + docID + "/attendees"))
         await setDoc(addRef, {
-          attendance: false,
-          who_attended: "Beneficiary", // temp
+          attendance: 0,
+          who_attended: checklist[i], // to do: make this not js beneficiary.
           first_name: notAttendeeList[i].first_name,
           last_name: notAttendeeList[i].last_name,
           beneficiaryID: notAttendeeList[i].docID,
@@ -373,140 +378,151 @@ export function EventPage() {
             </div>
           </form>
         </div>
-
-        <h2 className="text-primary text-2xl font-bold font-sans text-center mt-5">List of Attendees:</h2>
-        <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-2xl mt-4 sm:gap-4">
-        <div className="relative w-full max-w-2xl">
-          <div className="flex flex-row gap-4">
-            <button
-              className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 cursor-pointer w-1/2"
-              onClick={() => {
-                setShowAddDropdown(!showAddDropdown)
-                showBeneficiaryList()
-                setShowRemoveDropdown(false)
-                setShowOtherDropdown(false)
-              }}
-              data-dropdown-toggle="dropdownAdd"
-            >
-              Add
-            </button>
+        
+        <div className="flex flex-col sm:flex-row justify-between w-full max-w-2xl mt-4 sm:gap-4">
+          <h2 className="text-primary text-2xl font-bold font-sans text-center sm:text-left mt-5">List of Attendees:</h2>
+          <div className="relative w-full sm:w-3/5">
+            <div className="flex flex-row gap-4 items-center justify-around sm:mt-3 sm:w-auto sm:items-end sm:ml-auto border-primary border-2 h-[40px] rounded-md">
+              <button
+                className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                onClick={() => {
+                  setShowAddDropdown(!showAddDropdown)
+                  showBeneficiaryList()
+                  setShowRemoveDropdown(false)
+                  setShowOtherDropdown(false)
+                }}
+                data-dropdown-toggle="dropdownAdd"
+              >
+                <SquarePlus className="w-5 h-5 inline-block" />
+              </button>
             
-            {showAddDropdown && (
-              <div
-                id="dropdownAdd"
-                className="absolute top-full mt-2 left-0 w-full bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60">
-                <input
-                  type="text"
-                  placeholder="Search"
-                  className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
-                />
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {
-                    notAttendeeList.length > 0 ? (
-                      notAttendeeList.map((notAtt, i) => (
-                        <div className="space-y-2" key={i}>
-                          <label className="flex items-center px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white mr-3"
-                              onChange={() => {
-                                const updChecklist = [...checklist]
-                                updChecklist[i] = !checklist[i]
-                                setChecklist(updChecklist)
-                              }}
-                            />
-                            <span className="font-semibold text-md text-white">{notAtt.first_name + " " + notAtt.last_name}</span>
-                          </label>
-                        </div>
-                      ))
-                    ) : "No beneficiaries to show"
-                  }
+              {showAddDropdown && (
+                <div
+                  id="dropdownAdd"
+                  className="absolute top-full mt-2 left-0 w-full bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60">
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
+                  />
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {
+                      notAttendeeList.length > 0 ? (
+                        notAttendeeList.map((notAtt, i) => (
+                          <div className="space-y-2" key={i}>
+                            <label className="flex items-center justify-between px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
+                              <span className="font-semibold text-md text-white">{notAtt.first_name + " " + notAtt.last_name}</span>
+                              <div
+                                className="cursor-pointer mr-3"
+                                onClick={() => {
+                                  const updChecklist = [...checklist];
+                                  updChecklist[i] = (checklist[i] + 1) % 4; // Cycle: 0 → 1 → 2 → 3 → 0
+                                  setChecklist(updChecklist);
+                                }}
+                              >
+                                {
+                                  checklist[i] === 0 ? (
+                                    <CirclePlus className="w-5 h-5 text-white-500" />
+                                  ) :
+                                  checklist[i] === 1 ? (
+                                    <UsersRound className="w-5 h-5 text-white-500" />
+                                  ) : checklist[i] === 2 ? (
+                                    <Baby className="w-5 h-5 text-white -500" />
+                                  ) : checklist[i] === 3 ? (
+                                    <UserRound className="w-5 h-5 text-white-400" />
+                                  ) : (
+                                    <CirclePlus className="w-5 h-5 text-white-500" />
+                                  )
+                                }
+                              </div>
+                              
+                            </label>
+                          </div>
+                        ))
+                      ) : "No beneficiaries to show"
+                    }
+                    </div>
+                    <div className="mt-4 text-right">
+                      <button
+                        className="text-secondary font-semibold hover:underline cursor-pointer"
+                        type="button"
+                        onClick={handleAddAttendees}
+                      >
+                        Update List
+                      </button>
+                    </div>
                   </div>
+              )}
+
+              <button
+                className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                type="button"
+                onClick={() => {
+                  setShowRemoveDropdown(!showRemoveDropdown)
+                  showBeneficiaryList()
+                  setShowAddDropdown(false)
+                  setShowOtherDropdown(false)
+                }}
+                data-dropdown-toggle="dropdownRemove"
+              >
+                <SquareMinus className="w-5 h-5 inline-block"/>
+              </button>
+
+              {showRemoveDropdown && (
+                <div
+                  id="dropdownRemove"
+                  className="absolute top-full mt-2 left-0 w-full max-w-2xl bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60">
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
+                  />
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {
+                      notAttendeeList.length > 0 ? (
+                        notAttendeeList.map((notAtt, i) => (
+                          <div className="space-y-2" key={i}>
+                            <label className="flex items-center px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white mr-3"
+                                onChange={() => {
+                                  const updChecklist = [...checklist]
+                                  updChecklist[i] = checklist[i]
+                                  setChecklist(updChecklist)
+                                }}
+                              />
+                              <span className="font-semibold text-md text-white">{notAtt.first_name + " " + notAtt.last_name}</span>
+                            </label>
+                          </div>
+                        ))
+                      ) : "No beneficiaries to show"
+                    }
+                  </div>
+                
                   <div className="mt-4 text-right">
                     <button
                       className="text-secondary font-semibold hover:underline cursor-pointer"
                       type="button"
-                      onClick={handleAddAttendees}
+                      onClick={handleRemoveAttendees}
                     >
                       Update List
                     </button>
                   </div>
                 </div>
-            )}
+              )}
 
             <button
-              className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 cursor-pointer w-1/2"
+              className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
               type="button"
-              onClick={() => {
-                setShowRemoveDropdown(!showRemoveDropdown)
-                showBeneficiaryList()
-                setShowAddDropdown(false)
-                setShowOtherDropdown(false)
-              }}
-              data-dropdown-toggle="dropdownRemove"
             >
-              Remove
+              <SquareCheck className="w-5 h-5 inline-block" />
             </button>
-
-            {showRemoveDropdown && (
-              <div
-                id="dropdownRemove"
-                className="absolute top-full mt-2 left-0 w-full max-w-2xl bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60">
-                <input
-                  type="text"
-                  placeholder="Search"
-                  className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
-                />
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {
-                    notAttendeeList.length > 0 ? (
-                      notAttendeeList.map((notAtt, i) => (
-                        <div className="space-y-2" key={i}>
-                          <label className="flex items-center px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white mr-3"
-                              onChange={() => {
-                                const updChecklist = [...checklist]
-                                updChecklist[i] = !checklist[i]
-                                setChecklist(updChecklist)
-                              }}
-                            />
-                            <span className="font-semibold text-md text-white">{notAtt.first_name + " " + notAtt.last_name}</span>
-                          </label>
-                        </div>
-                      ))
-                    ) : "No beneficiaries to show"
-                  }
-                </div>
-                
-
-                <div className="mt-4 text-right">
-                  <button
-                    className="text-secondary font-semibold hover:underline cursor-pointer"
-                    type="button"
-                    onClick={handleRemoveAttendees}
-                  >
-                    Update List
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-row gap-4 w-full max-w-2xl justify-between">
-          <button
-            className="bg-primary text-white font-sans font-bold rounded-md mt-3 px-10 py-2 cursor-pointer w-8/10 sm:w-1/2"
-            type="button"
-          >
-            Update
-          </button>
-
-          <div className="relative w-2/10 max-w-2xl">
+            
+            <div className="relative">
             <button
               type="submit"
-              className="mt-3 font-sans font-semibold text-white bg-primary rounded-md h-[40px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+              className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
               onClick={() => {
                 setShowOtherDropdown(!showOtherDropdown);
                 setShowAddDropdown(false)
@@ -521,17 +537,18 @@ export function EventPage() {
               <div id="dropdownOther" className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2">
                 <ul className="py-1">
                   <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                    Send SMS
+                    <MessageSquareMore className="w-8 h-5 inline-block"/> Send SMS
                   </li>
                   <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                    Send Email
+                    <Mail className="w-8 h-5 inline-block"/> Send Email
                   </li>
                 </ul>
               </div>
             )}
-          </div>
         </div>
+          </div>
       </div>
+    </div>
 
         <div className="w-full max-w-2xl mt-3">
           { 
