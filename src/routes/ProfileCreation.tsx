@@ -174,7 +174,7 @@ export function VolunteerProfileCreation() {
                 className="appearance-none bg-full bg-tertiary w-full rounded-[5px] p-2 font-sans border-1 border-secondary"
               >
                 <option className="bg-white text-black" value="Male">Male</option>
-                <option className="bg-white text-black" value="Volunteer">Female</option>
+                <option className="bg-white text-black" value="Female">Female</option>
               </select>
             </div>
 
@@ -427,19 +427,33 @@ export function BeneficiaryProfileCreation() {
                 className="appearance-none g-full bg-tertiary w-full rounded-[5px] p-2 font-sans border-1 border-secondary"
               >
                 <option className="bg-white text-black" value="Male">Male</option>
-                <option className="bg-white text-black" value="Volunteer">Female</option>
+                <option className="bg-white text-black" value="Female">Female</option>
               </select>
             </div>
             <div>
-              <label htmlFor="gradelevel" className="text-white font-sans font-semibold">
-                Grade Level
-              </label>
-              <input
-                id="gradelevel"
-                name="gradelevel"
-                type="number"
-                className="input-text w-full"
-              />
+              <label
+                    htmlFor="gradelevel"
+                    className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                    Grade Level:
+                </label>
+                <select
+                    id="gradelevel"
+                    name="gradelevel"
+                    className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                >
+                    <option className="bg-secondary text-white" value="1">1</option>
+                    <option className="bg-secondary text-white" value="2">2</option>
+                    <option className="bg-secondary text-white" value="3">3</option>
+                    <option className="bg-secondary text-white" value="4">4</option>
+                    <option className="bg-secondary text-white" value="5">5</option>
+                    <option className="bg-secondary text-white" value="6">6</option>
+                    <option className="bg-secondary text-white" value="7">7</option>
+                    <option className="bg-secondary text-white" value="8">8</option>
+                    <option className="bg-secondary text-white" value="9">9</option>
+                    <option className="bg-secondary text-white" value="10">10</option>
+                    <option className="bg-secondary text-white" value="11">11</option>
+                    <option className="bg-secondary text-white" value="12">12</option>
+                </select>
             </div>
             <div>
               <label htmlFor="address" className="text-white font-sans font-semibold">

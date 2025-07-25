@@ -10,6 +10,7 @@ import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
 import { callDeleteBeneficiaryProfile } from "../firebase/cloudFunctions";
+import { Pencil } from 'lucide-react';
 import type { Guardian } from "@models/guardianType";
 import type { AttendedEvents } from "@models/attendedEventsType";
 
@@ -244,17 +245,17 @@ export function BeneficiaryProfile() {
 
     }
 
-    const eventsTest = [
-        { id: 0, name: "Donation", date: "12/02/1902" },
-        { id: 1, name: "Teaching", date: "12/02/1999" },
-        { id: 2, name: "Airplane Visit", date: "11/09/2001" },
-        { id: 3, name: "Church", date: "12/02/2004" },
-        { id: 4, name: "Donation", date: "12/02/2005" },
-        { id: 5, name: "Teaching", date: "12/02/2006" },
-        { id: 6, name: "Food Drive", date: "12/02/2007" },
-        { id: 7, name: "Food Drive", date: "12/02/2008" },
-        { id: 8, name: "Christmas Party", date: "22/12/2009" },
-    ];
+    interface SemiCircularProgressProps {
+        value: number
+    }
+    const SemiCircularProgress = (props: SemiCircularProgressProps) => {
+    return (
+        <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
+        <span style={{ fontSize: 20, color: '#333333' }}>{props.value}%</span>
+        </div>
+    )
+    }
+
     return (
         <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
             {showDeleteModal &&(
@@ -294,10 +295,48 @@ export function BeneficiaryProfile() {
                 </h3>
             )}
 
-            <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
-                <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                {beneficiary?.last_name}, {beneficiary?.first_name}
-                </h3>
+            <div className="relative mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
+                <div className="flex flex-col items-end mt-[-5rem]">
+                    <SemiCircularProgress value={(attendance.present/attendance.events)*100} />
+                    <h2 className=" text-secondary text-sm">Attendance Rate</h2>
+                </div>
+                <div className="flex flex-row justify-center gap-2">
+                    { formState === true && (
+                        <h3 className="text-secondary text-2xl text-center font-bold font-sans">
+                            {beneficiary?.last_name}, {beneficiary?.first_name}
+                        </h3>
+                    )}
+                    {(formState === false) && (
+                        <div className="flex flex-col justify-center sm:flex-row sm:gap-4">
+                            <div className="flex flex-col w-full sm:w-1/2">
+                                <label htmlFor="fName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                First Name
+                                </label>
+                                <input
+                                id="fName"
+                                name="fName"
+                                type="text"
+                                className="input-text w-full text-sm"
+                                onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, first_name : e.target.value})}
+                                value={beneficiary?.first_name}
+                                />
+                            </div>
+                            <div className="flex flex-col w-full sm:w-1/2">
+                                <label htmlFor="lName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                Last Name
+                                </label>
+                                <input
+                                id="lName"
+                                name="lName"
+                                type="text"
+                                className="input-text w-full"
+                                onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, last_name : e.target.value})}
+                                value={beneficiary?.last_name}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <div className="w-full flex justify-center mt-1">
                     <div className="flex flex-row gap-2 text-secondary font-sans m-2">
                         <label htmlFor="idNum">ID:</label>
@@ -330,18 +369,21 @@ export function BeneficiaryProfile() {
                     </div>
 
                     <div className="flex flex-col flex-1">
-                    <label
-                        htmlFor="Sex"
-                        className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                        Sex:
-                    </label>
-                    <input
-                        type="text"
-                        id="Sex"
-                        className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                        readOnly={formState ?? true}
-                        onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, sex : e.target.value})}
-                        value={sex}/>
+                        <label
+                            htmlFor="Sex"
+                            className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                            Sex:
+                        </label>
+                        <select
+                            id="Sex"
+                            className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                            disabled={formState ?? true}
+                            onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, sex : e.target.value})}
+                            value={sex}
+                        >
+                            <option className="bg-secondary text-white" value="Male">Male</option>
+                            <option className="bg-secondary text-white" value="Female">Female</option>
+                        </select>
                     </div>
                 </div>
                 <div className="flex flex-col">
@@ -350,14 +392,26 @@ export function BeneficiaryProfile() {
                     className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
                     Grade Level:
                 </label>
-                <input
-                    type="text"
+                <select
                     id="gLevel"
-                    className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                    readOnly={formState ?? true}
+                    className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                    disabled={formState ?? true}
                     onChange={(e) => setGradeLevel(e.target.value)}
                     value={gradeLevel}
-                />
+                >
+                    <option className="bg-secondary text-white" value="1">1</option>
+                    <option className="bg-secondary text-white" value="2">2</option>
+                    <option className="bg-secondary text-white" value="3">3</option>
+                    <option className="bg-secondary text-white" value="4">4</option>
+                    <option className="bg-secondary text-white" value="5">5</option>
+                    <option className="bg-secondary text-white" value="6">6</option>
+                    <option className="bg-secondary text-white" value="7">7</option>
+                    <option className="bg-secondary text-white" value="8">8</option>
+                    <option className="bg-secondary text-white" value="9">9</option>
+                    <option className="bg-secondary text-white" value="10">10</option>
+                    <option className="bg-secondary text-white" value="11">11</option>
+                    <option className="bg-secondary text-white" value="12">12</option>
+                </select>
                 </div>
                 <div className="flex flex-col">
                     <label
@@ -442,11 +496,49 @@ export function BeneficiaryProfile() {
                     <h3 className="text-primary text-2xl text-center font-bold font-sans mb-4">
                     Attended Events
                     </h3>
-                    Attendance Rate: {attendance.present/attendance.events}%
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+                        <select
+                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-1/4"
+                        >
+                        <option className="bg-secondary text-white" value="">Filter By</option>
+                        <option className="bg-secondary text-white" value="beneficiary">Beneficiary</option>
+                        <option className="bg-secondary text-white" value="guardian">Guardian</option>
+                        <option className="bg-secondary text-white" value="attendance">Attendance</option>
+                        </select>
+
+                        <select
+                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-1/4"
+                        >
+                        <option className="bg-secondary text-white" value="">Sort by</option>
+                        <option className="bg-secondary text-white" value="name">Event Name</option>
+                        <option className="bg-secondary text-white" value="latest">Latest Event</option>
+                        <option className="bg-secondary text-white" value="oldest">Oldest Event</option>
+                        </select>
+
+                        <input
+                        type="text"
+                        placeholder="Search"
+                        className="p-2 rounded-md border border-gray-300 text-sm w-1/2"
+                        />
+                    </div>
                     <div className="space-y-2">
-                    {attendedEvents.map((att, index) => (
-                        <EventCard key={index} attEvent={att}/>
-                    ))}
+                        <div className="grid grid-cols-4 gap-2 w-full justify-items-center items-center">
+                            <div className="text-sm border rounded-full px-3 w-fit">
+                                <p className="text-white font-medium">time</p>
+                            </div>
+                            <div className="text-sm border rounded-full px-3 w-fit">
+                                <p className="text-white font-medium">Event Name</p>
+                            </div>
+                            <div className="text-sm border rounded-full px-3 w-fit">
+                                <p className="text-white font-medium">Attended</p>
+                            </div>
+                            <div className="text-sm border rounded-full px-3 w-fit">
+                                <p className="text-white font-medium">Who Attended</p>
+                            </div>
+                        </div>
+                        {attendedEvents.map((att, index) => (
+                            <EventCard key={index} attEvent={att}/>
+                        ))}
                     </div>
                 </div>
             </div>

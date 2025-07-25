@@ -204,13 +204,16 @@ export function VolunteerProfile() {
                         className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
                         Sex:
                     </label>
-                    <input
-                        type="text"
+                    <select
                         id="Sex"
-                        className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                        readOnly={formState ?? true}
+                        className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                        disabled={formState ?? true}
                         onChange={(e) => setVolunteer({...volunteer as Volunteer, sex : e.target.value})}
-                        value={sex}/>
+                        value={sex}
+                    >
+                        <option className="bg-secondary text-white" value="Male">Male</option>
+                        <option className="bg-secondary text-white" value="Female">Female</option>
+                    </select>
                     </div>
                 </div>
                 <div className="flex flex-col">
