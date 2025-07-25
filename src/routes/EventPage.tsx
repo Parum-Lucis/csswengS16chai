@@ -192,11 +192,22 @@ export function EventPage() {
   const handleAddAttendees = async () => {
     let upd = false
     for (let i = 0; i < checklist.length; i++) {
-      if (checklist[i] != 0) {
+      let type = ""
+      switch(checklist[i]) {
+        case 1:
+          type = "Family"
+          break
+        case 2:
+          type = "Beneficiary"
+          break
+        case 3:
+          type = "Parent"
+      }
+      if (type) {
         const addRef = doc(collection(db, 'events/' + docID + "/attendees"))
         await setDoc(addRef, {
           attendance: 0,
-          who_attended: checklist[i], // to do: make this not js beneficiary.
+          who_attended: type,
           first_name: notAttendeeList[i].first_name,
           last_name: notAttendeeList[i].last_name,
           beneficiaryID: notAttendeeList[i].docID,
