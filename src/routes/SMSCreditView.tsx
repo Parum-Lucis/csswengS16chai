@@ -17,7 +17,6 @@ export function SMSCreditView() {
             const res = await callGetSMSCredits();
             if (!ignore) {
                 if (res.data.success && res.data.credits !== null) {
-                    console.log(res.data)
                     setCredits(res.data.credits);
                 } else {
                     toast.error("Couldn't load credits.")
