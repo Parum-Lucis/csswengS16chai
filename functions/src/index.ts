@@ -66,7 +66,7 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
                 is_admin,
                 sex,
                 address,
-                pfpPath,
+                pfpPath: pfpPath === undefined || pfpPath.length === 0 ? null : pfpPath,
                 birthdate: new Timestamp(birthdate.seconds, birthdate.nanoseconds),
                 time_to_live: null
             })
