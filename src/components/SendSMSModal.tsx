@@ -1,8 +1,26 @@
 import type { AttendedEvents } from "@models/attendedEventsType";
-import { X } from "lucide-react";
-import { useRef, type ReactEventHandler } from "react";
+import { Bell, ClipboardIcon, MessageSquareReply, X } from "lucide-react";
+import { useMemo, useRef, type ReactEventHandler } from "react";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import { getMobileOperatingSystem } from "../util/getMobileOperatingSystem";
+import type { Event } from "@models/eventType";
 
-export function SendSMSModal({ attendees, showModal, onClose }: { attendees: AttendedEvents[], showModal: boolean, onClose: ReactEventHandler }) {
+// currying magic.
+function handleCopy(text: string) {
+    return async function () {
+        try {
+            await navigator.clipboard.writeText(text);
+            toast.success("successfully copied to clipboard!");
+        } catch (error) {
+            console.log(error);
+            toast.error("couldn't copy into clipboard.");
+        }
+
+    }
+}
+
+export function SendSMSModal({ event, attendees, showModal, onClose }: { event: Event, attendees: AttendedEvents[], showModal: boolean, onClose: ReactEventHandler }) {
 
     const dialogRef = useRef<HTMLDialogElement>(null);
     if (showModal) {
@@ -11,22 +29,110 @@ export function SendSMSModal({ attendees, showModal, onClose }: { attendees: Att
         dialogRef.current?.close()
     }
 
-    const cost = 5
+    const { cost, phoneNumbers, eventDetails } = useMemo(() => {
+
+        // hardcoded computation. Very difficult. I think this is O(n / n)
+        const cost = 1 * attendees.length;
+
+        // I'm currently not checking if the numbers are fine.
+        const phoneNumbers = attendees.reduce((prev, curr) => (prev + "," + curr.contact_number), "")
+
+        // reused Jericho's template
+        const eventDetails = `This is a reminder to attend the event titled ${event.name} between 2:59 PM and 3:00 PM on July 19, 2025.
+About the event: ${event.description}`
+
+        return { cost, phoneNumbers, eventDetails }
+
+    }, [attendees, event])
+
+    switch (getMobileOperatingSystem()) {
+        case "iOS":
+
+
+            break;
+
+        case "Android":
+        case "Windows Phone":
+        default:
+            break;
+
+
+    }
+
+    const smsProtocolLink = "sms://"
+
 
     return (
         <dialog ref={dialogRef} className="w-full max-w-3xl inset-0 fixed m-auto" onClose={onClose} >
-            <div className="p-6">
+            <div className="px-6 py-10">
                 <div className="flex justify-between flex-row mb-8">
                     <h1 className="text-xl">Send SMS</h1>
                     <button type="button" onClick={onClose}><X /></button>
                 </div>
-                <div className="flex flex-col px-4">
-                    <div className="flex justify-between flex-row items-center">
-                        <div className="flex flex-col">
-                            <h2 className="m-0">Send SMS Automatically to all participants.</h2>
-                            <p className="italic text-sm">Note: This will cost <span className="text-blue-600 font-bold">{cost}</span> pesos.</p>
+
+                <div className="flex flex-col px-4 gap-4">
+                    <div className="flex justify-between flex-row items-center gap-2 sm:gap-6">
+                        <div className="flex items-center gap-2">
+                            <Bell className="h-full flex-grow hidden sm:block" />
+                            <div className="flex flex-col">
+
+                                <h2 className="m-0"><span className="font-bold">Automatically</span> send to all participants.</h2>
+                                <p className="italic text-sm">This will cost
+                                    <span className="text-green-600 font-bold"> {cost} </span>
+                                    pesos. Remember to top-up{" "}
+                                    <Link to="https://sms.iprogtech.com/" className="underline text-shadow-primary">here</Link>
+                                </p>
+                            </div>
                         </div>
-                        <button className="hover:opacity-80 focus:opacity-50 p-4 bg-primary text-white rounded-md cursor-pointer">Notify All via Text</button>
+                        <button className="hover:opacity-80 focus:opacity-50 p-4 bg-primary text-white rounded-md cursor-pointer text-nowrap">Notify</button>
+                    </div>
+                    <div className="flex justify-center items-center w-4/5 gap-4 mx-auto my-6">
+                        <hr className="border-gray-400 border-2 flex-grow" />
+                        <span className="">OR</span>
+                        <hr className="border-gray-400 border-2 flex-grow" />
+                    </div>
+                    <div className="flex flex-col gap-4">
+                        <div className="flex justify-between flex-row items-center gap-2 sm:gap-6">
+                            <div className="flex items-center gap-2">
+                                <MessageSquareReply className="h-full flex-grow hidden sm:block" />
+                                <div className="flex flex-col">
+
+                                    <h2 className="m-0"><span className="font-bold">Manually</span> send to all participants.</h2>
+                                    <p className="italic text-sm">Will only cost your phone's load.
+                                    </p>
+                                </div>
+                            </div>
+                            <Link className="hover:opacity-80 focus:opacity-50 p-4 bg-primary text-white rounded-md cursor-pointer text-nowrap"
+                                to={smsProtocolLink}
+                            >Send</Link>
+                        </div>
+                        <span className="text-sm mt-4">
+                            If the button above doesn't send you to your text messaging app or doesn't work, you can manually mass send a text message by creating a {" "}
+                            <Link className="underline"
+                                to="https://support.google.com/messages/answer/9367099?hl=en">"Group Chat"</Link>.
+                        </span>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex flex-row gap-2">
+                                <button onClick={handleCopy(phoneNumbers)} className="hover:opacity-80 focus:opacity-50">
+                                    <ClipboardIcon />
+                                </button>
+                                <details className="border-black border-2 flex-grow p-2">
+                                    <summary>Phone numbers</summary>
+                                    {phoneNumbers}
+                                </details>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex flex-row gap-2">
+                                <button onClick={handleCopy(eventDetails)} className="hover:opacity-80 focus:opacity-50">
+                                    <ClipboardIcon />
+                                </button>
+                                <details className="border-black border-2 flex-grow p-2">
+                                    <summary>Event Details</summary>
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+                                </details>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
