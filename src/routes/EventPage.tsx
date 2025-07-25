@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
 import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, deleteDoc, setDoc } from "firebase/firestore"
@@ -10,9 +10,11 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
 import { callDeleteEvent } from '../firebase/cloudFunctions';
 import { sendEmailReminder } from "../firebase/cloudFunctions";
+import { UserContext } from "../context/userContext";
 
 export function EventPage() {
   const params = useParams()
+  const usercheck = useContext(UserContext);
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null)
   const [originalEvent, setOriginalEvent] = useState<Event | null>(null)
@@ -26,6 +28,12 @@ export function EventPage() {
   const [runQuery, setRunQuery] = useState<boolean>(true)
   // for remove list 
   const [removeChecklist, setRemoveChecklist] = useState<boolean[]>([])
+
+  useEffect(() => {
+    if (usercheck === null) {
+      navigate("/");
+    }
+  }, [usercheck, navigate]);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -180,7 +188,7 @@ export function EventPage() {
       if (checklist[i]) {
         const addRef = doc(collection(db, 'events/' + docID + "/attendees"))
         await setDoc(addRef, {
-          attendance: false,
+          attended: false,
           who_attended: "Beneficiary", // temp
           event_name: event!.name,
           event_start: event!.start_date,

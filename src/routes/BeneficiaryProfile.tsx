@@ -2,7 +2,7 @@ import EventCard from "../components/EventCard";
 import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
 import { UserContext } from "../context/userContext";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, getDocs, Timestamp, updateDoc, collectionGroup, where, query } from "firebase/firestore"
 import type { Beneficiary } from "@models/beneficiaryType";
@@ -13,7 +13,7 @@ import { callDeleteBeneficiaryProfile } from "../firebase/cloudFunctions";
 import { Pencil } from 'lucide-react';
 import type { Guardian } from "@models/guardianType";
 import type { AttendedEvents } from "@models/attendedEventsType";
-
+import { compareAsc } from "date-fns";
 
 export function BeneficiaryProfile() {
     const params = useParams()
@@ -58,7 +58,7 @@ export function BeneficiaryProfile() {
                 const attData = att.data() as AttendedEvents
                 attList.push({...attData, docID : att.id});
                 // ignore if null/undefined (means event hasn't happened)
-                if(attData.event_start.toMillis() < Date.now()) {
+                if(attData.event_start.toMillis() < (Date.now() - ((new Date()).getTimezoneOffset() * 60000))) {
                     if(attData.attended ?? false) 
                         pres += 1
                     events += 1
@@ -89,13 +89,63 @@ export function BeneficiaryProfile() {
         document.body.style.overflow = showDeleteModal ? 'hidden': 'unset';
     },[showDeleteModal ]);
 
+    // thx liana for code :pray:
+    const [filter, setFilter] = useState<string>("");
+    const [status, setStatus] = useState<string>("");
+    const [sort, setSort] = useState<string>("");
+    const [search, setSearch] = useState<string>("");
+    const modifiedList = useMemo<AttendedEvents[]>(() => {
+        let filteredAtt = [...attendedEvents];
+
+        // Filter profiles based on who attended
+        if (filter === "beneficiary") {
+            filteredAtt = filteredAtt.filter(e => e.who_attended == "Beneficiary" )
+        } else if (filter === "parent") {
+            filteredAtt = filteredAtt.filter(e => e.who_attended == "Parent")
+        } else if (filter === "family") {
+            filteredAtt = filteredAtt.filter(e => e.who_attended == "Family")
+        }
+
+        // Sort profiles based on attendance status
+        if (status === "present") {
+            filteredAtt = filteredAtt.filter(e => e.attended);
+        } else if (status === "absent") {
+            filteredAtt = filteredAtt.filter(e => !(e.attended))
+        } 
+
+        // Sort profiles based on event
+        if (sort === "name") {
+            filteredAtt.sort((a, b) => a.event_name.localeCompare(b.event_name));
+        } else if (sort === "latest") {
+            filteredAtt.sort((a, b) => compareAsc(a.event_start.toDate(), b.event_start.toDate()))
+        } else if (sort === "oldest") {
+            filteredAtt.sort((a, b) => compareAsc(b.event_start.toDate(), a.event_start.toDate()))
+        }
+
+        // Search filter (partial or exact matches on name)
+        if (search.trim() !== "") {
+            const searchLower = search.trim().toLowerCase();
+            const terms = searchLower.split(/[\s,]+/).filter(Boolean);
+
+            filteredAtt = filteredAtt.filter(att => {
+                const values = [
+                    att.event_name.toLowerCase()
+                ];
+                return terms.every(term =>
+                    values.some(value => value.includes(term))
+                );
+            });
+        }
+        return filteredAtt
+    }, [attendedEvents, filter, sort, status, search])
+
 
     function handleEdit(){
         if (formState === false && originalBenificiary) {
             setBeneficiary(originalBenificiary);
             setGradeLevel(originalBenificiary.grade_level.toString());
             // if guardians were modified, return to original
-            if (guardians.length != originalBenificiary.guardians.length) {
+            if (guardians != originalBenificiary.guardians) {
                 setGuardians(originalBenificiary.guardians);
             }
         }
@@ -498,45 +548,55 @@ export function BeneficiaryProfile() {
                     </h3>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                         <select
-                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-1/4"
+                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
+                        onChange={e => setFilter(e.target.value)}
                         >
-                        <option className="bg-secondary text-white" value="">Filter By</option>
-                        <option className="bg-secondary text-white" value="beneficiary">Beneficiary</option>
-                        <option className="bg-secondary text-white" value="guardian">Guardian</option>
-                        <option className="bg-secondary text-white" value="attendance">Attendance</option>
+                            <option className="bg-secondary text-white" value="">Filter By</option>
+                            <option className="bg-secondary text-white" value="beneficiary">Beneficiary</option>
+                            <option className="bg-secondary text-white" value="parent">Parent</option>
+                            <option className="bg-secondary text-white" value="family">Family</option>
                         </select>
-
                         <select
-                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-1/4"
+                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
+                        onChange={e => setStatus(e.target.value)}
                         >
-                        <option className="bg-secondary text-white" value="">Sort by</option>
-                        <option className="bg-secondary text-white" value="name">Event Name</option>
-                        <option className="bg-secondary text-white" value="latest">Latest Event</option>
-                        <option className="bg-secondary text-white" value="oldest">Oldest Event</option>
+                            <option className="bg-secondary text-white" value="">Attendance Status</option>
+                            <option className="bg-secondary text-white" value="present">Present</option>
+                            <option className="bg-secondary text-white" value="absent">Absent</option>
+                        </select>
+                        <select
+                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
+                        onChange={e => setSort(e.target.value)}
+                        >
+                            <option className="bg-secondary text-white" value="">Sort by</option>
+                            <option className="bg-secondary text-white" value="name">Event Name</option>
+                            <option className="bg-secondary text-white" value="latest">Latest Event</option>
+                            <option className="bg-secondary text-white" value="oldest">Oldest Event</option>
                         </select>
 
                         <input
                         type="text"
                         placeholder="Search"
-                        className="p-2 rounded-md border border-gray-300 text-sm w-1/2"
+                        className="p-2 rounded-md border border-gray-300 text-sm w-full"
+                        onChange={e => setSearch(e.target.value)}
                         />
                     </div>
                     <div className="space-y-2">
                         <div className="grid grid-cols-4 gap-2 w-full justify-items-center items-center">
                             <div className="text-sm border rounded-full px-3 w-fit">
-                                <p className="text-white font-medium">time</p>
+                                <p className="text-white font-medium">Date</p>
                             </div>
                             <div className="text-sm border rounded-full px-3 w-fit">
-                                <p className="text-white font-medium">Event Name</p>
+                                <p className="text-white font-medium">Event</p>
                             </div>
                             <div className="text-sm border rounded-full px-3 w-fit">
-                                <p className="text-white font-medium">Attended</p>
+                                <p className="text-white font-medium">Status</p>
                             </div>
                             <div className="text-sm border rounded-full px-3 w-fit">
-                                <p className="text-white font-medium">Who Attended</p>
+                                <p className="text-white font-medium">Attended By</p>
                             </div>
                         </div>
-                        {attendedEvents.map((att, index) => (
+                        {modifiedList.map((att, index) => (
                             <EventCard key={index} attEvent={att}/>
                         ))}
                     </div>
