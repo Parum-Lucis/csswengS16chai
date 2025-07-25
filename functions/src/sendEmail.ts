@@ -16,7 +16,7 @@ export const sendEmailReminder = onCall<Event>(async (req) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'jericho_reyes@dlsu.edu.ph',
+            user: process.env.EMAIL,
             pass: process.env.APP_PASSWORD
         }
     }); 
