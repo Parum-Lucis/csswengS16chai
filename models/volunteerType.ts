@@ -1,7 +1,7 @@
 import type { Timestamp } from "firebase/firestore";
 
 export interface Volunteer {
-  docID: string;
+  docID?: string;
   last_name: string;
   first_name: string;
   contact_number: string;
