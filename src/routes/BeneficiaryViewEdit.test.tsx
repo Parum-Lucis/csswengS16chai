@@ -9,25 +9,53 @@ import { getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ToastContainer } from 'react-toastify';
 
 // Mock Firebase
-jest.mock('firebase/firestore', () => ({
-  collection: jest.fn(() => ({})), // Return a mock object
-  addDoc: jest.fn(),
-  doc: jest.fn(() => ({})), // Return a mock object
-  getDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  Timestamp: {
-    fromMillis: jest.fn((ms) => ({
-      seconds: Math.floor(ms / 1000),
-      nanoseconds: (ms % 1000) * 1_000_000,
-      toDate: () => new Date(ms),
+jest.mock('firebase/firestore', () => {
+  const originalModule = jest.requireActual('firebase/firestore');
+
+  const mockBeneficiaryData = {
+    firstName: 'Test',
+    lastName: 'Beneficiary',
+    id: '123',
+    birthDate: {
+      toDate: () => new Date('2015-05-10'),
+    },
+    sex: 'Male',
+    gradeLevel: '5',
+    address: '123 Test Street',
+    guardians: [],
+  };
+
+  return {
+    ...originalModule,
+    getFirestore: jest.fn(() => 'mock-db'),
+    doc: jest.fn((db, collection, id) => ({
+      id,
+      withConverter: jest.fn(() => ({
+        id,
+        collection,
+        db,
+      })),
     })),
-    fromDate: jest.fn((date: Date) => ({
-      seconds: Math.floor(date.getTime() / 1000),
-      nanoseconds: (date.getTime() % 1000) * 1_000_000,
-      toDate: () => date,
-    })),
-  },
-}));
+    getDoc: jest.fn(async (docRef) => {
+      if (
+        docRef.collection === 'beneficiaries' &&
+        docRef.id === 'test-beneficiary-id'
+      ) {
+        return Promise.resolve({
+          exists: () => true,
+          data: () => mockBeneficiaryData,
+        });
+      } else {
+        return Promise.resolve({
+          exists: () => false,
+          data: () => undefined,
+        });
+      }
+    }),
+    updateDoc: jest.fn(() => Promise.resolve()) ,
+    deleteDoc: jest.fn(() => Promise.resolve()),
+  };
+});
 
 jest.mock('../firebase/firebaseConfig', () => ({
   db: {},
