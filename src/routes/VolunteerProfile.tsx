@@ -190,7 +190,7 @@ export function VolunteerProfile() {
 
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
                     <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                        {originalVolunteer?.last_name}, {originalVolunteer?.first_name} {originalVolunteer?.is_admin ? "(Admin)" : ""}
+                        {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
                     </h3>
                     <div className="flex flex-col gap-4 mt-6">
                         <ProfilePictureInput readOnly={isViewForm} pfpFile={volunteer?.pfpFile ?? null}

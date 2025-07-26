@@ -10,6 +10,9 @@ import { PlusCircle } from "lucide-react";
 import type { Beneficiary } from "@models/beneficiaryType";
 import { beneficiaryConverter, volunteerConverter } from "../util/converters";
 import type { Volunteer } from "@models/volunteerType";
+import {
+  EllipsisVertical,
+} from 'lucide-react';
 
 export function BeneficiaryList() {
   // List control states
@@ -22,6 +25,9 @@ export function BeneficiaryList() {
 
   // Profiles and test profiles flag
   const [profiles, setProfiles] = useState<Beneficiary[]>([]);
+
+  // Dropdown export
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Fetching profiles 
   // RUNS TWICE while in development because of React's strict mode
@@ -45,6 +51,19 @@ export function BeneficiaryList() {
 
   }, []);
 
+  // Dropdown export
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const dropdown = document.getElementById("dropdownSearch");
+      if (dropdown && !dropdown.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
   const filteredProfiles = useMemo(() => {
     // Filter profiles based on filter val
     let temp = [...profiles];
@@ -86,12 +105,11 @@ export function BeneficiaryList() {
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Beneficiary List</h1>
-
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
           <option className="bg-secondary text-white" value="student">
@@ -105,7 +123,7 @@ export function BeneficiaryList() {
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
           <option className="bg-secondary text-white" value="last">
@@ -119,31 +137,56 @@ export function BeneficiaryList() {
           </option>
         </select>
 
-        <input
-          type="text"
-          placeholder="Search"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/2"
-        />
-      </div>
+        <div className="flex items-center gap-2 w-full sm:w-5/10">
+          <input
+            type="text"
+            placeholder="Search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-9/10"
+          />
 
-      <div className="flex flex-col gap-4">
-        <Link to="new" className="flex p-4 gap-2 bg-primary mb-4 rounded-xl">
-          <PlusCircle />
-          Create New Profile
-        </Link>
-        {loading ? (
-          // display loading while fetching from database.
-          <div className="text-center text-white py-8">Fetching...</div>
-        ) : filteredProfiles.length === 0 ? (
-          <div className="text-center text-white py-8">No profiles to show.</div>
-        ) : (
-          // non-empty profiles
-          filteredProfiles.map((profile) => (
-            <ProfileCard profile={profile} sort={sort} />
-          ))
-        )}
+          <div className="relative w-1/10">
+            <button
+              type="submit"
+              className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+              onClick={() => {
+                setShowDropdown(!showDropdown);
+              }}
+              data-dropdown-toggle="dropdownSearch"
+            >
+              <EllipsisVertical className="w-5 h-5" />
+            </button>
+
+            {showDropdown && (
+              <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
+                <ul className="py-1">
+                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                    Export
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <Link to="new" className="flex p-4 gap-2 bg-primary mb-4 rounded-xl">
+            <PlusCircle />
+            Create New Profile
+          </Link>
+          {loading ? (
+            // display loading while fetching from database.
+            <div className="text-center text-white py-8">Fetching...</div>
+          ) : filteredProfiles.length === 0 ? (
+            <div className="text-center text-white py-8">No profiles to show.</div>
+          ) : (
+            // non-empty profiles
+            filteredProfiles.map((profile) => (
+              <ProfileCard profile={profile} sort={sort} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
@@ -161,6 +204,9 @@ export function VolunteerList() {
 
   // Profiles and test profiles flag
   const [profiles, setProfiles] = useState<Volunteer[]>([]);
+
+  // Dropdown export
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Fetching profiles 
   useEffect(() => {
@@ -182,6 +228,19 @@ export function VolunteerList() {
 
   }, []);
 
+  // Dropdown export
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const dropdown = document.getElementById("dropdownSearch");
+      if (dropdown && !dropdown.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
 
   // Filter profiles based on filter val
   let filteredprofiles = filter ? profiles.filter(profile => profile.role.toLocaleLowerCase() === filter.toLocaleLowerCase()) : profiles;
@@ -216,12 +275,11 @@ export function VolunteerList() {
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Volunteer List</h1>
-
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
           <option className="bg-secondary text-white" value="volunteer">
@@ -235,7 +293,7 @@ export function VolunteerList() {
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
           <option className="bg-secondary text-white" value="last">
@@ -249,27 +307,52 @@ export function VolunteerList() {
           </option>
         </select>
 
-        <input
-          type="text"
-          placeholder="Search"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/2"
-        />
-      </div>
+        <div className="flex items-center gap-2 w-full sm:w-5/10">
+          <input
+            type="text"
+            placeholder="Search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-9/10"
+          />
 
-      <div className="flex flex-col gap-4">
-        {loading ? (
-          // display loading while fetching from database.
-          <div className="text-center text-white py-8">Fetching...</div>
-        ) : filteredprofiles.length === 0 ? (
-          <div className="text-center text-white py-8">No profiles to show.</div>
-        ) : (
-          // non-empty profiles
-          filteredprofiles.map((profile) => (
-            <ProfileCard profile={profile} sort={sort} key={profile.docID} />
-          ))
-        )}
+          <div className="relative w-1/10">
+            <button
+              type="submit"
+              className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+              onClick={() => {
+                setShowDropdown(!showDropdown);
+              }}
+              data-dropdown-toggle="dropdownSearch"
+            >
+              <EllipsisVertical className="w-5 h-5" />
+            </button>
+
+            {showDropdown && (
+              <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
+                <ul className="py-1">
+                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                    Export
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {loading ? (
+            // display loading while fetching from database.
+            <div className="text-center text-white py-8">Fetching...</div>
+          ) : filteredprofiles.length === 0 ? (
+            <div className="text-center text-white py-8">No profiles to show.</div>
+          ) : (
+            // non-empty profiles
+            filteredprofiles.map((profile) => (
+              <ProfileCard profile={profile} sort={sort} key={profile.docID} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
