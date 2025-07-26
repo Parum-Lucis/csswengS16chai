@@ -8,7 +8,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 import { UserContext } from '../util/userContext';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 
 jest.mock('firebase/auth', () => ({
   sendPasswordResetEmail: jest.fn(),
@@ -16,6 +16,14 @@ jest.mock('firebase/auth', () => ({
 
 jest.mock('../firebase/firebaseConfig', () => ({
   auth: {},
+}));
+
+jest.mock('react-toastify', () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn(),
+  },
+  ToastContainer: () => <div data-testid="toast-container" />,
 }));
 
 const mockedNavigate = jest.fn();
@@ -43,27 +51,49 @@ describe('ForgetMeNot Page', () => {
   test('renders the initial form correctly', () => {
     renderForgetMeNot();
     expect(screen.getByLabelText(/enter email/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /continue/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit email/i })).toBeInTheDocument();
+    expect(screen.getByText(/back to login/i)).toBeInTheDocument();
   });
 
-  test('calls sendPasswordResetEmail and navigates on valid email submission', async () => {
+  test('shows error toast for invalid email format', async () => {
+    renderForgetMeNot();
+
+    const emailInput = screen.getByLabelText(/enter email/i);
+    const form = emailInput.closest('form')!;
+    
+    fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
+    
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Please input a proper email.');
+      expect(sendPasswordResetEmail).not.toHaveBeenCalled();
+    });
+  });
+
+  test('calls sendPasswordResetEmail with correct parameters on valid email submission', async () => {
     (sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
 
     renderForgetMeNot();
 
     const emailInput = screen.getByLabelText(/enter email/i);
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    const continueButton = screen.getByRole('button', { name: /continue/i });
-    fireEvent.click(continueButton);
+    
+    const submitButton = screen.getByRole('button', { name: /submit email/i });
+    fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(sendPasswordResetEmail).toHaveBeenCalledWith(auth, 'test@example.com');
-      expect(mockedNavigate).toHaveBeenCalledWith('/');
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(
+        auth, 
+        'test@example.com',
+        { url: "https://chai-met.firebaseapp.com/" }
+      );
+      expect(toast.success).toHaveBeenCalledWith('Password reset email sent');
     });
   });
 
   test('handles error when sendPasswordResetEmail fails', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     (sendPasswordResetEmail as jest.Mock).mockRejectedValue({
       code: 'auth/invalid-email',
       message: 'Invalid email',
@@ -72,37 +102,108 @@ describe('ForgetMeNot Page', () => {
     renderForgetMeNot();
 
     const emailInput = screen.getByLabelText(/enter email/i);
-    fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
 
+    const submitButton = screen.getByRole('button', { name: /submit email/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(
+        auth, 
+        'test@example.com',
+        { url: "https://chai-met.firebaseapp.com/" }
+      );
+      expect(consoleLogSpy).toHaveBeenCalledWith('auth/invalid-email');
+      expect(consoleLogSpy).toHaveBeenCalledWith('Invalid email');
+    });
+
+    consoleLogSpy.mockRestore();
+  });
+
+  test('navigates to login page when Back to Login is clicked', () => {
+    renderForgetMeNot();
+
+    const backButton = screen.getByText(/back to login/i);
+    fireEvent.click(backButton);
+
+    expect(mockedNavigate).toHaveBeenCalledWith('/');
+  });
+
+  test('disables button during form submission and keeps it disabled on success', async () => {
+    (sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
+
+    renderForgetMeNot();
+
+    const emailInput = screen.getByLabelText(/enter email/i);
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    
+    const submitButton = screen.getByRole('button', { name: /submit email/i });
     const form = emailInput.closest('form')!;
+    
+    expect(submitButton).not.toBeDisabled();
+    
+    fireEvent.submit(form);
+
+    expect(submitButton).toBeDisabled();
+
+    await waitFor(() => {
+      expect(sendPasswordResetEmail).toHaveBeenCalled();
+      expect(toast.success).toHaveBeenCalledWith('Password reset email sent');
+    });
+
+    expect(submitButton).toBeDisabled();
+  });
+
+  test('makes email input readonly and progresses form state after successful submission', async () => {
+    (sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
+
+    renderForgetMeNot();
+
+    const emailInput = screen.getByLabelText(/enter email/i) as HTMLInputElement;
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    
+    expect(emailInput.readOnly).toBe(false);
+
+    const submitButton = screen.getByRole('button', { name: /submit email/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(emailInput.readOnly).toBe(true);
+      expect(emailInput).toHaveClass('bg-gray-300');
+    });
+  });
+
+  test('form handles multiple state progressions', async () => {
+    (sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
+
+    renderForgetMeNot();
+
+    const emailInput = screen.getByLabelText(/enter email/i);
+    const form = emailInput.closest('form')!;
+    
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(sendPasswordResetEmail).toHaveBeenCalledWith(auth, 'invalid-email');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('auth/invalid-email');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid email');
+      expect(sendPasswordResetEmail).toHaveBeenCalledTimes(1);
     });
 
-    consoleErrorSpy.mockRestore();
-  });
-
-  test('redirects to /me if user is already logged in', async () => {
-    const user = { uid: 'test-uid', email: 'test@example.com' };
-    renderForgetMeNot(user);
+    fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(mockedNavigate).toHaveBeenCalledWith('/me');
+      expect(sendPasswordResetEmail).toHaveBeenCalledTimes(1); 
     });
-  });
 
-  test('form progresses to the next step on continue', async () => {
-    renderForgetMeNot();
-
-    const continueButton = screen.getByRole('button', { name: /continue/i });
-    fireEvent.click(continueButton);
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    
+    fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/enter confirmation code/i)).toBeInTheDocument();
+      expect(consoleLogSpy).toHaveBeenCalledWith('HIII');
+      expect(sendPasswordResetEmail).toHaveBeenCalledTimes(1); 
     });
+
+    consoleLogSpy.mockRestore();
   });
 });

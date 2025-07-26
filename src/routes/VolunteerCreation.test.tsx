@@ -41,7 +41,7 @@ describe("Volunteer Creation Page", () => {
     jest.clearAllMocks();
   });
 
-  it("renders all required form fields and create account button", () => {
+  test("renders all required form fields and create account button", () => {
     renderWithRouter(<VolunteerProfileCreation />);
 
     expect(screen.getByLabelText(/Role/i)).toBeInTheDocument();
@@ -55,7 +55,7 @@ describe("Volunteer Creation Page", () => {
     expect(screen.getByText(/Create Account/i)).toBeInTheDocument();
   });
 
-  it("shows error if fields are empty", async () => {
+  test("shows error if fields are empty", async () => {
     renderWithRouter(<VolunteerProfileCreation />);
     fireEvent.click(screen.getByText(/Create Account/i));
 
@@ -66,7 +66,7 @@ describe("Volunteer Creation Page", () => {
     });
   });
 
-  it("shows error for invalid email", async () => {
+  test("shows error for invalid email", async () => {
     const toast = require("react-toastify").toast;
 
     renderWithRouter(<VolunteerProfileCreation />);
@@ -110,7 +110,7 @@ describe("Volunteer Creation Page", () => {
     });
   });
 
-  it("shows error for invalid phone number", async () => {
+  test("shows error for invalid phone number", async () => {
     renderWithRouter(<VolunteerProfileCreation />);
 
     fireEvent.change(screen.getByLabelText(/Role/i), {
@@ -154,7 +154,7 @@ describe("Volunteer Creation Page", () => {
     });
   });
 
-  it("submits valid form and calls cloud function", async () => {
+  test("submits valid form and calls cloud function", async () => {
     const mockRes = { data: true };
     (callCreateVolunteerProfile as unknown as jest.Mock).mockResolvedValue(mockRes);
 

@@ -15,3 +15,12 @@ declare global {
     entries(): IterableIterator<[string, FormDataEntryValue]>;
   }
 }
+
+(globalThis as any).import = {
+  meta: {
+    env: {
+      DEV: "false",
+      VITE_OVERRIDE_EMULATOR: "false",
+    },
+  },
+};

@@ -26,6 +26,7 @@ export function EventPage() {
   // for remove list 
   const [removeChecklist, setRemoveChecklist] = useState<boolean[]>([])
 
+  // use effect for fetch event & fetch attendees
   useEffect(() => {
     const fetchEvent = async () => {
       const getQuery = doc(db, "events", params.docId as string)
@@ -92,6 +93,7 @@ export function EventPage() {
 
   const { name, description, location: event_location } = event || {}
 
+  // date handling
   const start_date = new Date((event?.start_date.seconds ?? 0) * 1000)
   start_date.setMinutes(start_date.getMinutes() - start_date.getTimezoneOffset()) // local datetime
 
@@ -100,36 +102,46 @@ export function EventPage() {
 
   const max_date = start_date.toISOString().substring(0, 11) + "23:59"
   console.log(max_date, start_date.toISOString().substring(0, 16))
+
+  // edit event
   const handleSave = async (e: React.MouseEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!name?.trim() || !description?.trim() || !start_date || !end_date) {
       toast.error("Please fill up all fields!")
       return
     }
-    if (start_date > end_date) {
+    else if (start_date.getTime() > end_date.getTime()) {
       toast.error("Start date cannot be greater than end date!")
       return
     }
-    console.log("i am here")
-    try {
-      start_date.setMinutes(start_date.getMinutes() + start_date.getTimezoneOffset())
-      end_date.setMinutes(end_date.getMinutes() + end_date.getTimezoneOffset())
-      const updateRef = doc(db, "events", docID!)
-      await updateDoc(updateRef, {
-        ...event
-      })
-      setOriginalEvent(event)
-      toast.success("Update success!")
-      console.log(event)
-    } catch {
-      toast.error("Something went wrong")
+    else if (start_date.toISOString().substring(0, 10) !== end_date.toISOString().substring(0, 10)) {
+      toast.error("Start date must be the same date as end date!")
+      return
+    }
+    else {
+      console.log("i am here")
+      try {
+        start_date.setMinutes(start_date.getMinutes() + start_date.getTimezoneOffset())
+        end_date.setMinutes(end_date.getMinutes() + end_date.getTimezoneOffset())
+        const updateRef = doc(db, "events", docID!)
+        await updateDoc(updateRef, {
+          ...event
+        })
+        setOriginalEvent(event)
+        toast.success("Update success!")
+        console.log(event)
+      } catch {
+        toast.error("Something went wrong")
+      }
     }
   }
 
+  // delete modal
   function handleDelete() {
     setDeleteModal(!showDeleteModal);
   }
 
+  // delete event
   const handleConfirm = async () => {
     if (!params.docId) return;
     setDeleteModal(!showDeleteModal)
@@ -147,7 +159,7 @@ export function EventPage() {
     }
   }
 
-  // fixed
+  // retrieves all beneficiaries not in attendee list, only runs the first time add attendees button is pressed
   const showBeneficiaryList = async () => {
     const beneficiaryID: string[] = []
     setChecklist([])
@@ -173,6 +185,7 @@ export function EventPage() {
     }
   }
 
+  // adds new attendees to attendee list, then refreshes page
   const handleAddAttendees = async () => {
     let upd = false
     for (let i = 0; i < checklist.length; i++) {
@@ -204,7 +217,7 @@ export function EventPage() {
     }
   }
 
-  // todo: refactor (remove bene list)
+  // removes attendees from attendee list, then refreshes page
   const handleRemoveAttendees = async () => {
     let refresh = false
     console.log("checklist is" + removeChecklist)
@@ -318,8 +331,8 @@ export function EventPage() {
                     type="datetime-local"
                     className="input-text w-full appearance-none"
                     step="1"
-                    min={start_date.toISOString().substring(0, 16)}
-                    max={max_date}
+                    // min={start_date.toISOString().substring(0, 16)}
+                    // max={max_date}
                     value={end_date.toISOString().substring(0, 19)}
                     onChange={e => setEvent(prev => ({ ...prev as Event, end_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.end_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
                   />
@@ -435,7 +448,6 @@ export function EventPage() {
 
         <div className="w-full max-w-2xl mt-3">
           {
-            // todo: refactor
             attendees.length > 0 ? attendees.map((att, i) => (
               <AttendeesCard
                 key={i}
