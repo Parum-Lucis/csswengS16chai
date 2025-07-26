@@ -400,82 +400,78 @@ export function EventPage() {
         
         <div className="flex flex-col sm:flex-row justify-between w-full max-w-2xl mt-4 sm:gap-4">
           <h2 className="text-primary text-2xl font-bold font-sans text-center sm:text-left mt-5">List of Attendees:</h2>
-          <div className= { `relative 
-                            ${isEditing ? 'w-full sm:w-1/2' : 'w-1/2 sm:w-1/4'}`}>
-            <div className="mt-3 flex flex-row items-center justify-end gap-4 border-1 border-primary h-[40px] rounded-md px-4 relative transition-all duration-300">
+           <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditing ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/4'}`}>
               {isEditing && (
                 <div className="flex flex-row gap-3 items-center">
-                  <div className="relative">
-                    <button
-                      className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                      onClick={() => {
-                        setShowAddDropdown(!showAddDropdown)
-                        showBeneficiaryList()
-                        setShowOtherDropdown(false)
-                      }}
-                      data-dropdown-toggle="dropdownAdd"
-                    >
-                      <SquarePlus className="w-5 h-5 inline-block" />
-                    </button>
+                  <button
+                    className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                    onClick={() => {
+                      setShowAddDropdown(!showAddDropdown)
+                      showBeneficiaryList()
+                      setShowOtherDropdown(false)
+                    }}
+                    data-dropdown-toggle="dropdownAdd"
+                  >
+                    <SquarePlus className="w-5 h-5 inline-block" />
+                  </button>
 
-                    {showAddDropdown && (
-                      <div
-                        id="dropdownAdd"
-                        className="absolute top-full mt-2 left-0 w-64 bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60"
-                      >
-                        <input
-                          type="text"
-                          placeholder="Search"
-                          className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
-                        />
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {notAttendeeList.length > 0 ? (
-                            notAttendeeList.map((notAtt, i) => (
-                              <label
-                                key={i}
-                                className="flex items-center justify-between px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer"
+                  {showAddDropdown && (
+                    <div
+                      id="dropdownAdd"
+                      className="absolute top-full mt-2 left-0 w-full bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60"
+                    >
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
+                      />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {notAttendeeList.length > 0 ? (
+                          notAttendeeList.map((notAtt, i) => (
+                            <label
+                              key={i}
+                              className="flex items-center justify-between px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer"
+                            >
+                              <span className="font-semibold text-md text-white">
+                                {notAtt.first_name + " " + notAtt.last_name}
+                              </span>
+                              <div
+                                className="cursor-pointer mr-3"
+                                onClick={() => {
+                                  const updChecklist = [...checklist];
+                                  updChecklist[i] = (checklist[i] + 1) % 4;
+                                  setChecklist(updChecklist);
+                                }}
                               >
-                                <span className="font-semibold text-md text-white">
-                                  {notAtt.first_name + " " + notAtt.last_name}
-                                </span>
-                                <div
-                                  className="cursor-pointer mr-3"
-                                  onClick={() => {
-                                    const updChecklist = [...checklist];
-                                    updChecklist[i] = (checklist[i] + 1) % 4;
-                                    setChecklist(updChecklist);
-                                  }}
-                                >
-                                  {
-                                    checklist[i] === 0 ? (
-                                      <CirclePlus className="w-5 h-5 text-white-500" />
-                                    ) :
-                                    checklist[i] === 1 ? (
-                                      <UsersRound className="w-5 h-5 text-white-500" />
-                                    ) : checklist[i] === 2 ? (
-                                      <Baby className="w-5 h-5 text-white -500" />
-                                    ) : (
-                                      <UserRound className="w-5 h-5 text-white-400" />
-                                    )
-                                  }
-                                </div>
-                              </label>
-                            ))
-                          ) : (
-                            <div className="text-sm text-gray-600">No beneficiaries to show</div>
-                          )}
-                        </div>
-                        <div className="mt-4 text-right">
-                          <button
-                            className="text-secondary font-semibold hover:underline cursor-pointer"
-                            onClick={handleAddAttendees}
-                          >
-                            Update List
-                          </button>
-                        </div>
+                                {
+                                  checklist[i] === 0 ? (
+                                    <CirclePlus className="w-5 h-5 text-white-500" />
+                                  ) :
+                                  checklist[i] === 1 ? (
+                                    <UsersRound className="w-5 h-5 text-white-500" />
+                                  ) : checklist[i] === 2 ? (
+                                    <Baby className="w-5 h-5 text-white -500" />
+                                  ) : (
+                                    <UserRound className="w-5 h-5 text-white-400" />
+                                  )
+                                }
+                              </div>
+                            </label>
+                          ))
+                        ) : (
+                          <div className="text-sm text-gray-600">No beneficiaries to show</div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                      <div className="mt-4 text-right">
+                        <button
+                          className="text-secondary font-semibold hover:underline cursor-pointer"
+                          onClick={handleAddAttendees}
+                        >
+                          Update List
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   
                   <button
                     className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
@@ -531,7 +527,6 @@ export function EventPage() {
               </div>
             </div> 
           </div>
-        </div>
   
 
         <div className="w-full max-w-2xl mt-3">
@@ -555,6 +550,5 @@ export function EventPage() {
         </div>
     </div>
   </div>
-   
   );
 }
