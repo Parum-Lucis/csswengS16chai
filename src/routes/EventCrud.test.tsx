@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { UserContext } from "../util/userContext";
@@ -181,6 +181,71 @@ describe("Event Creation", () => {
             expect(toast.error).toHaveBeenCalledWith("Description must be at most 255 characters in length!");
         });
         expect(addDoc).not.toHaveBeenCalled();
+    });
+
+    test("disables submit button after submission to prevent multiple submissions", async () => {
+      // Mock addDoc to return a promise that never resolves
+      const neverResolvingPromise = new Promise(() => {});
+      (addDoc as jest.Mock).mockReturnValue(neverResolvingPromise);
+
+      renderWithRouter(<EventCreation />);
+
+      fireEvent.change(screen.getByLabelText(/event name/i), { target: { value: "Spam Block" } });
+      fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Testing spam click" } });
+      fireEvent.change(screen.getByLabelText(/date/i), { target: { value: "2025-12-25" } });
+      fireEvent.change(screen.getByLabelText(/start time/i), { target: { value: "09:00" } });
+      fireEvent.change(screen.getByLabelText(/end time/i), { target: { value: "11:00" } });
+      fireEvent.change(screen.getByLabelText(/location/i), { target: { value: "Lab" } });
+
+      const button = screen.getByRole("button", { name: /create event/i });
+      
+      const form = button.closest('form')!;
+      
+      const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+      Object.defineProperty(submitEvent, 'target', {
+        value: form,
+        enumerable: true
+      });
+      
+      form.dispatchEvent(submitEvent);
+
+      await waitFor(() => {
+        expect(button).toBeDisabled();
+      });
+    });
+
+    test("re-enables submit button after validation error", async () => {
+      renderWithRouter(<EventCreation />);
+
+      const button = screen.getByRole("button", { name: /create event/i });
+
+      fireEvent.submit(button.closest("form")!);
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("Please fill up all fields!");
+        expect(button).not.toBeDisabled();
+      });
+    });
+
+    test("re-enables submit button if addDoc fails", async () => {
+      (addDoc as jest.Mock).mockRejectedValue(new Error("Firestore error"));
+
+      renderWithRouter(<EventCreation />);
+
+      fireEvent.change(screen.getByLabelText(/event name/i), { target: { value: "Test" } });
+      fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Error Test" } });
+      fireEvent.change(screen.getByLabelText(/date/i), { target: { value: "2025-12-25" } });
+      fireEvent.change(screen.getByLabelText(/start time/i), { target: { value: "09:00" } });
+      fireEvent.change(screen.getByLabelText(/end time/i), { target: { value: "11:00" } });
+      fireEvent.change(screen.getByLabelText(/location/i), { target: { value: "Field" } });
+
+      const button = screen.getByRole("button", { name: /create event/i });
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("Failed to create event"));
+        expect(button).not.toBeDisabled();
+      });
     });
 });
 
