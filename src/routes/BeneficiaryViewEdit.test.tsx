@@ -77,9 +77,9 @@ jest.mock('react-router', () => ({
 
 function renderBeneficiaryProfile(initialDocId = 'test-beneficiary-id') {
   return render(
-    <MemoryRouter initialEntries={[`/beneficiary-profile/${initialDocId}`]}>
+    <MemoryRouter initialEntries={[`/beneficiary/${initialDocId}`]}>
       <Routes>
-        <Route path="/beneficiary-profile/:docId" element={<BeneficiaryProfile />} />
+        <Route path="/beneficiary/:docId" element={<BeneficiaryProfile />} />
         <Route path="/" element={<div>Login Page</div>} />
       </Routes>
       <ToastContainer />
