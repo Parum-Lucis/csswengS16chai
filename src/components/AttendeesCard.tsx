@@ -6,6 +6,9 @@ function AttendeesCard({name, who_attended, attendance, handleToggle}: {name: st
           </div>
           <h4 className="text-start text-[15px] sm:text-[1em]">{name}</h4>
           <div className="flex items-center justify-end ml-auto">
+            <h4 className="text-[15px] sm:text-[1em] mr-2">
+              Attendance: {attendance ? "Absent" : "Present"}
+            </h4>
             <input
               type="checkbox"
               className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white ml-auto mr-3"

@@ -27,7 +27,6 @@ export function EventPage() {
   const [removeChecklist, setRemoveChecklist] = useState<boolean[]>([])
   // for dropdowns
   const [showAddDropdown, setShowAddDropdown] = useState(false)
-  const [showRemoveDropdown, setShowRemoveDropdown] = useState(false)
   const [showOtherDropdown, setShowOtherDropdown] = useState(false)
 
   useEffect(() => {
@@ -85,7 +84,6 @@ export function EventPage() {
           !target.closest("#dropdownOther")
         ) {
           setShowAddDropdown(false);
-          setShowRemoveDropdown(false);
           setShowOtherDropdown(false);
         }
     };
@@ -289,15 +287,24 @@ export function EventPage() {
             </h2>
 
             <div className="flex flex-col gap-4 mt-6">
-              {/* <input
-                        id="name"
-                        name="name"
-                        type="string"
-                        className="input-text w-full"
-                        value={name}
-                        onChange={e => setEvent({...event as Event, name : e.target.value})}
-                      /> */}
+              <div className="flex flex-col flex-1">
+                <label
+                  htmlFor="name"
+                  className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                  Name:
+                </label>
 
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  className="input-text w-full"
+                  value={name}
+                  onChange={e => setEvent(prev => ({ ...prev as Event, name: e.target.value }))}
+                  required
+                />
+              </div>
+              
               <div className="flex flex-col flex-1">
                 <label
                   htmlFor="description"
@@ -399,7 +406,6 @@ export function EventPage() {
                 onClick={() => {
                   setShowAddDropdown(!showAddDropdown)
                   showBeneficiaryList()
-                  setShowRemoveDropdown(false)
                   setShowOtherDropdown(false)
                 }}
                 data-dropdown-toggle="dropdownAdd"
@@ -465,63 +471,16 @@ export function EventPage() {
                   </div>
               )}
 
-              <button
-                className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                type="button"
-                onClick={() => {
-                  setShowRemoveDropdown(!showRemoveDropdown)
-                  showBeneficiaryList()
-                  setShowAddDropdown(false)
-                  setShowOtherDropdown(false)
-                }}
-                data-dropdown-toggle="dropdownRemove"
-              >
-                <SquareMinus className="w-5 h-5 inline-block"/>
+            <button
+              className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+              type="button"
+              onClick={() => {
+                // TODO refactor deletion
+              }}
+              data-dropdown-toggle="dropdownRemove"
+            >
+              <SquareMinus className="w-5 h-5 inline-block"/>
               </button>
-
-              {showRemoveDropdown && (
-                <div
-                  id="dropdownRemove"
-                  className="absolute top-full mt-2 left-0 w-full max-w-2xl bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60">
-                  <input
-                    type="text"
-                    placeholder="Search"
-                    className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
-                  />
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {
-                      notAttendeeList.length > 0 ? (
-                        notAttendeeList.map((notAtt, i) => (
-                          <div className="space-y-2" key={i}>
-                            <label className="flex items-center px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer">
-                              <input
-                                type="checkbox"
-                                className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white mr-3"
-                                onChange={() => {
-                                  const updChecklist = [...checklist]
-                                  updChecklist[i] = checklist[i]
-                                  setChecklist(updChecklist)
-                                }}
-                              />
-                              <span className="font-semibold text-md text-white">{notAtt.first_name + " " + notAtt.last_name}</span>
-                            </label>
-                          </div>
-                        ))
-                      ) : "No beneficiaries to show"
-                    }
-                  </div>
-                
-                  <div className="mt-4 text-right">
-                    <button
-                      className="text-secondary font-semibold hover:underline cursor-pointer"
-                      type="button"
-                      onClick={handleRemoveAttendees}
-                    >
-                      Update List
-                    </button>
-                  </div>
-                </div>
-              )}
 
             <button
               className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
@@ -537,7 +496,6 @@ export function EventPage() {
               onClick={() => {
                 setShowOtherDropdown(!showOtherDropdown);
                 setShowAddDropdown(false)
-                setShowRemoveDropdown(false)
               }}
               data-dropdown-toggle="dropdownOther"
             >
