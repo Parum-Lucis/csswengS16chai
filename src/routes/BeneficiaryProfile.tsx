@@ -2,7 +2,7 @@ import EventCard from "../components/EventCard";
 import { useNavigate, useParams } from "react-router";
 import "../css/styles.css";
 import { useEffect, useState } from "react";
-import { db } from "../firebase/firebaseConfig";
+import { db, store } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Beneficiary } from "@models/beneficiaryType";
 import GuardianCard from "../components/GuardianCard";
@@ -12,6 +12,9 @@ import type { Guardian } from "@models/guardianType";
 import { emailRegex } from "../util/emailRegex";
 import { add } from "date-fns";
 import type { Event } from "@models/eventType";
+import { ProfilePictureInput } from "../components/ProfilePicture";
+import { beneficiaryConverter } from "../util/converters";
+import { deleteObject, getBlob, ref, uploadBytes } from "firebase/storage";
 
 
 export function BeneficiaryProfile() {
@@ -35,15 +38,23 @@ export function BeneficiaryProfile() {
 
     useEffect(() => {
         const fetchBeneficiary = async () => {
-            const getQuery = doc(db, "beneficiaries", params.docId as string)
+            const getQuery = doc(db, "beneficiaries", params.docId as string).withConverter(beneficiaryConverter)
             const beneficiariesSnap = await getDoc(getQuery)
-            if (beneficiariesSnap.exists())
-                setBeneficiary(beneficiariesSnap.data() as Beneficiary)
-            setOriginalBeneficiary(beneficiariesSnap.data() as Beneficiary)
-            setGuardians((beneficiariesSnap.data() as Beneficiary).guardians)
-            console.log((beneficiariesSnap.data() as Beneficiary))
-            setDocID(beneficiariesSnap.id)
-            setGradeLevel((beneficiariesSnap.data() as Beneficiary).grade_level.toString()) // see commit desc re: this change
+            if (beneficiariesSnap.exists()) {
+                const data = beneficiariesSnap.data();
+                setBeneficiary(data)
+                setOriginalBeneficiary(data)
+                setGuardians(data.guardians)
+                setDocID(beneficiariesSnap.id)
+                setGradeLevel(data.grade_level.toString()) // see commit desc re: this change
+                if (data.pfpPath) {
+                    const path = data.pfpPath;
+                    const r = ref(store, path);
+                    const blob = await getBlob(r);
+                    setBeneficiary(prev => (prev === null ? null : { ...prev, pfpFile: new File([blob], path) }))
+                }
+            }
+
             setForm(true)
         }
         fetchBeneficiary()
@@ -130,17 +141,21 @@ export function BeneficiaryProfile() {
 
     const handleConfirm = async () => {
         setDeleteModal(!showDeleteModal)
+        if (!beneficiary) return;
 
         const updateRef = doc(db, "beneficiaries", docID!)
+        const { pfpFile, ...beneficiaryRes } = beneficiary;
+        console.log(pfpFile);
         try {
             await updateDoc(updateRef, {
-                ...beneficiary,
+                ...beneficiaryRes,
                 time_to_live: Timestamp.fromDate(add(new Date(), { days: 30 }))
             })
             toast.success("Account delete success!")
             navigate("/beneficiary")
         }
-        catch {
+        catch (e) {
+            console.error(e)
             toast.error("Something went wrong")
         }
     }
@@ -194,16 +209,32 @@ export function BeneficiaryProfile() {
             if (test)
                 return
             try {
-                await updateDoc(updateRef, {
-                    ...beneficiary,
-                    guardians: guardians,
-                    grade_level: gradeLevelNum
-                })
+                const newFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
+                if (beneficiary?.pfpFile) {
+                    const { pfpFile, ...volunteerRed } = beneficiary;
+                    if (originalBenificiary?.pfpPath) {
+                        const oldRef = ref(store, originalBenificiary.pfpPath);
+                        deleteObject(oldRef); // don't even wait for it.
+                    }
+
+                    // upload the new picture
+                    const newPfpRef = ref(store, newFilePath);
+                    await Promise.all([
+                        uploadBytes(newPfpRef, pfpFile),
+                        updateDoc(updateRef, {
+                            ...volunteerRed,
+                            pfpPath: newFilePath
+                        })
+                    ])
+                } else {
+                    await updateDoc(updateRef, {
+                        ...beneficiary,
+                    })
+                }
+
                 setOriginalBeneficiary({ ...beneficiary as Beneficiary, grade_level: gradeLevelNum, guardians: guardians })
+                setForm(true);
                 toast.success("Account update success!")
-                setTimeout(function () {
-                    location.reload();
-                }, 1000);
             } catch {
                 toast.error("Something went wrong")
             }
@@ -249,9 +280,6 @@ export function BeneficiaryProfile() {
                 )
             )}
             <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pb-10 px-4 sm:px-6 overflow-hidden">
-                <div className="absolute sm:top-0 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[10px] border-primary rounded-full flex items-center justify-center mb-1 mt-15">
-                    <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
-                </div>
 
                 {(formState === null) && (
                     <h3
@@ -259,7 +287,13 @@ export function BeneficiaryProfile() {
                         Fetching...
                     </h3>
                 )}
-
+                <ProfilePictureInput readOnly={formState ?? true} pfpFile={beneficiary?.pfpFile ?? null}
+                    onPfpChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                            const files = e.target.files;
+                            setBeneficiary(prev => prev === null ? null : ({ ...prev, pfpFile: files[0] }))
+                        }
+                    }} />
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
                     <h3 className="text-secondary text-2xl text-center font-bold font-sans">
                         {beneficiary?.last_name}, {beneficiary?.first_name}
