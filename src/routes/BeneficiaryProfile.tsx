@@ -144,11 +144,8 @@ export function BeneficiaryProfile() {
         if (!beneficiary) return;
 
         const updateRef = doc(db, "beneficiaries", docID!)
-        const { pfpFile, ...beneficiaryRes } = beneficiary;
-        console.log(pfpFile);
         try {
             await updateDoc(updateRef, {
-                ...beneficiaryRes,
                 time_to_live: Timestamp.fromDate(add(new Date(), { days: 30 }))
             })
             toast.success("Account delete success!")
@@ -223,12 +220,16 @@ export function BeneficiaryProfile() {
                         uploadBytes(newPfpRef, pfpFile),
                         updateDoc(updateRef, {
                             ...volunteerRed,
-                            pfpPath: newFilePath
+                            pfpPath: newFilePath,
+                            guardians,
+                            grade_level: gradeLevelNum
                         })
                     ])
                 } else {
                     await updateDoc(updateRef, {
                         ...beneficiary,
+                        guardians,
+                        grade_level: gradeLevelNum
                     })
                 }
 
