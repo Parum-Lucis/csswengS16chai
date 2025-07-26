@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
-import { db } from "../firebase/firebaseConfig"
+import { db, store } from "../firebase/firebaseConfig"
 import {
   collection, addDoc,/*, Timestamp*/
   Timestamp
@@ -12,10 +12,14 @@ import GuardianCard from "../components/GuardianCard";
 import { callCreateVolunteerProfile } from "../firebase/cloudFunctions";
 import type { Volunteer } from "@models/volunteerType";
 import { emailRegex } from "../util/emailRegex";
+import { ProfilePictureInput } from "../components/ProfilePicture";
+import { ref, uploadBytes } from "firebase/storage";
 
 
 export function VolunteerProfileCreation() {
   const navigate = useNavigate();
+
+  const [pfpFile, setPfpFile] = useState<File | null>(null); // hayst...
 
   const submitDetails = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,6 +37,7 @@ export function VolunteerProfileCreation() {
       address: formData.get("address") as string,
       sex: formData.get("SexDropdown") as string,
       role: formData.get("dropdown") as string,
+      pfpPath: "",
       time_to_live: null
     }
     /*
@@ -53,7 +58,7 @@ export function VolunteerProfileCreation() {
 
     let err = false;
     for (const [, value] of formData.entries()) {
-      console.log(value.toString(), err);
+      // console.log(value.toString(), err);
       if (!(value.toString().trim())) err = true;
     }
 
@@ -74,27 +79,40 @@ export function VolunteerProfileCreation() {
       return
     }
 
+    const pfpFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
 
-
-    const res = await callCreateVolunteerProfile(data);
-
-    if (res.data) {
-      toast.success("Success!");
-      navigate("/admin");
+    if ((formData.get("pfp") as File).size > 0) {
+      data.pfpPath = pfpFilePath
+      const [uploadRes, createRes] = await Promise.all([
+        uploadBytes(ref(store, pfpFilePath), formData.get("pfp") as File),
+        callCreateVolunteerProfile(data)
+      ])
+      if (createRes.data && uploadRes.ref) {
+        toast.success("Success!");
+        navigate(-1);
+      } else {
+        toast.error("Couldn't create profile.");
+      }
     } else {
-      toast.error("Couldn't create profile.");
+      const res = await callCreateVolunteerProfile(data);
+      if (res.data) {
+        toast.success("Success")!
+        navigate(-1);
+      } else {
+        toast.error("Couldn't create profile");
+      }
     }
+
+
   };
 
   return (
     <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
       <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pb-10 px-4 sm:px-6 overflow-hidden">
-        <div className="absolute sm:top-0 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[10px] border-primary rounded-full flex items-center justify-center mb-1 mt-15">
-          <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
-        </div>
 
         <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
           <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
+            <ProfilePictureInput pfpFile={pfpFile} onPfpChange={e => setPfpFile(e.target.files ? e.target.files[0] : null)} />
             <div>
               <label htmlFor="dropdown" className="text-white font-sans font-semibold">
                 Role
@@ -227,6 +245,8 @@ export function BeneficiaryProfileCreation() {
     contact_number: ''
   }])
   const [minimizeState, setMinimize] = useState(false)
+  const [pfpFile, setPfpFile] = useState<File | null>(null); // hayst...
+
 
   function handleMinimize() {
     setMinimize(!minimizeState)
@@ -305,6 +325,11 @@ export function BeneficiaryProfileCreation() {
         const idNumValue = (formData.get("idNum") as string);
         const accredited_id = idNumValue.trim() ? Number(idNumValue) : NaN;
         /* end of change */
+
+        const pfpFilePath = `pfp/beneficiaries/${crypto.randomUUID()}`;
+        if (formData.get("pfp") as File) {
+          await uploadBytes(ref(store, pfpFilePath), formData.get("pfp") as File);
+        }
         const addRef = await addDoc(collection(db, "beneficiaries"), {
           /* accredited_id: accredited_id == 0 ? accredited_id : NaN,*/ // already converts an empty string to NaN
           accredited_id: accredited_id,
@@ -316,6 +341,7 @@ export function BeneficiaryProfileCreation() {
           is_waitlisted: is_waitlisted,
           guardians: guardians,
           sex: formData.get("SexDropdown") as string, /* this was missing pala? */
+          pfpPath: (formData.get("pfp") as File).size > 0 ? pfpFilePath : null,
           time_to_live: null,
         });
 
@@ -365,12 +391,12 @@ export function BeneficiaryProfileCreation() {
   return (
     <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
       <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pb-10 px-4 sm:px-6 overflow-hidden">
-        <div className="absolute sm:top-0 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[10px] border-primary rounded-full flex items-center justify-center mb-1 mt-15">
-          <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
-        </div>
+
 
         <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
           <form className="flex flex-col w-full space-y-3" onSubmit={submitDetails}>
+            <ProfilePictureInput pfpFile={pfpFile} onPfpChange={e => setPfpFile(e.target.files ? e.target.files[0] : null)} />
+
             <div>
               <label htmlFor="idNum" className="text-white font-sans font-semibold">
                 ID no.
