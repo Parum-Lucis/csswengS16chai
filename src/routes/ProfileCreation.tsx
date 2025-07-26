@@ -79,24 +79,31 @@ export function VolunteerProfileCreation() {
       return
     }
 
-    const pfpName = `pfp/volunteers/${crypto.randomUUID()}`
+    const pfpFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
 
-
-    data.pfpPath = pfpName
-    const [uploadRes, createRes] = await Promise.all([
-      uploadBytes(ref(store, pfpName), formData.get("pfp") as File),
-      callCreateVolunteerProfile(data)
-    ])
-
-    console.log(uploadRes)
-    console.log(createRes)
-
-    if (createRes.data && uploadRes.ref) {
-      toast.success("Success!");
-      navigate(-1);
+    if ((formData.get("pfp") as File).size > 0) {
+      data.pfpPath = pfpFilePath
+      const [uploadRes, createRes] = await Promise.all([
+        uploadBytes(ref(store, pfpFilePath), formData.get("pfp") as File),
+        callCreateVolunteerProfile(data)
+      ])
+      if (createRes.data && uploadRes.ref) {
+        toast.success("Success!");
+        navigate(-1);
+      } else {
+        toast.error("Couldn't create profile.");
+      }
     } else {
-      toast.error("Couldn't create profile.");
+      const res = await callCreateVolunteerProfile(data);
+      if (res.data) {
+        toast.success("Success")!
+        navigate(-1);
+      } else {
+        toast.error("Couldn't create profile");
+      }
     }
+
+
   };
 
   return (
@@ -334,7 +341,7 @@ export function BeneficiaryProfileCreation() {
           is_waitlisted: is_waitlisted,
           guardians: guardians,
           sex: formData.get("SexDropdown") as string, /* this was missing pala? */
-          pfpPath: formData.get("pfp") as File ? pfpFilePath : null,
+          pfpPath: (formData.get("pfp") as File).size > 0 ? pfpFilePath : null,
           time_to_live: null,
         });
 

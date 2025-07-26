@@ -22,7 +22,8 @@ function ProfileCard({ profile: {
       try {
         const r = ref(store, pfpPath);
         const blob = await getBlob(r);
-        setPicURL(URL.createObjectURL(blob));
+        if (blob.size > 0)
+          setPicURL(URL.createObjectURL(blob));
       } catch (error) {
         console.error(error);
 
