@@ -325,7 +325,7 @@ describe('Beneficiary Update', () => {
       expect(updateDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          time_to_live: expect.any(Number),
+          time_to_live: expect.any(Object),
         })
       );
       expect(screen.getByText(/Account delete success!/i)).toBeInTheDocument();
