@@ -135,6 +135,7 @@ export const importVolunteers = onCall<string>(async (req) => {
 export const exportVolunteers = onCall<void>(async (req) => {
     logger.log("exportVolunteers called");
     if (!req.auth) return false;
+    if (!req.auth.token.is_admin) return false;
 
     // fetch all volunteers
     const snapshot = await firestore.collection("volunteers").get();

@@ -21,6 +21,7 @@ export function BeneficiaryList() {
 
   // Loading prompt state
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   // Profiles and test profiles flag
   const [profiles, setProfiles] = useState<Beneficiary[]>([]);
@@ -67,6 +68,7 @@ export function BeneficiaryList() {
   // Export handler for beneficiaries
   const handleExport = async () => {
     console.log("Export clicked!")
+    setExporting(true);
     try {
       // create date and time string for filename
       const now = new Date();
@@ -94,6 +96,8 @@ export function BeneficiaryList() {
     } catch (error) {
       toast.error("Failed to export beneficiaries.");
       console.error("Export error:", error);
+    } finally {
+      setExporting(false);
     }
   };
   // Dropdown export
@@ -222,10 +226,10 @@ export function BeneficiaryList() {
             {showDropdown && (
               <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
                 <ul className="py-1">
-                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
-                    onClick={handleExport}
+                  <li className={`font-extraboldsans px-4 py-2 text-gray-700 ${exporting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                    onClick={exporting ? undefined : handleExport}
                   >
-                    Export
+                    {exporting ? "Exporting..." : "Export"}
                   </li>
                 </ul>
               </div>
@@ -264,6 +268,7 @@ export function VolunteerList() {
 
   // Loading prompt state
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   // Profiles and test profiles flag
   const [profiles, setProfiles] = useState<Volunteer[]>([]);
@@ -344,6 +349,7 @@ export function VolunteerList() {
   // Export handler for volunteers
   const handleExport = async () => {
     console.log("Export clicked!")
+    setExporting(true);
     try {
       // create date and time string for filename
       const now = new Date();
@@ -371,6 +377,8 @@ export function VolunteerList() {
     } catch (error) {
       toast.error("Failed to export volunteers.");
       console.error("Export error:", error);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -433,10 +441,10 @@ export function VolunteerList() {
             {showDropdown && (
               <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
                 <ul className="py-1">
-                  <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
-                    onClick={handleExport}
+                  <li className={`font-extraboldsans px-4 py-2 text-gray-700 ${exporting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                    onClick={exporting ? undefined : handleExport}
                   >
-                    Export
+                    {exporting ? "Exporting..." : "Export"}
                   </li>
                 </ul>
               </div>

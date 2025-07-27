@@ -23,6 +23,7 @@ const converter: FirestoreDataConverter<Event> = {
 export function EventList() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
+  const [exporting, setExporting] = useState(false);
 
   // Dropdown export
   useEffect(() => {
@@ -97,6 +98,7 @@ export function EventList() {
 
   const handleExport = async () => {
     console.log("Export clicked!")
+    setExporting(true);
     try {
       // create date and time string for filename
       const now = new Date();
@@ -124,6 +126,8 @@ export function EventList() {
     } catch (error) {
       toast.error("Failed to export events.");
       console.error("Export error:", error);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -178,12 +182,12 @@ export function EventList() {
             {showDropdown && (
               <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
                 <ul className="py-1">
-                    <li
-                    className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
-                    onClick={handleExport}
-                    >
-                    Export
-                    </li>
+                  <li
+                    className={`font-extraboldsans px-4 py-2 text-gray-700 ${exporting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                    onClick={exporting ? undefined : handleExport}
+                  >
+                    {exporting ? "Exporting..." : "Export"}
+                  </li>
                 </ul>
               </div>
             )}
