@@ -142,7 +142,6 @@ const mockUser = {
 describe("Event Integration Tests", () => {
   const MOCK_DATE = new Date();
   const { addDoc, updateDoc, getDocs, deleteDoc } = require("firebase/firestore");
-  const { callDeleteEvent } = require("../firebase/cloudFunctions");
 
   beforeEach(() => {
     jest.useFakeTimers();
