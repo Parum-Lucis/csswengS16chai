@@ -205,7 +205,7 @@ export function EventPage() {
       if (type) {
         const addRef = doc(collection(db, 'events/' + docID + "/attendees"))
         await setDoc(addRef, {
-          attendance: 0,
+          attended: 0,
           who_attended: type,
           first_name: notAttendeeList[i].first_name,
           last_name: notAttendeeList[i].last_name,
@@ -489,45 +489,46 @@ export function EventPage() {
                 </div>
               )}
 
-              <button
-                className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                {isEditing ? "Done" : "Edit"}
-              </button>
-
-              <div className="ml-auto relative">
+              <div className="ml-auto flex flex-row items-center gap-4">
                 <button
-                  type="submit"
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                  onClick={() => {
-                    setShowOtherDropdown(!showOtherDropdown);
-                    setShowAddDropdown(false);
-                  }}
-                  data-dropdown-toggle="dropdownOther"
+                  onClick={() => setIsEditing(!isEditing)}
                 >
-                  <EllipsisVertical className="w-5 h-5" />
+                  {isEditing ? "Done" : "Edit"}
                 </button>
 
-                {showOtherDropdown && (
-                  <div
-                    id="dropdownOther"
-                    className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
+                <div className="relative">
+                  <button
+                    type="submit"
+                    className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                    onClick={() => {
+                      setShowOtherDropdown(!showOtherDropdown);
+                      setShowAddDropdown(false);
+                    }}
+                    data-dropdown-toggle="dropdownOther"
                   >
-                    <ul className="py-1">
-                      <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                        <MessageSquareMore className="w-8 h-5 inline-block" /> Send SMS
-                      </li>
-                      <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                        <Mail className="w-8 h-5 inline-block" /> Send Email
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div> 
-          </div>
-  
+                    <EllipsisVertical className="w-5 h-5" />
+                  </button>
+
+                  {showOtherDropdown && (
+                    <div
+                      id="dropdownOther"
+                      className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
+                    >
+                      <ul className="py-1">
+                        <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                          <MessageSquareMore className="w-8 h-5 inline-block" /> Send SMS
+                        </li>
+                        <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                          <Mail className="w-8 h-5 inline-block" /> Send Email
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div> 
+            </div>
+        </div>
 
         <div className="w-full max-w-2xl mt-3">
           { 
