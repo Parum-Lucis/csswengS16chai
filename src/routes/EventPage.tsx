@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
-import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, deleteDoc, setDoc } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, deleteDoc, setDoc, query, where } from "firebase/firestore"
 import type { Event } from "@models/eventType"
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
 import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
-import { callDeleteEvent } from '../firebase/cloudFunctions';
 import { SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound, Baby, UserRound, MessageSquareMore, Mail } from 'lucide-react';
 import { add } from "date-fns";
 import { sendEmailReminder } from "../firebase/cloudFunctions";
@@ -185,7 +184,8 @@ export function EventPage() {
     if (runQuery) {
       const updList: Beneficiary[] = []
       const updChecklist: number[] = []
-      const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
+      const q = query(collection(db, "beneficiaries"), where("time_to_live", "==", null));
+      const beneficiarySnap = await getDocs(q);
 
       attendees.forEach((att) => {
         beneficiaryID.push(att.beneficiaryID)
@@ -228,6 +228,8 @@ export function EventPage() {
         await setDoc(addRef, {
           attended: false,
           who_attended: type,
+          event_name: event!.name,
+          event_start: event!.start_date,
           first_name: notAttendeeList[i].first_name,
           last_name: notAttendeeList[i].last_name,
           email: notAttendeeList[i].guardians[0].email,
