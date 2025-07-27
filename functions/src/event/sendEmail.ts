@@ -3,7 +3,6 @@ import { getFirestore } from "firebase-admin/firestore";
 import { onCall } from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 import type { Event } from "@models/eventType";
-
 import nodemailer from "nodemailer";
 import mjml2html from "mjml";
 import { formatInTimeZone } from "date-fns-tz";
@@ -26,8 +25,10 @@ export const sendEmailReminder = onCall<Event>(async (req) => {
 
     // takes email of each attendee
     const emailList: string[] = []
+    logger.log(req.data)
     attRef.forEach((att) => {
         emailList.push((att.data() as AttendedEvents).email)
+        logger.log((att.data() as AttendedEvents).email)
     })
 
     // dates

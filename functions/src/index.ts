@@ -216,7 +216,7 @@ export { importBeneficiaries, exportBeneficiaries } from "./csv/beneficiaries";
 export { importVolunteers, exportVolunteers } from "./csv/volunteers";
 export { importEvents, exportEvents } from "./csv/events";
 
-export { sendEmailReminder } from "./sendEmail";
+export { sendEmailReminder } from "./event/sendEmail";
 export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
 export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"
