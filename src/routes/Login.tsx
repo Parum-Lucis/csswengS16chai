@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { useContext, useEffect } from "react";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 
 function Login() {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ function Login() {
   // if there is already a user logged in, just skip the login page.
   useEffect(() => {
     if (user) {
-      navigate("/view-profile");
+      navigate("/me");
     }
   }, [user, navigate]);
 
@@ -42,7 +42,7 @@ function Login() {
         rememberMe ? browserLocalPersistence : browserSessionPersistence
       );
       console.log(user);
-      navigate("/view-profile");
+      navigate("/me");
     } catch (error) {
       // see https://firebase.google.com/docs/auth/admin/errors for other auth/error-codes
       if (error instanceof FirebaseError) {
@@ -53,6 +53,8 @@ function Login() {
         } else if (error.code === "auth/wrong-password") {
           // will only happen in emulator
           toast.error("wrong password bro.");
+        } else if (error.code === "auth/user-disabled") {
+          toast.error("Cannot your account is currently disabled or deleted.")
         }
       } else {
         toast.error("Something went wrong. Please try again.");
@@ -104,7 +106,7 @@ function Login() {
               Remember Me
             </label>
             <a
-              onClick={() => {navigate("/forget-password")}}
+              onClick={() => { navigate("/forget-password") }}
               className="font-sans text-sm text-primary hover:underline cursor-pointer"
             >
               Forgot Password?

@@ -1,32 +1,10 @@
 import "../css/styles.css";
-import { NavLink, useNavigate } from "react-router";
-import { useContext, useEffect } from "react";
-import { UserContext } from "../context/userContext.ts";
-import { callImportBeneficiaries, callImportEvents, callImportVolunteers } from '../firebase/cloudFunctions';
+import { NavLink } from "react-router";
+import { Baby, BookUser, CalendarPlus, Undo2, UserPlus, Wallet, Import} from "lucide-react";
 import { toast } from "react-toastify";
+import { callImportBeneficiaries, callImportEvents, callImportVolunteers } from "../firebase/cloudFunctions";
 
-
-function Admin(){
-    const navigate = useNavigate()
-    const user = useContext(UserContext)
-
-    const urls = [
-        { name: "Create Beneficiary Profile", pldt: "/create-beneficiary-profile" },
-        { name: "Import Beneficiary", onClick: () => { handleImport(0); } },
-        { name: "Create Volunteer Profile", pldt: "/create-volunteer-profile" },  
-        { name: "Import Volunteer", onClick: () => { handleImport(1); } },
-        { name: "Create Event", pldt: "/create-event" },
-        { name: "Import Event", onClick: () => { handleImport(2); } }
-    ];
-
-    useEffect(() => {
-        // If there is no user logged in, skip this page and redirect to login page.
-        if (user === null) {
-          navigate("/");
-        }
-    }, [user, navigate]);
-
-    const handleImport = async (type: 0 | 1 | 2) => {
+const handleImport = async (type: 0 | 1 | 2) => {
         // 0 = import beneficiaries
         // 1 = import volunteers
         // 2 = import event
@@ -100,34 +78,60 @@ function Admin(){
         };
         input.click();
     };
+const volunteerURLs = [
+    { name: "View", pldt: "volunteer", Icon: BookUser },
+    { name: "Create", pldt: "volunteer/new", Icon: UserPlus },
+    { name: "Restore", pldt: "volunteer/deleted", Icon: Undo2 },
+    { name: "Import", onClick: () => handleImport(1), Icon: Import }
+];
 
+const beneficiaryURLs = [
+    { name: "Create", pldt: "/beneficiary/new", Icon: Baby }, // goes to the non-admin creation page
+    { name: "Restore", pldt: "beneficiary/deleted", Icon: Undo2 },
+    { name: "Import", onClick: () => handleImport(0), Icon: Import }
+
+]
+
+
+const eventURLs = [
+    { name: "Create", pldt: "event/new", Icon: CalendarPlus },
+    { name: "SMS", pldt: "event/smscredits", Icon: Wallet },
+    { name: "Import", onClick: () => handleImport(2), Icon: Import }
+]
+
+
+const URLs = [
+    { title: "Volunteer", list: volunteerURLs },
+    { title: "Beneficiary", list: beneficiaryURLs },
+    { title: "Events", list: eventURLs },
+]
+function Admin() {
     return (
-        <div className="w-full bg-secondary flex items-center justify-center px-4 py-10 sm:px-6 lg:px-8 relative mt-20">
-            <div className="relative w-full max-w-2xl flex flex-col items-center px-4 sm:px-6 overflow-hidden">
-            <h1 className="text-center text-5xl font-bold text-primary mb-8 font-sans">Admin Dashboard</h1>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                {urls.map((ur) =>
-                    ur.pldt ? (
-                        <NavLink
-                            key={ur.name}
-                            to={ur.pldt}
-                            className="font-sans font-semibold text-white text-center bg-primary px-5 py-5 rounded-md flex items-center justify-center shadow-lg cursor-pointer hover:opacity-90 transition"
-                        >
-                            {ur.name}
-                        </NavLink>
-                    ) : (
-                        <button
-                            key={ur.name}
-                            onClick={ur.onClick}
-                            className="font-sans font-semibold text-white text-center bg-primary px-5 py-5 rounded-md flex items-center justify-center shadow-lg cursor-pointer hover:opacity-90 transition"
-                        >
-                            {ur.name}
-                        </button>
-                    )
-                )}
+        <div className="w-full min-h-screen flex bg-secondary items-center justify-center">
+            <div className="max-w-4xl grid xl:grid-cols-2">
+                {
+                    URLs.map(({ title, list }) => (
+                        <div className="w-full p-8" key={title}>
+                            <h1 className="text-2xl mb-4">{title}</h1>
+                            <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-fr wrap-anywhere gap-4 font-sans font-bold w-full max-w-5xl text-white">
+                                {list.map(({ name, pldt, onClick, Icon }) =>
+                                    pldt ? (
+                                        <NavLink to={pldt} key={`${name}${pldt}`} className="flex flex-col text-nowrap justify-center items-center duration-100 bg-primary rounded-md text-xl text-center p-6 hover:bg-onhover">
+                                            {name}
+                                            <Icon className="w-12 h-12" />
+                                        </NavLink>
+                                    ) : (
+                                        <button key={name} onClick={onClick} className="flex flex-col text-nowrap justify-center items-center duration-100 bg-primary rounded-md text-xl text-center p-6 hover:bg-onhover" type="button">
+                                            {name}
+                                            <Icon className="w-12 h-12" />
+                                        </button>
+                                    )
+                                )}
+                            </div>
+                        </div>
+                    ))
+                }
             </div>
-            </div>  
         </div>
     );
 }

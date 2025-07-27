@@ -1,26 +1,19 @@
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 import "../css/styles.css";
 import ProfileCard from "../components/ProfileCard";
-import { UserContext } from "../context/userContext";
-import { useContext, useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { useEffect, useMemo, useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import { differenceInYears } from "date-fns";
+import { compareAsc, compareDesc, differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
 import { EllipsisVertical} from 'lucide-react';
 import { callExportBeneficiaries, callExportVolunteers } from '../firebase/cloudFunctions';
-
+import { PlusCircle } from "lucide-react";
+import type { Beneficiary } from "@models/beneficiaryType";
+import { beneficiaryConverter, volunteerConverter } from "../util/converters";
+import type { Volunteer } from "@models/volunteerType";
 
 export function BeneficiaryList() {
-  const navigate = useNavigate();
-  const usertest = useContext(UserContext);
-
-  useEffect(() => {
-    if (usertest === null) {
-      navigate("/");
-    }
-  }, [usertest, navigate]);
-
   // List control states
   const [filter, setFilter] = useState<string>("");
   const [sort, setSort] = useState<string>("");
@@ -30,8 +23,7 @@ export function BeneficiaryList() {
   const [loading, setLoading] = useState(true);
 
   // Profiles and test profiles flag
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const useTestProfiles = false; // false if db query
+  const [profiles, setProfiles] = useState<Beneficiary[]>([]);
 
   // Dropdown export
   const [showDropdown, setShowDropdown] = useState(false);
@@ -40,70 +32,24 @@ export function BeneficiaryList() {
   // RUNS TWICE while in development because of React's strict mode
   // https://www.reddit.com/r/reactjs/comments/1epir3s/why_is_my_useeffect_being_called_twice_even/
   useEffect(() => {
-    if (useTestProfiles) {
-      setProfiles([
-        { first_name: "Juan", last_name: "Dela Cruz", age: 12, sex: "M", type: "student" },
-        { first_name: "Maria", last_name: "Clara", age: 10, sex: "F", type: "student" },
-        { first_name: "Jose", last_name: "Rizal", age: 13, sex: "M", type: "student" },
-        { first_name: "Melchora", last_name: "Aquino", age: 9, sex: "F", type: "student" },
-        { first_name: "Gabriela", last_name: "Silang", age: 7, sex: "F", type: "waitlist" },
-        { first_name: "Maria", last_name: "Elena", age: 11, sex: "F", type: "waitlist" },
-        { first_name: "Apolinario", last_name: "Mabini", age: 8, sex: "M", type: "waitlist" },
-      ]);
-      setLoading(false);
-    } else {
-      const fetchProfiles = async () => {
-        setLoading(true); // display "fetching..."
-        const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
-        const profiles: any[] = [];
-        let flag: boolean = false;
-
-        // TODO: use db models when pulled in main
-        // validate doc fields (allow N/A for now)
-        beneficiarySnap.docs.forEach(doc => {
-          try {
-            const data = doc.data();
-            const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
-            const age = birthDate ? differenceInYears(new Date(), birthDate) : "N/A";
-            const sex = data.sex === "M" || data.sex === "F" ? data.sex : "N/A";
-            const type = Number.isNaN(data.accredited_id) ? "waitlist" : "student";
-            const accredited_id = Number.isNaN(data.accredited_id) ? "waitlisted" : Number(data.accredited_id).toString();
-
-            // Skip if name missing
-            if (!data.first_name || !data.last_name) {
-              flag = true;
-              console.error("Error fetching beneficiary: " + doc.id, "Missing name fields");
-              return;
-            }
-            
-            profiles.push({
-              docId: doc.id,
-              first_name: data.first_name,
-              last_name: data.last_name,
-              sex: sex,
-              age,
-              type,
-              accredited_id,
-            });
-          } catch (error) {
-            flag = true;
-            console.error("Error fetching beneficiary: " + doc.id, error);
-            return;
-          }
-        });
-
-        setProfiles(profiles);
+    const fetchProfiles = async () => {
+      setLoading(true); // display "fetching..."
+      const q = query(collection(db, "beneficiaries"), where("time_to_live", "==", null));
+      try {
+        const beneficiarySnap = await getDocs(q.withConverter(beneficiaryConverter));
+        setProfiles(beneficiarySnap.docs.map(beneficiary => beneficiary.data()))
+        // hi Allen kulang ung name check here!
+      } catch (error) {
+        console.error(error);
+      } finally {
         setLoading(false);
+      }
 
-        // warn that one or more profiles were skipped
-        if (flag) {
-          toast.warn("One or more profiles failed to load.");
-        }
-      };
-      fetchProfiles();
-    }
+
+    };
+    fetchProfiles();
+
   }, []);
-
   // Dropdown export
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -150,55 +96,74 @@ export function BeneficiaryList() {
       console.error("Export error:", error);
     }
   };
+  // Dropdown export
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const dropdown = document.getElementById("dropdownSearch");
+      if (dropdown && !dropdown.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
+  const filteredProfiles = useMemo(() => {
+    // Filter profiles based on filter val
+    let temp = [...profiles];
+    if (filter === "waitlist") {
+      // waitlist: id = NaN (implementation) OR field doesnt exist for benef (incase)
+      temp = temp.filter(profile => profile.accredited_id === undefined || profile.accredited_id === null || isNaN(profile.accredited_id));
+    } else if (filter === "student") {
+      // student: id = an existing field & number!!
+      temp = temp.filter(profile => profile.accredited_id !== undefined && profile.accredited_id !== null && !isNaN(profile.accredited_id));
+    }
 
-  // Filter profiles based on filter val
-  let filteredprofiles = filter ? profiles.filter(profile => profile.type === filter) : profiles;
+    // Sort profiles based on selected sort val
+    if (sort === "last") {
+      temp.sort((a, b) => a.last_name.localeCompare(b.last_name));
+    } else if (sort === "first") {
+      temp.sort((a, b) => a.first_name.localeCompare(b.first_name));
+    } else if (sort === "age") {
+      temp.sort((a, b) => compareDesc(a.birthdate.toDate(), b.birthdate.toDate()));
+    } else if (sort === "id") {
+      temp.sort((a, b) => {
+        // make waitlisted be at bottom of list for ASCENDING
+        const aIsWaitlisted = isNaN(a.accredited_id);
+        const bIsWaitlisted = isNaN(b.accredited_id);
+        if (aIsWaitlisted && bIsWaitlisted) return 0;
+        if (aIsWaitlisted) return 1;
+        if (bIsWaitlisted) return -1;
+        return a.accredited_id - b.accredited_id;
+      });
+    }
 
-  // Sort profiles based on selected sort val
-  if (sort === "last") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.last_name.localeCompare(b.last_name));
-  } else if (sort === "first") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
-  } else if (sort === "age") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.age - b.age);
-  } else if (sort === "id") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => {
-      const aIsWaitlisted = a.accredited_id === "waitlisted";
-      const bIsWaitlisted = b.accredited_id === "waitlisted";
-      if (aIsWaitlisted && bIsWaitlisted) return 0;
-      if (aIsWaitlisted) return 1;
-      if (bIsWaitlisted) return -1;
-      return Number(a.accredited_id) - Number(b.accredited_id);
-    });
-  }
+    // Search filter (partial or exact matches on name and age)
+    if (search.trim() !== "") {
+      const searchLower = search.trim().toLowerCase();
+      const terms = searchLower.split(/[\s,]+/).filter(Boolean);
 
-  // Search filter (partial or exact matches on name and age)
-  if (search.trim() !== "") {
-    const searchLower = search.trim().toLowerCase();
-    const terms = searchLower.split(/[\s,]+/).filter(Boolean);
-
-    filteredprofiles = filteredprofiles.filter(profile => {
-      const values = [
-        profile.first_name.toLowerCase(),
-        profile.last_name.toLowerCase(),
-        profile.accredited_id,
-      ];
-      return terms.every(term =>
-        values.some(value => value.includes(term))
-      );
-    });
-  }
-
+      temp = temp.filter(profile => {
+        const values = [
+          profile.first_name.toLowerCase(),
+          profile.last_name.toLowerCase(),
+          profile.birthdate.toString(),
+          isNaN(profile.accredited_id) ? "waitlisted" : profile.accredited_id.toString(),
+          differenceInYears(new Date(), profile.birthdate.toDate()).toString()
+        ];
+        return terms.every(term =>
+          values.some(value => value.includes(term))
+        );
+      });
+    }
+    return temp;
+  }, [filter, sort, search, profiles]);
 
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Beneficiary List</h1>
-      {/* Beneficiary count */}
-      <div className="text-center text-lg text-white-200 mb-2">
-        {filteredprofiles.length === profiles.length
-          ? `Showing all ${profiles.length} beneficiaries`
-          : `Showing ${filteredprofiles.length} of ${profiles.length} beneficiaries`}
-      </div>
+
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <select
           value={filter}
@@ -220,7 +185,7 @@ export function BeneficiaryList() {
           className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
-          <option className="bg-secondary text-white" value="last"> 
+          <option className="bg-secondary text-white" value="last">
             Last Name
           </option>
           <option className="bg-secondary text-white" value="first">
@@ -247,8 +212,7 @@ export function BeneficiaryList() {
             <button
               type="submit"
               className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
-              onClick={() => {
-                setShowDropdown(!showDropdown);
+              onClick={() => {setShowDropdown(!showDropdown);
               }}
               data-dropdown-toggle="dropdownSearch"
             >
@@ -269,39 +233,22 @@ export function BeneficiaryList() {
           </div>
         </div>
       </div>
-      
+      <div className="flex flex-col gap-4">
+        <Link to="new" className="flex p-4 gap-2 bg-primary mb-4 rounded-xl">
+          <PlusCircle />
+          Create New Profile
+        </Link>
+      </div>
       <div className="flex flex-col gap-4">
         {loading ? (
           // display loading while fetching from database.
           <div className="text-center text-white py-8">Fetching...</div>
-        ) : filteredprofiles.length === 0 ? (
+        ) : filteredProfiles.length === 0 ? (
           <div className="text-center text-white py-8">No profiles to show.</div>
         ) : (
           // non-empty profiles
-          filteredprofiles.map((profile, index) => (
-
-            <div
-              key={`${sort}-${index}`}
-              onClick={() => {
-                console.log(`Profile clicked: ${profile.first_name} ${profile.last_name} (${profile.docId})`);
-                navigate(`/view-beneficiary/${profile.docId}`);
-              }}
-              className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
-            >
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-                <svg
-                  className="w-6 h-6 text-primary"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
-                  />
-                </svg>
-              </div>
-              {/* QA - please keep the change below. */}
-              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} id={profile.accredited_id} />
-            </div>
+          filteredProfiles.map((profile) => (
+            <ProfileCard profile={profile} sort={sort} />
           ))
         )}
       </div>
@@ -310,15 +257,6 @@ export function BeneficiaryList() {
 }
 
 export function VolunteerList() {
-  const navigate = useNavigate();
-  const usertest = useContext(UserContext);
-
-  useEffect(() => {
-    if (usertest === null) {
-      navigate("/");
-    }
-  }, [usertest, navigate]);
-
   // List control states
   const [filter, setFilter] = useState<string>("");
   const [sort, setSort] = useState<string>("");
@@ -328,76 +266,35 @@ export function VolunteerList() {
   const [loading, setLoading] = useState(true);
 
   // Profiles and test profiles flag
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const useTestProfiles = false; // false if db query
+  const [profiles, setProfiles] = useState<Volunteer[]>([]);
 
   // Dropdown export
   const [showDropdown, setShowDropdown] = useState(false);
 
   // Fetching profiles 
   useEffect(() => {
-    if (useTestProfiles) {
-      setProfiles([
-        { first_name: "Juan", last_name: "Dela Cruz", age: 12, sex: "M", is_admin: true },
-        { first_name: "Maria", last_name: "Clara", age: 10, sex: "F", is_admin: true },
-        { first_name: "Jose", last_name: "Rizal", age: 13, sex: "M", is_admin: true },
-        { first_name: "Melchora", last_name: "Aquino", age: 9, sex: "F", is_admin: true },
-        { first_name: "Gabriela", last_name: "Silang", age: 7, sex: "F", is_admin: false },
-        { first_name: "Maria", last_name: "Elena", age: 11, sex: "F", is_admin: false },
-        { first_name: "Apolinario", last_name: "Mabini", age: 8, sex: "M", is_admin: false },
-      ]);
-      setLoading(false);
-    } else {
-      const fetchProfiles = async () => {
-        setLoading(true); // display "fetching..."
-        const volunteerSnap = await getDocs(collection(db, "volunteers"));
-        const profiles: any[] = [];
-        let flag: boolean = false;
+    const fetchProfiles = async () => {
+      setLoading(true); // display "fetching..."
+      const q = query(collection(db, "volunteers"), where("time_to_live", "==", null));
+      // IF PROFILES AREN'T LOADING, PROBABLY COZ UR MISSING time_to_live = null ON UR DOCS
+      try {
+        const volunteerSnap = await getDocs(q.withConverter(volunteerConverter));
+        setProfiles(volunteerSnap.docs.map(profile => ({
+          ...profile.data(),
+          accredited_id: null // NEED THIS PLSPLSPLS FOR PROFILECARD ID DISPLAY PLDPDPLPLSPLSPLS
+        })))
 
-        // TODO: use db models when pulled in main
-        // validate doc fields (allow N/A for now)
-        volunteerSnap.docs.forEach(doc => {
-          try {
-            const data = doc.data();
-            const birthDate = data.birthdate?.toDate ? data.birthdate.toDate() : null;
-            const age = birthDate ? differenceInYears(new Date(), birthDate) : "N/A";
-            const sex = data.sex === "M" || data.sex === "F" ? data.sex : "N/A";
-            const type = data.is_admin ? "admin" : "volunteer";
-            
-            // Skip if name missing
-            if (!data.first_name || !data.last_name) {
-              flag = true;
-              console.error("Error fetching beneficiary: " + doc.id, "Missing name fields");
-              return;
-            }
-
-            // TODO: handle routing to current user's profile differently
-
-            profiles.push({
-              docId: doc.id,
-              first_name: data.first_name,
-              last_name: data.last_name,
-              sex: sex,
-              age: age,
-              type,
-            });
-          } catch (error) {
-            flag = true;
-            console.error("Error fetching volunteer: " + doc.id, error);
-            return;
-          }
-        });
-
-        setProfiles(profiles);
+        console.log(profiles)
+      } catch (error: any) {
+        console.error(error);
+        toast.error("Failed to load volunteers");
+        console.log(error.message)
+      } finally {
         setLoading(false);
+      }
+    };
+    fetchProfiles();
 
-        // warn that one or more profiles were skipped
-        if (flag) {
-          toast.warn("One or more profiles failed to load.");
-        }
-      };
-      fetchProfiles();
-    }
   }, []);
 
   // Dropdown export
@@ -415,7 +312,7 @@ export function VolunteerList() {
   }, [showDropdown]);
 
   // Filter profiles based on filter val
-  let filteredprofiles = filter ? profiles.filter(profile => profile.type === filter) : profiles;
+  let filteredprofiles = filter ? profiles.filter(profile => profile.role.toLocaleLowerCase() === filter.toLocaleLowerCase()) : profiles;
 
   // Sort profiles based on selected sort val
   if (sort === "last") {
@@ -423,7 +320,7 @@ export function VolunteerList() {
   } else if (sort === "first") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
   } else if (sort === "age") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => a.age - b.age);
+    filteredprofiles = [...filteredprofiles].sort((a, b) => compareAsc(a.birthdate.toDate(), b.birthdate.toDate()));
   }
 
   // Search filter (partial or exact matches on name and age)
@@ -435,7 +332,8 @@ export function VolunteerList() {
       const values = [
         profile.first_name.toLowerCase(),
         profile.last_name.toLowerCase(),
-        profile.age.toString()
+        profile.birthdate.toString(),
+        differenceInYears(new Date(), profile.birthdate.toDate()).toString()
       ];
       return terms.every(term =>
         values.some(value => value.includes(term))
@@ -486,11 +384,11 @@ export function VolunteerList() {
           className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
-          <option className="bg-secondary text-white" value="student">
-            Students
+          <option className="bg-secondary text-white" value="volunteer">
+            Volunteers
           </option>
-          <option className="bg-secondary text-white" value="waitlist">
-            Waitlisted
+          <option className="bg-secondary text-white" value="admin">
+            Admins
           </option>
         </select>
 
@@ -500,7 +398,7 @@ export function VolunteerList() {
           className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
-          <option className="bg-secondary text-white" value="last"> 
+          <option className="bg-secondary text-white" value="last">
             Last Name
           </option>
           <option className="bg-secondary text-white" value="first">
@@ -529,9 +427,9 @@ export function VolunteerList() {
               }}
               data-dropdown-toggle="dropdownSearch"
             >
-              <EllipsisVertical className="w-5 h-5"/>
+              <EllipsisVertical className="w-5 h-5" />
             </button>
-            
+
             {showDropdown && (
               <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
                 <ul className="py-1">
@@ -545,41 +443,20 @@ export function VolunteerList() {
             )}
           </div>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-4">
-        {loading ? (
-          // display loading while fetching from database.
-          <div className="text-center text-white py-8">Fetching...</div>
-        ) : filteredprofiles.length === 0 ? (
-          <div className="text-center text-white py-8">No profiles to show.</div>
-        ) : (
-          // non-empty profiles
-          filteredprofiles.map((profile, index) => (
-
-            <div
-              key={`${sort}-${index}`}
-              onClick={() => {
-                navigate(`/view-volunteer/${profile.docId}`);
-              }}
-              className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
-            >
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-                <svg
-                  className="w-6 h-6 text-primary"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
-                  />
-                </svg>
-              </div>
-              {/* QA - please keep the change below. */}
-              <ProfileCard key={`${sort}-${index}`} firstName={profile.first_name} lastName={profile.last_name} age={profile.age} sex={profile.sex} sort={sort} id={null} />
-            </div>
-          ))
-        )}
+        <div className="flex flex-col gap-4">
+          {loading ? (
+            // display loading while fetching from database.
+            <div className="text-center text-white py-8">Fetching...</div>
+          ) : filteredprofiles.length === 0 ? (
+            <div className="text-center text-white py-8">No profiles to show.</div>
+          ) : (
+            // non-empty profiles
+            filteredprofiles.map((profile) => (
+              <ProfileCard profile={profile} sort={sort} key={profile.docID} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
