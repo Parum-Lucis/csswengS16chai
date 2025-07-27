@@ -22,3 +22,6 @@ StringId,String,Id,M,11/12/2004,1,should skip,test,test,09172647328,test@gmail.c
 20,2blank,guardian,M,11/12/2004,1,should keep,,,,,,,,,test,test,09172647328,test@gmail.com
 21,Normal,Benef,M,11/12/2004,1,should keep,test,test,09172647328,test@gmail.com,,,,,,,,
 21,Dupe,Id,M,11/12/2004,1,should skip,test,test,09172647328,test@gmail.com,,,,,,,,
+22,Nursery,grade,M,11/12/2004,Nursery,should keep,test,test,09172647328,test@gmail.com,,,,,,,,
+23,N,grade,M,11/12/2004,n,should keep,test,test,09172647328,test@gmail.com,,,,,,,,
+24,Male,sex,Male,11/12/2004,1,should keep,test,test,09172647328,test@gmail.com,,,,,,,,
