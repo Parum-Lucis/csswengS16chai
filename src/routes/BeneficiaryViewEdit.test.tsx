@@ -7,6 +7,7 @@ import { BeneficiaryProfile } from './BeneficiaryProfile';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ToastContainer } from 'react-toastify';
+import { add } from 'date-fns';
 
 Object.defineProperty(global.self, 'crypto', {
   value: {
@@ -354,6 +355,32 @@ describe('Beneficiary Update', () => {
     await waitFor(() => {
       expect(screen.queryByText(/Confirm Deletion/i)).not.toBeInTheDocument();
     })
+  });
+
+  test('sets a 30-day TTL upon deletion', async () => {
+    const MOCK_DATE = new Date();
+    jest.useFakeTimers();
+    jest.setSystemTime(MOCK_DATE);
+
+    renderBeneficiaryProfile();
+
+    await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: /delete account/i }));
+    fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
+
+    await waitFor(() => {
+      expect(updateDoc).toHaveBeenCalled();
+      const updatePayload = (updateDoc as jest.Mock).mock.calls[0][1];
+      expect(updatePayload).toHaveProperty('time_to_live');
+      const receivedTime = updatePayload.time_to_live.toDate().getTime();
+      const expectedTime = add(MOCK_DATE, { days: 30 }).getTime();
+      expect(Math.abs(receivedTime - expectedTime)).toBeLessThan(1000);
+      expect(screen.getByText(/Account delete success!/i)).toBeInTheDocument();
+      expect(mockedNavigate).toHaveBeenCalledWith('/beneficiary');
+    });
+
+    jest.useRealTimers();
   });
 
   test('confirms account deletion and navigates to login', async () => {
