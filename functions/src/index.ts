@@ -21,6 +21,11 @@ import { onSchedule } from "firebase-functions/scheduler";
 import { createTimestampFromNow } from "./utils/time";
 import { onDocumentUpdated } from "firebase-functions/firestore";
 import { Beneficiary } from "@models/beneficiaryType";
+import { Event } from "@models/eventType"
+
+import 'dotenv/config'
+
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -115,12 +120,28 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
     }
 })
 
-export const updateAttendees = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
+export const updateAttendeesBeneficiary = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
     const batch = firestore.batch()
     const attRef = firestore.collectionGroup("attendees").where("beneficiaryID", "==", event.data?.after.id);
+    (await attRef.get()).forEach((att) => {
+        const data = event.data?.after.data() as Beneficiary;
+        batch.update(att.ref, {
+            "first_name": data.first_name,
+            "last_name": data.last_name,
+            "contact_number": data.guardians[0].contact_number,
+            "email": data.guardians[0].email
+        })
+    })
+
+    await batch.commit()
+})
+
+export const updateAttendeesEvent = onDocumentUpdated("events/{docID}", async (event) => {
+    const batch = firestore.batch()
+    const attRef = firestore.collectionGroup("attendees").where("docID", "==", event.data?.after.id);
     (await attRef.get()).forEach((att) => batch.update(att.ref, {
-        "first_name": (event.data?.after.data() as Beneficiary).first_name,
-        "last_name": (event.data?.after.data() as Beneficiary).last_name
+        "event_name": (event.data?.after.data() as Event).name,
+        "event_start": (event.data?.after.data() as Event).start_date
     }))
 
     await batch.commit()
@@ -192,6 +213,9 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
     }
 })
 
+export { sendEmailReminder } from "./sendEmail";
 
 export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
 export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
+export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"
+export { getSMSCredits } from "./event/getSMSCredits"
