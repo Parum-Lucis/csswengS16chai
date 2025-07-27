@@ -227,6 +227,7 @@ describe("Create Volunteer Profile", () => {
       sex: "male",
       is_admin: false,
       role: "volunteer",
+      pfpPath: null, // cuz of new feature
       time_to_live: null,
     });
   });
