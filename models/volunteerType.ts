@@ -1,7 +1,7 @@
 import type { Timestamp } from "firebase/firestore";
 
 export interface Volunteer {
-  docID?: string;
+  docID: string;
   last_name: string;
   first_name: string;
   contact_number: string;
@@ -11,5 +11,7 @@ export interface Volunteer {
   sex: string;
   address: string;
   birthdate: Timestamp;
+  pfpPath?: string;
+  pfpFile?: File | null; //not stored in firestore. Instead, should be retrieved via getBlob(...) or some other.
   time_to_live?: Timestamp | null;
 }

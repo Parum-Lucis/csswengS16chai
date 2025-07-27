@@ -23,6 +23,7 @@ import { onDocumentUpdated } from "firebase-functions/firestore";
 import { Beneficiary as BeneficiaryFrontend } from "@models/beneficiaryType";
 import { Guardian } from "@models/guardianType"
 import { Event } from "@models/eventType";
+import 'dotenv/config';
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -98,14 +99,28 @@ const emailRegEx = new RegExp(
 
 // list of valid grade levels
 const validGradeLevels = [
-    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "nursery", "kindergarten"
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "n", "k"
 ];
+
+export const promoteMetoAdmin = onCall(async (req) => {
+    if (!req.auth) return false;
+    const { uid } = req.auth;
+    await auth.setCustomUserClaims(uid, { is_admin: true });
+    firestore.doc(`volunteers/${uid}`).update(
+        {
+            role: "Admin",
+            is_admin: true
+        }
+    )
+    return true;
+})
 
 export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
     if (!req.auth) return false;
     if (!req.auth.token.is_admin) return false;
 
-    const { email, is_admin } = req.data;
+    const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate, pfpPath } = req.data;
+    console.log(req.data);
     try {
 
         const { uid } = await auth.createUser({
@@ -115,7 +130,19 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 
         await Promise.all([
             auth.setCustomUserClaims(uid, { is_admin }),
-            firestore.doc(`volunteers/${uid}`).create(req.data)
+            firestore.doc(`volunteers/${uid}`).create({
+                first_name,
+                last_name,
+                contact_number,
+                email,
+                role,
+                is_admin,
+                sex,
+                address,
+                pfpPath: pfpPath === undefined || pfpPath.length === 0 ? null : pfpPath,
+                birthdate: new Timestamp(birthdate.seconds, birthdate.nanoseconds),
+                time_to_live: null
+            })
         ])
 
         return true;
@@ -129,10 +156,14 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 
 export const deleteVolunteerProfile = onCall<string>(async (req) => {
     if (!req.auth) return false;
+    if (req.auth.uid !== req.data && !req.auth.token.is_admin) return false;
 
     const uid = req.data;
     try {
 
+        await auth.updateUser(uid, {
+            disabled: true
+        })
         await firestore.doc(`volunteers/${uid}`).update(
             { time_to_live: createTimestampFromNow({ seconds: 30 }) }
         )
@@ -144,43 +175,28 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
     }
 })
 
-export const deleteBeneficiaryProfile = onCall<string>(async (req) => {
-    if (!req.auth) return false;
-
-    const uid = req.data;
-    try {
-        await firestore.doc(`beneficiaries/${uid}`).update(
-            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
-        )
-        return true;
-
-    } catch (error) {
-        logger.error(error)
-        return false;
-    }
-})
-
-export const deleteEvent = onCall<string>(async (req) => {
-    if (!req.auth) return false;
-
-    const uid = req.data;
-    try {
-        await firestore.doc(`events/${uid}`).update(
-            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
-        );
-        return true;
-    } catch (error) {
-        logger.error(error);
-        return false;
-    }
-});
-
-export const updateAttendees = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
+export const updateAttendeesBeneficiary = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
     const batch = firestore.batch()
     const attRef = firestore.collectionGroup("attendees").where("beneficiaryID", "==", event.data?.after.id);
+    (await attRef.get()).forEach((att) => {
+        const data = event.data?.after.data() as Beneficiary;
+        batch.update(att.ref, {
+            "first_name": data.first_name,
+            "last_name": data.last_name,
+            "contact_number": data.guardians[0].contact_number,
+            "email": data.guardians[0].email
+        })
+    })
+
+    await batch.commit()
+})
+
+export const updateAttendeesEvent = onDocumentUpdated("events/{docID}", async (event) => {
+    const batch = firestore.batch()
+    const attRef = firestore.collectionGroup("attendees").where("docID", "==", event.data?.after.id);
     (await attRef.get()).forEach((att) => batch.update(att.ref, {
-        "first_name": (event.data?.after.data() as Beneficiary).first_name,
-        "last_name": (event.data?.after.data() as Beneficiary).last_name
+        "event_name": (event.data?.after.data() as Event).name,
+        "event_start": (event.data?.after.data() as Event).start_date
     }))
 
     await batch.commit()
@@ -834,3 +850,9 @@ export const exportVolunteers = onCall<void>(async (req) => {
     const csvContent = csvRows.join("\r\n");
     return csvContent;
 });
+
+export { sendEmailReminder } from "./sendEmail";
+export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
+export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
+export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"
+export { getSMSCredits } from "./event/getSMSCredits"

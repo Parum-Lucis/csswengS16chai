@@ -3,31 +3,40 @@ import "../css/styles.css";
 import { useNavigate } from "react-router";
 import { auth } from "../firebase/firebaseConfig";
 import { toast } from "react-toastify";
-import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { useContext, useEffect, useState, useRef } from "react";
-import { UserContext } from "../context/userContext";
+import { useState, useRef } from "react";
+import { emailRegex } from "../util/emailRegex";
 
 function ForgetMeNot() {
     const [formState, setForm] = useState(1);
     const buttonRef = useRef<HTMLButtonElement>(null);
+    const [disableButton, setDisableButton] = useState(false);
     const navigate = useNavigate();
-    const user = useContext(UserContext);
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>){
         e.preventDefault();
+        setDisableButton(true)
         const formData = new FormData(e.target as HTMLFormElement);
         const email = formData.get("username") as string;
         
-        if (buttonRef.current){
-            buttonRef.current.blur()
+        if (!emailRegex.test(email)) {
+            toast.error("Please input a proper email.");
+            setDisableButton(false)
+            if (buttonRef.current){
+                buttonRef.current.blur()
+            }
+              return;
         }
-
         if (formState < 3){
             if (formState === 1){
-                sendPasswordResetEmail(auth, email)
+                
+                sendPasswordResetEmail(auth, email ,{
+                    url: "https://chai-met.firebaseapp.com/"
+                })
                 .then(() => {
                     console.log("Password reset email sent")
+                    toast.success("Password reset email sent")
                 })
                 .catch((error: FirebaseError) => {
                     const errorCode = error.code;
@@ -35,20 +44,12 @@ function ForgetMeNot() {
                     console.log (errorCode);
                     console.log(errorMessage);
                 })
-                navigate("/")
             }
             setForm(formState + 1)
         } else {
             console.log("HIII")
         }
     }
-
-    // if there is already a user logged in, just skip the login page.
-    useEffect(() => {
-        if (user) {
-        navigate("/view-profile");
-        }
-    }, [user, navigate]);
 
     return (
         <div className="transition-all duration-500 ease-in-out w-full max-w-lg mx-auto h-[90vh] flex flex-col items-center justify-center">
@@ -80,52 +81,14 @@ function ForgetMeNot() {
                             }`}
                         />
                     </div>
-                    <div
-                        className={`flex flex-col transition-all duration-500 ease-in-out ${
-                        formState >= 2
-                            ? "opacity-100 translate-x-0 h-[8vh]"
-                            : "opacity-0 -translate-x-5 pointer-events-none h-0"
-                        }`}
-                    >
-                        <label htmlFor="code" className="font-sans font-semibold">
-                        Enter Confirmation Code
-                        </label>
-                        <input
-                        id="code"
-                        name="code"
-                        type="text"
-                        readOnly={formState >= 3}
-                        className={`transition-all duration-500 border-solid border-3 rounded-[5px] p-1.5 ${
-                                formState >=3
-                                    ? "bg-gray-300"
-                                    : "bg-transparent"
-                        }`}
-                        />
-                    </div>
-                    <div
-                        className={`flex flex-col transition-all duration-500 ease-in-out ${
-                        formState >= 3
-                            ? "opacity-100 translate-x-0 h-[8vh]"
-                            : "opacity-0 -translate-x-5 pointer-events-none h-0"
-                        }`}
-                    >
-                        <label htmlFor="nPassword" className="font-sans font-semibold">
-                            Enter new Password
-                        </label>
-                        <input
-                            id="nPassword"
-                            name="nPassword"
-                            type="password"
-                            className="border-solid border-3 rounded-[5px] p-1.5"
-                        />
-                    </div>
                     <button
-                        ref={buttonRef}
                         type="submit"
+                        ref={buttonRef}
+                        disabled={disableButton}
                         className="bg-primary text-white mt-2 p-1.5 rounded-[5px] w-full m-auto font-semibold cursor-pointer duration-200 transition-all
                         hover:opacity-50 focus:opacity-50"
                     >
-                        {formState <=2 ? "Continue" : "Change Password"}
+                        Submit Email
                     </button>
                     <a
                         onClick={() => {navigate("/")}}

@@ -5,11 +5,10 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import { UserContext } from '../context/userContext';
+import { UserContext } from '../util/userContext';
 import { VolunteerProfile } from './VolunteerProfile';
 import { YourProfile } from './YourProfile';
-import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
-import { auth, db } from '../firebase/firebaseConfig';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { callDeleteVolunteerProfile } from '../firebase/cloudFunctions';
 
 jest.mock('firebase/firestore', () => ({

@@ -10,6 +10,10 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
 import { callDeleteEvent } from '../firebase/cloudFunctions';
 import { SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound, Baby, UserRound, MessageSquareMore, Mail } from 'lucide-react';
+import { add } from "date-fns";
+import { sendEmailReminder } from "../firebase/cloudFunctions";
+import { SendSMSModal } from "../components/SendSMSModal";
+import { SendEmailModal } from "../components/SendEmailModal";
 
 export function EventPage() {
   const params = useParams()
@@ -30,13 +34,18 @@ export function EventPage() {
   const [showAddDropdown, setShowAddDropdown] = useState(false)
   const [showOtherDropdown, setShowOtherDropdown] = useState(false)
 
+  // for sms & email modal
+  const [isShowSMSModal, setIsShowSMSModal] = useState(false);
+  const [isShowEmailModal, setIsShowEmailModal] = useState(false);
+
+  // use effect for fetch event & fetch attendees
   useEffect(() => {
     const fetchEvent = async () => {
       const getQuery = doc(db, "events", params.docId as string)
       const attendeeQuery = collection(db, "events", params.docId as string, "attendees")
       const eventsSnap = await getDoc(getQuery)
       const attendeesList = await getDocs(attendeeQuery)
-      if (eventsSnap.exists()){
+      if (eventsSnap.exists()) {
         setEvent(eventsSnap.data() as Event)
         setOriginalEvent(eventsSnap.data() as Event)
       }
@@ -102,6 +111,7 @@ export function EventPage() {
 
   const { name, description, location: event_location } = event || {}
 
+  // date handling
   const start_date = new Date((event?.start_date.seconds ?? 0) * 1000)
   start_date.setMinutes(start_date.getMinutes() - start_date.getTimezoneOffset()) // local datetime
 
@@ -110,54 +120,64 @@ export function EventPage() {
 
   const max_date = start_date.toISOString().substring(0, 11) + "23:59"
   console.log(max_date, start_date.toISOString().substring(0, 16))
+
+  // edit event
   const handleSave = async (e: React.MouseEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!name?.trim() || !description?.trim() || !start_date || !end_date) {
       toast.error("Please fill up all fields!")
       return
     }
-    if (start_date > end_date) {
+    else if (start_date.getTime() > end_date.getTime()) {
       toast.error("Start date cannot be greater than end date!")
       return
     }
-    console.log("i am here")
-    try {
-      start_date.setMinutes(start_date.getMinutes() + start_date.getTimezoneOffset())
-      end_date.setMinutes(end_date.getMinutes() + end_date.getTimezoneOffset())
-      const updateRef = doc(db, "events", docID!)
-      await updateDoc(updateRef, {
-        ...event
-      })
-      setOriginalEvent(event)
-      toast.success("Update success!")
-      console.log(event)
-    } catch {
-      toast.error("Something went wrong")
+    else if (start_date.toISOString().substring(0, 10) !== end_date.toISOString().substring(0, 10)) {
+      toast.error("Start date must be the same date as end date!")
+      return
+    }
+    else {
+      console.log("i am here")
+      try {
+        start_date.setMinutes(start_date.getMinutes() + start_date.getTimezoneOffset())
+        end_date.setMinutes(end_date.getMinutes() + end_date.getTimezoneOffset())
+        const updateRef = doc(db, "events", docID!)
+        await updateDoc(updateRef, {
+          ...event
+        })
+        setOriginalEvent(event)
+        toast.success("Update success!")
+        console.log(event)
+      } catch {
+        toast.error("Something went wrong")
+      }
     }
   }
 
+  // delete modal
   function handleDelete() {
     setDeleteModal(!showDeleteModal);
   }
 
+  // delete event
   const handleConfirm = async () => {
+    if (!params.docId) return;
     setDeleteModal(!showDeleteModal)
 
     try {
-      callDeleteEvent(params.docId)
-        .then((result) => {
-          if (result.data) {
-            toast.success("Event delete success!")
-            navigate("/view-event-list");
-          } else { toast.error("Could not delete the event (no auth or event not found)") }
-        })
+      const d = doc(db, "events", params.docId);
+      await updateDoc(d, {
+        time_to_live: Timestamp.fromDate(add(new Date(), { days: 30 }))
+      })
+      toast.success("Event delete success!")
+      navigate("/event");
     }
     catch {
-      toast.error("Something went wrong!")
+      toast.error("Could not delete the event (no auth or event not found)");
     }
   }
 
-  // fixed
+  // retrieves all beneficiaries not in attendee list, only runs the first time add attendees button is pressed
   const showBeneficiaryList = async () => {
     const beneficiaryID: string[] = []
     setChecklist([])
@@ -166,7 +186,7 @@ export function EventPage() {
       const updList: Beneficiary[] = []
       const updChecklist: number[] = []
       const beneficiarySnap = await getDocs(collection(db, "beneficiaries"));
-      
+
       attendees.forEach((att) => {
         beneficiaryID.push(att.beneficiaryID)
       })
@@ -188,6 +208,7 @@ export function EventPage() {
     }
   }
 
+  // adds new attendees to attendee list, then refreshes page
   const handleAddAttendees = async () => {
     let upd = false
     for (let i = 0; i < checklist.length; i++) {
@@ -209,6 +230,8 @@ export function EventPage() {
           who_attended: type,
           first_name: notAttendeeList[i].first_name,
           last_name: notAttendeeList[i].last_name,
+          email: notAttendeeList[i].guardians[0].email,
+          contact_number: notAttendeeList[i].guardians[0].contact_number,
           beneficiaryID: notAttendeeList[i].docID,
           docID: addRef.id
         });
@@ -230,7 +253,7 @@ export function EventPage() {
     }
   }
 
-  // todo: refactor (remove bene list)
+  // removes attendees from attendee list, then refreshes page
   const handleRemoveAttendees = async () => {
     let refresh = false
     console.log("checklist is" + editChecklist)
@@ -245,13 +268,23 @@ export function EventPage() {
     }
     if (refresh) {
       toast.success("Success!");
-      setTimeout(function() {
-            location.reload();
-        }, 1000);
+      setTimeout(function () {
+        location.reload();
+      }, 1000);
       setRunQuery(true)
     }
     else toast.success("Nothing to update")
   }
+
+  function handleSendSMSButtonClick() {
+    setIsShowSMSModal(true);
+    setShowOtherDropdown(false);
+  }
+  
+  function handleSendEmailButtonClick() {
+    setIsShowEmailModal(true);
+    setShowOtherDropdown(false); // Close the dropdown when the modal opens
+  } 
 
   const handleUpdateAttendance = async () => {
     let refresh = false
@@ -310,7 +343,6 @@ export function EventPage() {
             <h2 className="text-secondary text-2xl text-center font-bold font-sans">
               {name ?? "Event Name"}
             </h2>
-
             <div className="flex flex-col gap-4 mt-6">
               <div className="flex flex-col flex-1">
                 <label
@@ -346,48 +378,45 @@ export function EventPage() {
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex flex-col flex-1">
-                  <label
-                    htmlFor="startdate"
-                    className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                    Start:
-                  </label>
-
-                  <input
-                    id="startdate"
-                    name="startdate"
-                    type="datetime-local"
-                    className="input-text w-full appearance-none"
-                    step="1"
-                    value={start_date.toISOString().substring(0, 19)}
-                    onChange={e => setEvent(prev => ({ ...prev as Event, start_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
+                <div className="flex flex-col sm:flex-row gap-4 w-full">
+                  <div className="flex flex-col flex-1 w-full">
+                    <label
+                      htmlFor="startdate"
+                      className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                      Start:
+                    </label>
+                    <input
+                      id="startdate"
+                      name="startdate"
+                      type="datetime-local"
+                      className="input-text w-full appearance-none"
+                      step="1"
+                      value={start_date.toISOString().substring(0, 19)}
+                      onChange={e => setEvent(prev => ({ ...prev as Event, start_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
                     />
-                </div>
-
-                <div className="flex flex-col flex-1">
-                  <label htmlFor="enddate"
-                    className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                    End:
-                  </label>
-
-                  <input
-                    id="enddate"
-                    name="enddate"
-                    type="datetime-local"
-                    className="input-text w-full appearance-none"
-                    step="1"
-                    min={start_date.toISOString().substring(0, 16)}
-                    max={max_date}
-                    value={end_date.toISOString().substring(0, 19)}
-                    onChange={e => setEvent(prev => ({ ...prev as Event, end_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.end_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
-                  />
+                  </div>
+                  <div className="flex flex-col flex-1 w-full">
+                    <label htmlFor="enddate"
+                      className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                      End:
+                    </label>
+                    <input
+                      id="enddate"
+                      name="enddate"
+                      type="datetime-local"
+                      className="input-text w-full appearance-none"
+                      step="1"
+                      value={end_date.toISOString().substring(0, 19)}
+                      onChange={e => setEvent(prev => ({ ...prev as Event, end_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.end_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="flex flex-col flex-1">
                 <label htmlFor="location" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                  Location
+                  Location:
                 </label>
                 <input
                   id="location"
@@ -438,7 +467,7 @@ export function EventPage() {
                   >
                     <SquarePlus className="w-5 h-5 inline-block" />
                   </button>
-
+                    
                   {showAddDropdown && (
                     <div
                       id="dropdownAdd"
@@ -544,12 +573,34 @@ export function EventPage() {
                       className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
                     >
                       <ul className="py-1">
-                        <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
-                          <MessageSquareMore className="w-8 h-5 inline-block" /> Send SMS
+                        <li className="font-extraboldsans text-gray-700 cursor-pointer hover:opacity-70">
+                          <button
+                            type="button"
+                            className="cursor-pointer px-4 py-2 w-full h-full text-left flex items-center"
+                            onClick={handleSendSMSButtonClick}
+                          >
+                            <MessageSquareMore className="w-8 h-5 inline-block mr-2" /> Send SMS
+                          </button>
                         </li>
-                        <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer">
+                        <li
+                          className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
+                          onClick={handleSendEmailButtonClick}
+                        >
                           <Mail className="w-8 h-5 inline-block" /> Send Email
                         </li>
+                        <SendEmailModal
+                          onClose={() => { console.log("Email Modal closed"); setIsShowEmailModal(false); }}
+                          attendees={attendees}
+                          showModal={isShowEmailModal}
+                          event={event ?? {
+                          description: "",
+                          end_date: new Timestamp(0, 0),
+                          start_date: new Timestamp(0, 0),
+                          location: "",
+                          name: "",
+                          attendees: []
+                          } as Event}
+                        />
                       </ul>
                     </div>
                   )}
@@ -574,7 +625,27 @@ export function EventPage() {
             )) : <div className="text-center text-white w-full max-w-2xl items-center mt-2 mr-2 font-sans bg-primary p-5 rounded-[5px] font-semibold mb-2"> "No data to show" </div>
           }
         </div>
+      </div>
+      {/* just shoving my modals down here cause it doesn't matter where they are technically. */}
+      <SendSMSModal onClose={() => { console.log("hi"); setIsShowSMSModal(false) }} attendees={attendees} showModal={isShowSMSModal}
+        event={event ?? {
+          description: "",
+          end_date: new Timestamp(0, 0),
+          start_date: new Timestamp(0, 0),
+          location: "",
+          name: "",
+          attendees: []
+        } as Event} />
+
+      <SendEmailModal onClose={() => { console.log("Email Modal closed"); setIsShowEmailModal(false) }} attendees={attendees} showModal={isShowEmailModal}
+        event={event ?? {
+          description: "",
+          end_date: new Timestamp(0, 0),
+          start_date: new Timestamp(0, 0),
+          location: "",
+          name: "",
+          attendees: []
+        } as Event} />
     </div>
-  </div>
   );
 }

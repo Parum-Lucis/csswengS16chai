@@ -5,8 +5,8 @@ import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
-import { UserContext } from "../context/userContext";
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
+import { UserContext } from "../util/userContext";
+import { getDocs, getDoc, addDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { EventCreation } from "./EventCreation";
 import { EventList } from "./EventList";
 import { EventPage } from "./EventPage";
@@ -128,7 +128,7 @@ describe("Event Creation", () => {
         await waitFor(() => {
             expect(addDoc).toHaveBeenCalled();
             expect(toast.success).toHaveBeenCalledWith("Event created successfully!");
-            expect(mockedNavigate).toHaveBeenCalledWith("/view-admin");
+            expect(mockedNavigate).toHaveBeenCalledWith("/admin");
         });
     });
 
@@ -312,9 +312,9 @@ describe("Edit Event", () => {
         fireEvent.click(screen.getByRole("button", { name: /edit/i }));
     
         // what should happen
-        // await waitFor(() => {
-        //   expect(toast.error).toHaveBeenCalledWith("Something went wrong");
-        // });
+        await waitFor(() => {
+          expect(toast.error).toHaveBeenCalledWith("Start date cannot be greater than end date!");
+        });
         expect(updateDoc).not.toHaveBeenCalled();
     });
 });
@@ -361,7 +361,7 @@ describe("Delete Event", () => {
         await waitFor(() => {
             expect(callDeleteEvent).toHaveBeenCalledWith("test-event-id");
             expect(toast.success).toHaveBeenCalledWith("Event delete success!");
-            expect(mockedNavigate).toHaveBeenCalledWith("/view-event-list");
+            expect(mockedNavigate).toHaveBeenCalledWith("/event");
         });
     });
 });

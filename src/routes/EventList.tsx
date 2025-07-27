@@ -1,6 +1,5 @@
-import { useContext, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { UserContext } from "../context/userContext";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 import type { Event } from "@models/eventType";
 import { collection, getDocs, QueryDocumentSnapshot, type FirestoreDataConverter } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
@@ -22,12 +21,9 @@ const converter: FirestoreDataConverter<Event> = {
 }
 
 export function EventList() {
-  const navigate = useNavigate();
-  const usertest = useContext(UserContext);
   const [showDropdown, setShowDropdown] = useState(false);
-
   const [events, setEvents] = useState<Event[]>([]);
-  
+
   // Dropdown export
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -55,12 +51,6 @@ export function EventList() {
 
     fetchEvents()
   }, []);
-
-  useEffect(() => {
-    if (usertest === null) {
-      navigate("/");
-    }
-  }, [usertest, navigate]);
 
   const [filter, setFilter] = useState<string>("");
   const [sort, setSort] = useState<string>("");
@@ -173,7 +163,7 @@ export function EventList() {
             className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-9/10"
           />
 
-          <div className="relative w-2/10">
+          <div className="relative w-1/10">
             <button
               type="submit"
               className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
@@ -182,9 +172,9 @@ export function EventList() {
               }}
               data-dropdown-toggle="dropdownSearch"
             >
-              <EllipsisVertical className="w-5 h-5"/>
+              <EllipsisVertical className="w-5 h-5" />
             </button>
-            
+
             {showDropdown && (
               <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
                 <ul className="py-1">
@@ -199,12 +189,12 @@ export function EventList() {
             )}
           </div>
         </div>
-      </div>
-      
-      <div className="flex flex-col gap-4">
-        {modifiedList.map((event, i) => (
-          <EventCard event={event} key={`${i}${event.docID}`} />
-        ))}
+
+        <div className="flex flex-col gap-4">
+          {modifiedList.map((event, i) => (
+            <EventCard event={event} key={`${i}${event.docID}`} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -218,7 +208,7 @@ function EventCard(
 
   return (
     <Link
-      to={`/view-event/${docID}`}
+      to={`/event/${docID}`}
       className="flex items-center bg-primary text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
     >
       <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 shrink-0">

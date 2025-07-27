@@ -11,5 +11,7 @@ export interface Beneficiary {
   sex: string;
   grade_level: number;
   guardians: Guardian[];
-  time_to_live?: Timestamp | null;
+  pfpPath?: string;
+  pfpFile?: File | null;
+  time_to_live?: Timestamp | null; 
 }
