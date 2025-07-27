@@ -10,7 +10,6 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
 import { SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound, Baby, UserRound, MessageSquareMore, Mail } from 'lucide-react';
 import { add } from "date-fns";
-import { sendEmailReminder } from "../firebase/cloudFunctions";
 import { SendSMSModal } from "../components/SendSMSModal";
 import { SendEmailModal } from "../components/SendEmailModal";
 
@@ -45,8 +44,8 @@ export function EventPage() {
       const eventsSnap = await getDoc(getQuery)
       const attendeesList = await getDocs(attendeeQuery)
       if (eventsSnap.exists()) {
-        setEvent({...eventsSnap.data() as Event, docID : eventsSnap.id})
-        setOriginalEvent({...eventsSnap.data() as Event, docID : eventsSnap.id})
+        setEvent({ ...eventsSnap.data() as Event, docID: eventsSnap.id })
+        setOriginalEvent({ ...eventsSnap.data() as Event, docID: eventsSnap.id })
       }
       if (!attendeesList.empty) {
         const updAttendees: AttendedEvents[] = []
@@ -83,18 +82,18 @@ export function EventPage() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-        if (
-          event.target instanceof HTMLElement &&
-          !target.closest("[data-dropdown-toggle='addDropdown']") &&
-          !target.closest("[data-dropdown-toggle='removeDropdown']") &&
-          !target.closest("[data-dropdown-toggle='otherDropdown']") &&
-          !target.closest("#dropdownAdd") &&
-          !target.closest("#dropdownRemove") &&
-          !target.closest("#dropdownOther")
-        ) {
-          setShowAddDropdown(false);
-          setShowOtherDropdown(false);
-        }
+      if (
+        event.target instanceof HTMLElement &&
+        !target.closest("[data-dropdown-toggle='addDropdown']") &&
+        !target.closest("[data-dropdown-toggle='removeDropdown']") &&
+        !target.closest("[data-dropdown-toggle='otherDropdown']") &&
+        !target.closest("#dropdownAdd") &&
+        !target.closest("#dropdownRemove") &&
+        !target.closest("#dropdownOther")
+      ) {
+        setShowAddDropdown(false);
+        setShowOtherDropdown(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -102,8 +101,8 @@ export function EventPage() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-    }, []);
-    
+  }, []);
+
   useEffect(() => {
     document.body.style.overflow = showDeleteModal ? 'hidden' : 'unset';
   }, [showDeleteModal]);
@@ -198,13 +197,13 @@ export function EventPage() {
         })
         setNotAttendeeList(updList)
         setChecklist(updChecklist)
-      }else {
+      } else {
         const updChecklist: number[] = []
-          notAttendeeList.forEach(() => {
-            updChecklist.push(0)
-          })
-      setChecklist(updChecklist)
-     }
+        notAttendeeList.forEach(() => {
+          updChecklist.push(0)
+        })
+        setChecklist(updChecklist)
+      }
     }
   }
 
@@ -213,7 +212,7 @@ export function EventPage() {
     let upd = false
     for (let i = 0; i < checklist.length; i++) {
       let type = ""
-      switch(checklist[i]) {
+      switch (checklist[i]) {
         case 1:
           type = "Family"
           break
@@ -282,11 +281,11 @@ export function EventPage() {
     setIsShowSMSModal(true);
     setShowOtherDropdown(false);
   }
-  
+
   function handleSendEmailButtonClick() {
     setIsShowEmailModal(true);
     setShowOtherDropdown(false); // Close the dropdown when the modal opens
-  } 
+  }
 
   const handleUpdateAttendance = async () => {
     let refresh = false
@@ -304,9 +303,9 @@ export function EventPage() {
     }
     if (refresh) {
       toast.success("Success!");
-      setTimeout(function() {
-            location.reload();
-        }, 1000);
+      setTimeout(function () {
+        location.reload();
+      }, 1000);
       setRunQuery(true)
     }
     else toast.success("Nothing to update")
@@ -363,7 +362,7 @@ export function EventPage() {
                   required
                 />
               </div>
-              
+
               <div className="flex flex-col flex-1">
                 <label
                   htmlFor="description"
@@ -426,7 +425,7 @@ export function EventPage() {
                   type="text"
                   className="input-text w-full"
                   value={event_location}
-                  onChange={e => setEvent(prev => ({ ...prev as Event, location: e.target.value}))}
+                  onChange={e => setEvent(prev => ({ ...prev as Event, location: e.target.value }))}
                   required
                 />
               </div>
@@ -452,56 +451,56 @@ export function EventPage() {
             </div>
           </form>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row justify-between w-full max-w-2xl mt-4 sm:gap-4">
           <h2 className="text-primary text-2xl font-bold font-sans text-center sm:text-left mt-5">List of Attendees:</h2>
-           <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditing ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/4'}`}>
-              {isEditing && (
-                <div className="flex flex-row gap-3 items-center">
-                  <button
-                    className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                    onClick={() => {
-                      setShowAddDropdown(!showAddDropdown)
-                      showBeneficiaryList()
-                      setShowOtherDropdown(false)
-                    }}
-                    data-dropdown-toggle="dropdownAdd"
+          <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditing ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/4'}`}>
+            {isEditing && (
+              <div className="flex flex-row gap-3 items-center">
+                <button
+                  className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                  onClick={() => {
+                    setShowAddDropdown(!showAddDropdown)
+                    showBeneficiaryList()
+                    setShowOtherDropdown(false)
+                  }}
+                  data-dropdown-toggle="dropdownAdd"
+                >
+                  <SquarePlus className="w-5 h-5 inline-block" />
+                </button>
+
+                {showAddDropdown && (
+                  <div
+                    id="dropdownAdd"
+                    className="absolute top-full mt-2 left-0 w-full bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60"
                   >
-                    <SquarePlus className="w-5 h-5 inline-block" />
-                  </button>
-                    
-                  {showAddDropdown && (
-                    <div
-                      id="dropdownAdd"
-                      className="absolute top-full mt-2 left-0 w-full bg-white rounded-lg shadow-lg px-4 py-3 z-50 flex flex-col space-y-4 max-h-60"
-                    >
-                      <input
-                        type="text"
-                        placeholder="Search"
-                        className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
-                      />
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {notAttendeeList.length > 0 ? (
-                          notAttendeeList.map((notAtt, i) => (
-                            <label
-                              key={i}
-                              className="flex items-center justify-between px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer"
+                    <input
+                      type="text"
+                      placeholder="Search"
+                      className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
+                    />
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {notAttendeeList.length > 0 ? (
+                        notAttendeeList.map((notAtt, i) => (
+                          <label
+                            key={i}
+                            className="flex items-center justify-between px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer"
+                          >
+                            <span className="font-semibold text-md text-white">
+                              {notAtt.first_name + " " + notAtt.last_name}
+                            </span>
+                            <div
+                              className="cursor-pointer mr-3"
+                              onClick={() => {
+                                const updChecklist = [...checklist];
+                                updChecklist[i] = (checklist[i] + 1) % 4;
+                                setChecklist(updChecklist);
+                              }}
                             >
-                              <span className="font-semibold text-md text-white">
-                                {notAtt.first_name + " " + notAtt.last_name}
-                              </span>
-                              <div
-                                className="cursor-pointer mr-3"
-                                onClick={() => {
-                                  const updChecklist = [...checklist];
-                                  updChecklist[i] = (checklist[i] + 1) % 4;
-                                  setChecklist(updChecklist);
-                                }}
-                              >
-                                {
-                                  checklist[i] === 0 ? (
-                                    <CirclePlus className="w-5 h-5 text-white-500" />
-                                  ) :
+                              {
+                                checklist[i] === 0 ? (
+                                  <CirclePlus className="w-5 h-5 text-white-500" />
+                                ) :
                                   checklist[i] === 1 ? (
                                     <UsersRound className="w-5 h-5 text-white-500" />
                                   ) : checklist[i] === 2 ? (
@@ -509,97 +508,97 @@ export function EventPage() {
                                   ) : (
                                     <UserRound className="w-5 h-5 text-white-400" />
                                   )
-                                }
-                              </div>
-                            </label>
-                          ))
-                        ) : (
-                          <div className="text-sm text-gray-600">No beneficiaries to show</div>
-                        )}
-                      </div>
-                      <div className="mt-4 text-right">
-                        <button
-                          className="text-secondary font-semibold hover:underline cursor-pointer"
-                          onClick={handleAddAttendees}
-                        >
-                          Update List
-                        </button>
-                      </div>
+                              }
+                            </div>
+                          </label>
+                        ))
+                      ) : (
+                        <div className="text-sm text-gray-600">No beneficiaries to show</div>
+                      )}
                     </div>
-                  )}
-                  
-                  <button
-                    className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                    type="button"
-                    onClick={handleRemoveAttendees}
-                  >
-                    <SquareMinus className="w-5 h-5 inline-block" />
-                  </button>
-                 
-                  <button
-                    className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                    type="button"
-                    onClick={handleUpdateAttendance}
-                  >
-                    <SquareCheck className="w-5 h-5 inline-block" />
-                  </button>
-                </div>
-              )}
+                    <div className="mt-4 text-right">
+                      <button
+                        className="text-secondary font-semibold hover:underline cursor-pointer"
+                        onClick={handleAddAttendees}
+                      >
+                        Update List
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-              <div className="ml-auto flex flex-row items-center gap-4">
                 <button
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                  onClick={() => {
-                    setIsEditing(!isEditing)
-                  }}
+                  type="button"
+                  onClick={handleRemoveAttendees}
                 >
-                  {isEditing ? "Done" : "Edit"}
+                  <SquareMinus className="w-5 h-5 inline-block" />
                 </button>
 
-                <div className="relative">
-                  <button
-                    type="submit"
-                    className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                    onClick={() => {
-                      setShowOtherDropdown(!showOtherDropdown);
-                      setShowAddDropdown(false);
-                    }}
-                    data-dropdown-toggle="dropdownOther"
-                  >
-                    <EllipsisVertical className="w-5 h-5" />
-                  </button>
+                <button
+                  className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                  type="button"
+                  onClick={handleUpdateAttendance}
+                >
+                  <SquareCheck className="w-5 h-5 inline-block" />
+                </button>
+              </div>
+            )}
 
-                  {showOtherDropdown && (
-                    <div
-                      id="dropdownOther"
-                      className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
-                    >
-                      <ul className="py-1">
-                        <li className="font-extraboldsans text-gray-700 cursor-pointer hover:opacity-70">
-                          <button
-                            type="button"
-                            className="cursor-pointer px-4 py-2 w-full h-full text-left flex items-center"
-                            onClick={handleSendSMSButtonClick}
-                          >
-                            <MessageSquareMore className="w-8 h-5 inline-block mr-2" /> Send SMS
-                          </button>
-                        </li>
-                        <li
-                          className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
-                          onClick={handleSendEmailButtonClick}
+            <div className="ml-auto flex flex-row items-center gap-4">
+              <button
+                className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                onClick={() => {
+                  setIsEditing(!isEditing)
+                }}
+              >
+                {isEditing ? "Done" : "Edit"}
+              </button>
+
+              <div className="relative">
+                <button
+                  type="submit"
+                  className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                  onClick={() => {
+                    setShowOtherDropdown(!showOtherDropdown);
+                    setShowAddDropdown(false);
+                  }}
+                  data-dropdown-toggle="dropdownOther"
+                >
+                  <EllipsisVertical className="w-5 h-5" />
+                </button>
+
+                {showOtherDropdown && (
+                  <div
+                    id="dropdownOther"
+                    className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
+                  >
+                    <ul className="py-1">
+                      <li className="font-extraboldsans text-gray-700 cursor-pointer hover:opacity-70">
+                        <button
+                          type="button"
+                          className="cursor-pointer px-4 py-2 w-full h-full text-left flex items-center"
+                          onClick={handleSendSMSButtonClick}
                         >
-                          <Mail className="w-8 h-5 inline-block" /> Send Email
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div> 
+                          <MessageSquareMore className="w-8 h-5 inline-block mr-2" /> Send SMS
+                        </button>
+                      </li>
+                      <li
+                        className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
+                        onClick={handleSendEmailButtonClick}
+                      >
+                        <Mail className="w-8 h-5 inline-block" /> Send Email
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
         </div>
 
         <div className="w-full max-w-2xl mt-3">
-          { 
+          {
             // todo: refactor
             attendees.length > 0 ? attendees.map((att, i) => (
               <AttendeesCard
@@ -627,7 +626,14 @@ export function EventPage() {
         } as Event} />
 
       <SendEmailModal onClose={() => { console.log("Email Modal closed"); setIsShowEmailModal(false) }} attendees={attendees} showModal={isShowEmailModal}
-        event={event!} />
+        event={event ?? {
+          description: "",
+          end_date: new Timestamp(0, 0),
+          start_date: new Timestamp(0, 0),
+          location: "",
+          name: "",
+          attendees: []
+        } as Event} />
     </div>
   );
 }
