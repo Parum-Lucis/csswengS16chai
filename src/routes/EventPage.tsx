@@ -12,6 +12,7 @@ import { add } from "date-fns";
 import { sendEmailReminder } from "../firebase/cloudFunctions";
 import { EllipsisVertical } from 'lucide-react';
 import { SendSMSModal } from "../components/SendSMSModal";
+import { SendEmailModal } from "../components/SendEMailModal";
 
 export function EventPage() {
   const params = useParams()
@@ -32,8 +33,9 @@ export function EventPage() {
   const [showRemoveDropdown, setShowRemoveDropdown] = useState(false)
   const [showOtherDropdown, setShowOtherDropdown] = useState(false)
 
-  // for sms modal
+  // for sms & email modal
   const [isShowSMSModal, setIsShowSMSModal] = useState(false);
+  const [isShowEmailModal, setIsShowEmailModal] = useState(false);
 
   // use effect for fetch event & fetch attendees
   useEffect(() => {
@@ -264,6 +266,11 @@ export function EventPage() {
     setIsShowSMSModal(true);
     setShowOtherDropdown(false);
   }
+
+  function handleSendEmailButtonClick() {
+  setIsShowEmailModal(true);
+  setShowOtherDropdown(false); // Close the dropdown when the modal opens
+  } 
 
   return (
     <>
@@ -567,7 +574,7 @@ export function EventPage() {
                           <button type="button" className="cursor-pointer px-4 py-2 w-full h-full text-left" onClick={handleSendSMSButtonClick}>Send SMS</button>
                         </li>
                         <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer hover:opacity-70">
-                          Send Email
+                          <button type="button" className="cursor-pointer px-4 py-2 w-full h-full text-left" onClick={handleSendEmailButtonClick}>Send Email</button>
                         </li>
                         <li className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer hover:opacity-70">
                           Export
@@ -601,6 +608,16 @@ export function EventPage() {
       </div>
       {/* just shoving my modals down here cause it doesn't matter where they are technically. */}
       <SendSMSModal onClose={() => { console.log("hi"); setIsShowSMSModal(false) }} attendees={attendees} showModal={isShowSMSModal}
+        event={event ?? {
+          description: "",
+          end_date: new Timestamp(0, 0),
+          start_date: new Timestamp(0, 0),
+          location: "",
+          name: "",
+          attendees: []
+        } as Event} />
+      
+      <SendEmailModal onClose={() => { console.log("Email Modal closed"); setIsShowEmailModal(false) }} attendees={attendees} showModal={isShowEmailModal}
         event={event ?? {
           description: "",
           end_date: new Timestamp(0, 0),
