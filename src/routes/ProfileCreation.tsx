@@ -433,7 +433,7 @@ export function BeneficiaryProfileCreation() {
             <div>
               <label
                     htmlFor="gradelevel"
-                    className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                    className="text-white font-sans font-semibold">
                     Grade Level:
                 </label>
                 <select
