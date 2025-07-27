@@ -293,7 +293,7 @@ export function BeneficiaryProfile() {
     const SemiCircularProgress = (props: SemiCircularProgressProps) => {
     return (
         <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
-        <span style={{ fontSize: 20, color: '#333333' }}>{props.value}%</span>
+        <span className="text-sm text-secondary">{props.value}%</span>
         </div>
     )
     }
@@ -340,7 +340,7 @@ export function BeneficiaryProfile() {
             <div className="relative mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
                 <div className="flex flex-col items-end mt-[-5rem]">
                     <SemiCircularProgress value={(attendance.present/attendance.events)*100} />
-                    <h2 className=" text-secondary text-sm">Attendance Rate</h2>
+                    <h2 className=" text-center text-secondary text-sm">Attendance <br className="block sm:hidden"/>Rate</h2>
                 </div>
                 <div className="flex flex-row justify-center gap-2">
                     { formState === true && (
@@ -503,7 +503,7 @@ export function BeneficiaryProfile() {
                           (_, i) => (
                             <div className="pb-4">
                               <h3 className="font-sans mb-2">Guardian {i + 1}</h3>
-                              <GuardianCard formState={false} index={i} guardians={guardians} setGuardians={setGuardians} />
+                              <GuardianCard formState={formState} index={i} guardians={guardians} setGuardians={setGuardians} />
                             </div>
                           )
                         )}
@@ -575,24 +575,11 @@ export function BeneficiaryProfile() {
                         onChange={e => setSearch(e.target.value)}
                         />
                     </div>
-                    <div className="space-y-2">
-                        <div className="grid grid-cols-4 gap-2 w-full justify-items-center items-center">
-                            <div className="text-sm border rounded-full px-3 w-fit">
-                                <p className="text-white font-medium">Date</p>
-                            </div>
-                            <div className="text-sm border rounded-full px-3 w-fit">
-                                <p className="text-white font-medium">Event</p>
-                            </div>
-                            <div className="text-sm border rounded-full px-3 w-fit">
-                                <p className="text-white font-medium">Status</p>
-                            </div>
-                            <div className="text-sm border rounded-full px-3 w-fit">
-                                <p className="text-white font-medium">Attended By</p>
-                            </div>
-                        </div>
+                    <div className={`space-y-2 gap-2 ${modifiedList.length === 0 ? "text-center" : ""}`}>
                         {modifiedList.map((att, index) => (
                             <EventCard key={index} attEvent={att}/>
                         ))}
+                        <span>{modifiedList.length === 0 ? "No Events Attended!" : ""}</span>
                     </div>
                 </div>
             </div>
