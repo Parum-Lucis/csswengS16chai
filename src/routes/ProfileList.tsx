@@ -148,9 +148,9 @@ export function BeneficiaryList() {
         const values = [
           profile.first_name.toLowerCase(),
           profile.last_name.toLowerCase(),
-          profile.birthdate.toString(),
+          // dont include birthdate, messes up results
           isNaN(profile.accredited_id) ? "waitlisted" : profile.accredited_id.toString(),
-          differenceInYears(new Date(), profile.birthdate.toDate()).toString()
+          // dont include age, messes up results when looking for id
         ];
         return terms.every(term =>
           values.some(value => value.includes(term))
