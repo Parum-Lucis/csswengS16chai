@@ -6,7 +6,7 @@ This guide explains how to import and export data in the **CHAI Management and E
 
 ## File Format
 
-- All import and export functionalities only use **Comma Separated Values (.csv)** files. For convenience, you may use either Google Sheets or Microsoft Excel to prepare your data into the required format (to be discussed later). In the case you do so, please don't forget to  **save or download your data as a .csv file**. 
+- All import and export functionalities only use **Comma Separated Values (.csv)** files. For convenience, you may use either Google Sheets or Microsoft Excel to prepare your data into the required format (to be discussed later). In the case you do so, please don't forget to  **save or download your data as a .csv file**.
 - Please take note that the the very first row within your .csv file will be ignored, assuming that it is the header row (row for column names). A header row will ensure that users are guided on how to properly format their data.
 - When importing, there must be least one valid row of data (apart from the header row) present within your file.
 - Max file size limit 10 MB.
@@ -18,6 +18,7 @@ Ensure that you follow the format of data below:
 - `09XXXXXXXXX` for contact numbers (eg., `09167646283`)
 - email addresses should also be valid (eg., `chai.taguig@gmail.com`)
 
+
 ---
 
 ## Beneficiaries
@@ -26,10 +27,10 @@ Ensure that you follow the format of data below:
 This function can be found in the **admin page** under the Beneficiary section, which means this requires that the account has admin privileges.
 
 **Order of Data (Headers, left to right):**
-1. Child Number (ID) - blank or number
+1. Child Number (ID) - blank (for waitlist) or number (for accredited IDs)
 2. First Name - required
 3. Last Name - required
-4. Sex - M or F
+4. Sex - M/Male or F/Female
 5. Birthdate - mm/dd/yyyy
 6. Grade Level - Nursery, Kindergarten, or numbers 1 to 12
 7. Address
@@ -89,7 +90,7 @@ This function can be found in the **admin page** under the Beneficiary section, 
 1. Email - required
 2. First Name - required
 3. Last Name - required
-4. Sex - M or F
+4. Sex - M/Male or F/Female
 5. Birthdate - mm/dd/yyyy
 6. Address
 7. Admin - TRUE or FALSE

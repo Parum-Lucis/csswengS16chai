@@ -65,8 +65,8 @@ const handleImport = async (type: 0 | 1 | 2) => {
                             const { imported, skipped } = result.data;
 
                             skipped === 0 ?
-                                toast.success(`Beneficiaries imported successfully! (${imported} added)`) :
-                                toast.warn(`Beneficiaries partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
+                                toast.success(`Events imported successfully! (${imported} added)`) :
+                                toast.warn(`Events partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
                         }
                     } catch (error: any) {
                         console.error(error);
