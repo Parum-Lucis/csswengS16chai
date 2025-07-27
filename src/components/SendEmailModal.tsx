@@ -47,7 +47,7 @@ export function SendEmailModal({ event, attendees, showModal, onClose }: { event
             const res = await sendEmailReminder(event);
 
             if (res) {
-                toast.success(`Successfully sent notifcation to beneficiaries!`)
+                toast.success(`Successfully sent email notification to beneficiaries!`)
             } else {
                 toast.error("Couldn't send notifcation. Try again. (Possibly hit email limits!)");
             }
@@ -80,10 +80,10 @@ export function SendEmailModal({ event, attendees, showModal, onClose }: { event
                             <div className="flex flex-col">
 
                                 <h2 className="m-0"><span className="font-bold">Automatically</span> send to all participants.</h2>
-                                <p className="italic text-sm">This will cost
-                                    <span className="text-green-600 font-bold"> fuckall </span>
-                                    pesos. Remember to top-up{" "}
-                                    <Link to="https://sms.iprogtech.com/" className="underline text-shadow-primary">here</Link>
+                                <p className="italic text-sm">Please keep in mind the limitations of 
+                                    <span className="text-green-600 font-bold"> 500 </span>
+                                    emails per day. For more information, please click {" "}
+                                    <Link to="https://support.google.com/mail/answer/22839?hl=en" className="underline text-shadow-primary">here</Link>
                                 </p>
                             </div>
                         </div>

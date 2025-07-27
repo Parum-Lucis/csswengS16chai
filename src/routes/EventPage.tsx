@@ -278,11 +278,27 @@ export function EventPage() {
   }
 
   function handleSendSMSButtonClick() {
+    if(originalEvent?.name != event?.name || originalEvent?.description != event?.description || originalEvent?.end_date != event?.end_date ||  originalEvent?.start_date != event?.start_date || originalEvent?.location != event?.location){ 
+      toast.error("Please save your changes first!")
+      return;
+    }
+    else if(attendees.length == 0){
+      toast.error("Attendees list is empty!")
+      return;
+    }
     setIsShowSMSModal(true);
     setShowOtherDropdown(false);
   }
 
   function handleSendEmailButtonClick() {
+    if(originalEvent?.name != event?.name || originalEvent?.description != event?.description || originalEvent?.end_date != event?.end_date ||  originalEvent?.start_date != event?.start_date || originalEvent?.location != event?.location){ 
+      toast.error("Please save your changes first!")
+      return;
+    }
+    else if(attendees.length == 0){
+      toast.error("Attendees list is empty!")
+      return;
+    }
     setIsShowEmailModal(true);
     setShowOtherDropdown(false); // Close the dropdown when the modal opens
   }
