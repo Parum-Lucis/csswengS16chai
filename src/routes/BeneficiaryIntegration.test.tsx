@@ -12,11 +12,27 @@ import { UserContext } from "../util/userContext";
 import type { User } from "firebase/auth";
 import { type UserStateType } from "../util/userContext";
 
+Object.defineProperty(global.self, 'crypto', {
+  value: {
+    randomUUID: () => `mock-uuid-${Math.random()}`,
+  },
+  configurable: true,
+});
+
+jest.mock('firebase/storage', () => ({
+  ref: jest.fn(() => ({})),
+  uploadBytes: jest.fn(() => Promise.resolve()),
+  getBlob: jest.fn(() => Promise.resolve(new Blob())),
+  deleteObject: jest.fn(() => Promise.resolve()),
+}));
+
+
 const getInitialBeneficiaryDocs = () => [
   {
     id: "1",
     exists: () => true,
     data: () => ({
+      docID: "1",
       first_name: "Ana",
       last_name: "Santos",
       birthdate: { toDate: () => new Date("2010-02-10") },
@@ -31,6 +47,7 @@ const getInitialBeneficiaryDocs = () => [
     id: "2",
     exists: () => true,
     data: () => ({
+      docID: "2",
       first_name: "Ben",
       last_name: "Reyes",
       birthdate: { toDate: () => new Date("2012-07-20") },
@@ -102,7 +119,7 @@ const mockedNavigate = jest.fn();
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
   useNavigate: () => mockedNavigate,
-  useParams: jest.fn(() => ({ docId: '1' })),
+  useParams: jest.fn(),
 }));
 
 const mockAdminUser: UserStateType = {
@@ -120,11 +137,13 @@ const mockVolunteerUser: UserStateType = {
 
 describe("Admin Beneficiary Management", () => {
     const { addDoc, updateDoc } = require("firebase/firestore");
+    const { useParams } = require("react-router");
 
     beforeEach(() => {
         addDoc.mockClear();
         updateDoc.mockClear();
         mockedNavigate.mockClear();
+        useParams.mockClear();
         beneficiaryDocs = getInitialBeneficiaryDocs();
     });
 
@@ -166,18 +185,27 @@ describe("Admin Beneficiary Management", () => {
         });
     });
 
-    test("admin can view the beneficiary list", async () => {
-        render(
-          <UserContext.Provider value={mockAdminUser}>
-            <MemoryRouter>
-              <BeneficiaryList />
-            </MemoryRouter>
-          </UserContext.Provider>
-        );
-
-        expect(await screen.findByText("Beneficiary List")).toBeInTheDocument();
-        expect(await screen.findByText(/Santos, Ana/i)).toBeInTheDocument();
-        expect(await screen.findByText(/Reyes, Ben/i)).toBeInTheDocument();
+    // modified
+    test("admin can view the list and navigate to a profile", async () => {
+      jest.requireMock('react-router').useParams.mockReturnValue({ docId: '1' });
+      render(
+        <UserContext.Provider value={mockAdminUser}>
+          <MemoryRouter initialEntries={['/beneficiaries']}>
+            <Routes>
+              <Route path="/beneficiaries" element={<BeneficiaryList />} />
+              <Route path="/beneficiaries/:docId" element={<BeneficiaryProfile />} />
+            </Routes>
+          </MemoryRouter>
+        </UserContext.Provider>
+      );
+  
+      const profileLink = await screen.findByText(/Santos, Ana/i);
+      expect(screen.getByText(/Reyes, Ben/i)).toBeInTheDocument();
+      
+      fireEvent.click(profileLink);
+  
+      expect(await screen.findByRole('button', { name: /edit/i })).toBeInTheDocument();
+      expect(screen.getByDisplayValue("123 Rizal Ave")).toBeInTheDocument();
     });
 
     test("admin can update a beneficiary's profile", async () => {
@@ -298,18 +326,25 @@ describe("Volunteer Beneficiary Management", () => {
         });
     });
 
-    test("volunteer can view the beneficiary list", async () => {
-        render(
-          <UserContext.Provider value={mockVolunteerUser}>
-            <MemoryRouter>
-              <BeneficiaryList />
-            </MemoryRouter>
-          </UserContext.Provider>
-        );
-
-        expect(await screen.findByText("Beneficiary List")).toBeInTheDocument();
-        expect(await screen.findByText(/Santos, Ana/i)).toBeInTheDocument();
-        expect(await screen.findByText(/Reyes, Ben/i)).toBeInTheDocument();
+    test("volunteer can view the list and navigate to a profile", async () => {
+      render(
+        <UserContext.Provider value={mockVolunteerUser}>
+          <MemoryRouter initialEntries={['/beneficiaries']}>
+            <Routes>
+              <Route path="/beneficiaries" element={<BeneficiaryList />} />
+              <Route path="/beneficiaries/:docId" element={<BeneficiaryProfile />} />
+            </Routes>
+          </MemoryRouter>
+        </UserContext.Provider>
+      );
+  
+      const profileLink = await screen.findByText(/Reyes, Ben/i);
+      expect(screen.getByText(/Santos, Ana/i)).toBeInTheDocument();
+      
+      fireEvent.click(profileLink);
+  
+      expect(await screen.findByRole('button', { name: /edit/i })).toBeInTheDocument();
+      expect(screen.getByDisplayValue("456 Mabini St")).toBeInTheDocument();
     });
 
     test("volunteer can update a beneficiary's profile", async () => {
