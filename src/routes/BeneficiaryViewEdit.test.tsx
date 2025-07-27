@@ -8,6 +8,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ToastContainer } from 'react-toastify';
 
+Object.defineProperty(global.self, 'crypto', {
+  value: {
+    randomUUID: () => `mock-uuid-${Math.random()}`,
+  },
+  configurable: true,
+});
+
 // Mock Firebase
 jest.mock('firebase/firestore', () => {
   const originalModule = jest.requireActual('firebase/firestore');
@@ -27,6 +34,13 @@ jest.mock('firebase/firestore', () => {
 
   return {
     ...originalModule,
+    Timestamp: {
+      fromDate: (date: Date) => ({
+        seconds: Math.floor(date.getTime() / 1000),
+        nanoseconds: (date.getTime() % 1000) * 1e6,
+        toDate: () => date,
+      }),
+    },
     getFirestore: jest.fn(() => 'mock-db'),
     doc: jest.fn((db, collection, id) => ({
       id,
@@ -59,10 +73,11 @@ jest.mock('firebase/firestore', () => {
 
 jest.mock('../firebase/firebaseConfig', () => ({
   db: {},
+  store: {},
   auth: {
     signOut: jest.fn(),
     onAuthStateChanged: jest.fn(callback => {
-      callback({ uid: 'test-uid', email: 'test@example.com' }); // Simulate logged-in user
+      callback({ uid: 'test-uid', email: 'test@example.com' });
       return jest.fn();
     }),
   },
