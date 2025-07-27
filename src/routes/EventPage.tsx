@@ -45,8 +45,8 @@ export function EventPage() {
       const eventsSnap = await getDoc(getQuery)
       const attendeesList = await getDocs(attendeeQuery)
       if (eventsSnap.exists()) {
-        setEvent(eventsSnap.data() as Event)
-        setOriginalEvent(eventsSnap.data() as Event)
+        setEvent({...eventsSnap.data() as Event, docID : eventsSnap.id})
+        setOriginalEvent({...eventsSnap.data() as Event, docID : eventsSnap.id})
       }
       if (!attendeesList.empty) {
         const updAttendees: AttendedEvents[] = []
@@ -590,19 +590,6 @@ export function EventPage() {
                         >
                           <Mail className="w-8 h-5 inline-block" /> Send Email
                         </li>
-                        <SendEmailModal
-                          onClose={() => { console.log("Email Modal closed"); setIsShowEmailModal(false); }}
-                          attendees={attendees}
-                          showModal={isShowEmailModal}
-                          event={event ?? {
-                          description: "",
-                          end_date: new Timestamp(0, 0),
-                          start_date: new Timestamp(0, 0),
-                          location: "",
-                          name: "",
-                          attendees: []
-                          } as Event}
-                        />
                       </ul>
                     </div>
                   )}
@@ -640,14 +627,7 @@ export function EventPage() {
         } as Event} />
 
       <SendEmailModal onClose={() => { console.log("Email Modal closed"); setIsShowEmailModal(false) }} attendees={attendees} showModal={isShowEmailModal}
-        event={event ?? {
-          description: "",
-          end_date: new Timestamp(0, 0),
-          start_date: new Timestamp(0, 0),
-          location: "",
-          name: "",
-          attendees: []
-        } as Event} />
+        event={event!} />
     </div>
   );
 }

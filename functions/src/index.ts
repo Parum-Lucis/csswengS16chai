@@ -851,7 +851,7 @@ export const exportVolunteers = onCall<void>(async (req) => {
     return csvContent;
 });
 
-export { sendEmailReminder } from "./sendEmail";
+export { sendEmailReminder } from "./event/sendEmail";
 export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
 export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"
