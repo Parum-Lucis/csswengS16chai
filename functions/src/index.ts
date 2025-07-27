@@ -98,7 +98,7 @@ const emailRegEx = new RegExp(
 
 // list of valid grade levels
 const validGradeLevels = [
-    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "nursery", "kindergarten"
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "n", "k"
 ];
 
 export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
