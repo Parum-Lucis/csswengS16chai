@@ -7,6 +7,7 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { UserContext } from '../util/userContext';
 import type { User } from "firebase/auth";
+import { add } from "date-fns"; 
 import { EventCreation } from "./EventCreation";
 import EventList from "./EventList";
 import { EventPage } from "./EventPage";
@@ -18,6 +19,7 @@ interface MockEventData {
   start_date: { toDate: () => Date };
   end_date: { toDate: () => Date };
   location: string;
+  time_to_live?: { toDate: () => Date }; 
 }
 
 interface MockAttendeeData {
@@ -61,6 +63,11 @@ jest.mock("firebase/firestore", () => {
   const originalModule = jest.requireActual("firebase/firestore");
   return {
     ...originalModule,
+    Timestamp: {
+      fromDate: (date: Date) => ({
+        toDate: () => date,
+      }),
+    },
     collection: jest.fn((db, path, ...segments) => {
       const collectionRef = {
         path: [path, ...segments].join('/'),
@@ -119,10 +126,6 @@ jest.mock("../firebase/firebaseConfig", () => ({
   func: {},
 }));
 
-jest.mock("../firebase/cloudFunctions", () => ({
-  callDeleteEvent: jest.fn(),
-}));
-
 const mockedNavigate = jest.fn();
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
@@ -137,15 +140,18 @@ const mockUser = {
 
 
 describe("Event Integration Tests", () => {
+  const MOCK_DATE = new Date();
   const { addDoc, updateDoc, getDocs, deleteDoc } = require("firebase/firestore");
   const { callDeleteEvent } = require("../firebase/cloudFunctions");
 
   beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(MOCK_DATE);
+
     addDoc.mockClear();
     updateDoc.mockClear();
     (getDocs as jest.Mock).mockClear();
     deleteDoc.mockClear();
-    callDeleteEvent.mockClear();
     mockedNavigate.mockClear();
     eventDocs = [
         {
@@ -169,6 +175,10 @@ describe("Event Integration Tests", () => {
           }),
         },
     ];
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   test("creates an event and displays it in the list", async () => {
@@ -235,7 +245,6 @@ describe("Event Integration Tests", () => {
   });
 
   test("deletes an event", async() => {
-    callDeleteEvent.mockResolvedValue({data: true});
     render(
         <UserContext.Provider value={mockUser}>
           <MemoryRouter initialEntries={["/event/1"]}>
@@ -255,7 +264,16 @@ describe("Event Integration Tests", () => {
     fireEvent.click(screen.getByRole("button", { name: /confirm delete/i }));
 
     await waitFor(() => {
-        expect(callDeleteEvent).toHaveBeenCalledWith("1");
+        expect(updateDoc).toHaveBeenCalled();
+
+        const mockUpdateDocCall = (updateDoc as jest.Mock).mock.calls[0];
+        const updatePayload = mockUpdateDocCall[1];
+        
+        expect(updatePayload).toHaveProperty("time_to_live");
+        const receivedTime = updatePayload.time_to_live.toDate().getTime();
+        const expectedTime = add(MOCK_DATE, { days: 30 }).getTime();
+        
+        expect(Math.abs(receivedTime - expectedTime)).toBeLessThan(1000);
         expect(mockedNavigate).toHaveBeenCalledWith("/event");
     });
   });
