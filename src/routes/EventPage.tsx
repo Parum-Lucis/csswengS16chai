@@ -23,8 +23,8 @@ export function EventPage() {
   const [notAttendeeList, setNotAttendeeList] = useState<Beneficiary[]>([])
   const [checklist, setChecklist] = useState<number[]>([])
   const [runQuery, setRunQuery] = useState<boolean>(true)
-  // for remove list 
-  const [removeChecklist, setRemoveChecklist] = useState<boolean[]>([])
+  // for upd/remove list 
+  const [editChecklist, setEditChecklist] = useState<boolean[]>([])
   // for dropdowns and navbar
   const [isEditing, setIsEditing] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false)
@@ -43,16 +43,16 @@ export function EventPage() {
       if (!attendeesList.empty) {
         const updAttendees: AttendedEvents[] = []
         // const updBene: Beneficiary[] = []
-        const updRemove: boolean[] = []
+        const updEdit: boolean[] = []
         attendeesList.forEach((att) => {
           updAttendees.push(att.data() as AttendedEvents)
           // beneficiaryID.push((att.data() as AttendedEvents).beneficiaryID)
-          updRemove.push(false)
+          updEdit.push(false)
           console.log(att.data())
           console.log((att.data() as AttendedEvents).beneficiaryID)
         })
         setAttendees(updAttendees.sort((a, b) => a.first_name.localeCompare(b.first_name)))
-        // setRemoveChecklist(updRemove)
+        setEditChecklist(updEdit)
         // const beneficiaryQuery = query(
         //   collection(db, "beneficiaries"),
         //   where(documentId(), "in", beneficiaryID)
@@ -205,7 +205,7 @@ export function EventPage() {
       if (type) {
         const addRef = doc(collection(db, 'events/' + docID + "/attendees"))
         await setDoc(addRef, {
-          attended: 0,
+          attended: false,
           who_attended: type,
           first_name: notAttendeeList[i].first_name,
           last_name: notAttendeeList[i].last_name,
@@ -233,13 +233,37 @@ export function EventPage() {
   // todo: refactor (remove bene list)
   const handleRemoveAttendees = async () => {
     let refresh = false
-    console.log("checklist is" + removeChecklist)
-    for (let i = 0; i < removeChecklist.length; i++) {
-      if (removeChecklist[i]) {
+    console.log("checklist is" + editChecklist)
+    for (let i = 0; i < editChecklist.length; i++) {
+      if (editChecklist[i]) {
         console.log("im here at delete")
         console.log("docid is " + attendees[i].docID + ", bene is " + attendees[i].first_name)
         console.log("attended_events ID is " + attendees[i].beneficiaryID + "bene id is " + attendees[i].docID)
         await deleteDoc(doc(db, "events/" + docID + "/attendees/" + attendees[i].docID))
+        refresh = true
+      }
+    }
+    if (refresh) {
+      toast.success("Success!");
+      setTimeout(function() {
+            location.reload();
+        }, 1000);
+      setRunQuery(true)
+    }
+    else toast.success("Nothing to update")
+  }
+
+  const handleUpdateAttendance = async () => {
+    let refresh = false
+    console.log("checklist is" + editChecklist)
+    for (let i = 0; i < editChecklist.length; i++) {
+      if (editChecklist[i]) {
+        console.log("im here at delete")
+        console.log("docid is " + attendees[i].docID + ", bene is " + attendees[i].first_name)
+        console.log("attended_events ID is " + attendees[i].beneficiaryID + "bene id is " + attendees[i].docID)
+        await updateDoc(doc(db, "events/" + docID + "/attendees/" + attendees[i].docID), {
+          attended: !attendees[i].attended
+        })
         refresh = true
       }
     }
@@ -476,6 +500,7 @@ export function EventPage() {
                   <button
                     className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                     type="button"
+                    onClick={handleRemoveAttendees}
                   >
                     <SquareMinus className="w-5 h-5 inline-block" />
                   </button>
@@ -483,6 +508,7 @@ export function EventPage() {
                   <button
                     className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                     type="button"
+                    onClick={handleUpdateAttendance}
                   >
                     <SquareCheck className="w-5 h-5 inline-block" />
                   </button>
@@ -492,7 +518,9 @@ export function EventPage() {
               <div className="ml-auto flex flex-row items-center gap-4">
                 <button
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={() => {
+                    setIsEditing(!isEditing)
+                  }}
                 >
                   {isEditing ? "Done" : "Edit"}
                 </button>
@@ -535,16 +563,13 @@ export function EventPage() {
             // todo: refactor
             attendees.length > 0 ? attendees.map((att, i) => (
               <AttendeesCard
-                key={i}
+                index={i}
                 name={attendees[i].first_name + " " + attendees[i].last_name}
                 attendance={att.attended ?? false}
                 who_attended={att.who_attended ?? "None"}
                 isEditing={isEditing}
-                handleToggle={() => {
-                  const updRemoveCkl = [...removeChecklist]
-                  updRemoveCkl[i] = !removeChecklist[i]
-                  setRemoveChecklist(updRemoveCkl)
-                }}
+                setEditChecklist={setEditChecklist}
+                editChecklist={editChecklist}
               />
             )) : <div className="text-center text-white w-full max-w-2xl items-center mt-2 mr-2 font-sans bg-primary p-5 rounded-[5px] font-semibold mb-2"> "No data to show" </div>
           }

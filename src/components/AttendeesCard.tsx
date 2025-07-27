@@ -1,4 +1,4 @@
-function AttendeesCard({name, who_attended, attendance, handleToggle, isEditing}: {name: string; who_attended: string; attendance: boolean, handleToggle: () => void, isEditing: boolean}) {
+function AttendeesCard({index, name, who_attended, attendance, editChecklist, setEditChecklist, isEditing}: {index: number, name: string; who_attended: string; attendance: boolean, editChecklist: boolean[], setEditChecklist: React.Dispatch<React.SetStateAction<boolean[]>>, isEditing: boolean}) {
     return ( // Add the return statement here
         <div
             className={`text-white w-full max-w-2xl flex flex-row items-center mt-2 h-[6vh] text-[1rem] mr-2 font-sans p-1.5 rounded-[5px] font-semibold mb-2 ${
@@ -13,8 +13,14 @@ function AttendeesCard({name, who_attended, attendance, handleToggle, isEditing}
             {isEditing && (
               <input
                 type="checkbox"
-                checked={attendance}
-                onClick={handleToggle}
+                checked={editChecklist[index]}
+                onChange={() => {
+                    const updEdit = [...editChecklist]
+                    updEdit[index] = !editChecklist[index]
+                    console.log(updEdit)
+                    setEditChecklist(updEdit)
+                  }
+                }
                 className="form-checkbox h-5 w-5 rounded text-white bg-white border-white checked:accent-secondary checked:border-white ml-auto mr-3"
               />
             )}
