@@ -423,8 +423,8 @@ export function BeneficiaryProfile() {
                             onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, sex : e.target.value})}
                             value={sex}
                         >
-                            <option className="bg-secondary text-white" value="Male">Male</option>
-                            <option className="bg-secondary text-white" value="Female">Female</option>
+                            <option className="bg-secondary text-white" value="M">Male</option>
+                            <option className="bg-secondary text-white" value="F">Female</option>
                         </select>
                     </div>
                 </div>
@@ -441,8 +441,8 @@ export function BeneficiaryProfile() {
                     onChange={(e) => setGradeLevel(e.target.value)}
                     value={gradeLevel}
                 >
-                    <option className="bg-secondary text-white" value="N">N</option>
-                    <option className="bg-secondary text-white" value="K">K</option>
+                    <option className="bg-secondary text-white" value="N">Nursery</option>
+                    <option className="bg-secondary text-white" value="K">Kindergarten</option>
                     <option className="bg-secondary text-white" value="1">1</option>
                     <option className="bg-secondary text-white" value="2">2</option>
                     <option className="bg-secondary text-white" value="3">3</option>

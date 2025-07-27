@@ -211,8 +211,8 @@ export function VolunteerProfile() {
                         onChange={(e) => setVolunteer({...volunteer as Volunteer, sex : e.target.value})}
                         value={sex}
                     >
-                        <option className="bg-secondary text-white" value="Male">Male</option>
-                        <option className="bg-secondary text-white" value="Female">Female</option>
+                        <option className="bg-secondary text-white" value="M">Male</option>
+                        <option className="bg-secondary text-white" value="F">Female</option>
                     </select>
                     </div>
                 </div>

@@ -173,8 +173,8 @@ export function VolunteerProfileCreation() {
                 name="SexDropdown"
                 className="appearance-none bg-full bg-tertiary w-full rounded-[5px] p-2 font-sans border-1 border-secondary"
               >
-                <option className="bg-white text-black" value="Male">Male</option>
-                <option className="bg-white text-black" value="Female">Female</option>
+                <option className="bg-white text-black" value="M">Male</option>
+                <option className="bg-white text-black" value="F">Female</option>
               </select>
             </div>
 
@@ -426,8 +426,8 @@ export function BeneficiaryProfileCreation() {
                 name="SexDropdown"
                 className="appearance-none g-full bg-tertiary w-full rounded-[5px] p-2 font-sans border-1 border-secondary"
               >
-                <option className="bg-white text-black" value="Male">Male</option>
-                <option className="bg-white text-black" value="Female">Female</option>
+                <option className="bg-white text-black" value="M">Male</option>
+                <option className="bg-white text-black" value="F">Female</option>
               </select>
             </div>
             <div>
@@ -441,6 +441,8 @@ export function BeneficiaryProfileCreation() {
                     name="gradelevel"
                     className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
                 >
+                    <option className="bg-secondary text-white" value="N">Nursery</option>
+                    <option className="bg-secondary text-white" value="K">Kindergarten</option>
                     <option className="bg-secondary text-white" value="1">1</option>
                     <option className="bg-secondary text-white" value="2">2</option>
                     <option className="bg-secondary text-white" value="3">3</option>
