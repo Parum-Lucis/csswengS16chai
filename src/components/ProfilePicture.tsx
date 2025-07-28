@@ -1,17 +1,20 @@
 import { type ChangeEvent } from "react"
 
 export function ProfilePictureInput(
-    { readOnly = false, pfpFile, onPfpChange }
+    { readOnly = false, pfpFile, onPfpChange, className }
         :
         {
             pfpFile: File | null,
             readOnly?: boolean,
-            onPfpChange?: (e: ChangeEvent<HTMLInputElement>) => void
+            onPfpChange?: (e: ChangeEvent<HTMLInputElement>) => void,
+            className?: string
         }
 ) {
     console.log(pfpFile?.size);
     return (
-        <div className="absolute top-0 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[10px] border-primary rounded-full flex items-center justify-center mb-1 mt-15 overflow-hidden">
+        <div className={`absolute top-0 z-10 w-32 h-32 sm:w-36 sm:h-36
+         bg-gray-500 border-[10px] border-primary inset-0 mx-auto
+         rounded-full flex items-center justify-center mb-1 mt-15 overflow-hidden ` + className}>
             <label htmlFor="pfp" className={`h-full ${!readOnly ? "hover:opacity-80 cursor-pointer" : ""}`}>
                 <input type="file" name="pfp" id="pfp" accept="image/*" disabled={readOnly} className="hidden" onChange={onPfpChange} />
                 {
