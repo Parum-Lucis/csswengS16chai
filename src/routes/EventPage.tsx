@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
 import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, deleteDoc, setDoc, query, where } from "firebase/firestore"
@@ -206,6 +206,33 @@ export function EventPage() {
       }
     }
   }
+
+  // thx liana part 2
+  const [search, setSearch] = useState<string>("");
+  const filteredBeneficiaries = useMemo(() => {
+      // Filter profiles based on filter val
+      let temp = [...notAttendeeList];
+  
+      // Search filter (partial or exact matches on name and age)
+      if (search.trim() !== "") {
+        const searchLower = search.trim().toLowerCase();
+        const terms = searchLower.split(/[\s,]+/).filter(Boolean);
+  
+        temp = temp.filter(profile => {
+          const values = [
+            profile.first_name.toLowerCase(),
+            profile.last_name.toLowerCase(),
+            // dont include birthdate, messes up results
+            isNaN(profile.accredited_id) ? "waitlisted" : profile.accredited_id.toString(),
+            // dont include age, messes up results when looking for id
+          ];
+          return terms.every(term =>
+            values.some(value => value.includes(term))
+          );
+        });
+      }
+      return temp;
+    }, [search, notAttendeeList]);
 
   // adds new attendees to attendee list, then refreshes page
   const handleAddAttendees = async () => {
@@ -494,10 +521,11 @@ export function EventPage() {
                       type="text"
                       placeholder="Search"
                       className="w-full px-4 py-2 mb-3 text-gray-600 border border-gray-300 rounded-md"
+                      onChange={e => setSearch(e.target.value)}
                     />
                     <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {notAttendeeList.length > 0 ? (
-                        notAttendeeList.map((notAtt, i) => (
+                      {filteredBeneficiaries.length > 0 ? (
+                        filteredBeneficiaries.map((notAtt, i) => (
                           <label
                             key={i}
                             className="flex items-center justify-between px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer"
