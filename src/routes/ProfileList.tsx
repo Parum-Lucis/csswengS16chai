@@ -210,7 +210,7 @@ export function VolunteerList() {
   } else if (sort === "first") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
   } else if (sort === "age") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => compareAsc(a.birthdate.toDate(), b.birthdate.toDate()));
+    filteredprofiles = [...filteredprofiles].sort((a, b) => compareDesc(a.birthdate.toDate(), b.birthdate.toDate()));
   }
 
   // Search filter (partial or exact matches on name and age)
