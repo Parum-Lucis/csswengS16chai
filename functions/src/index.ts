@@ -220,6 +220,6 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
     }
 })
 
-
+export { initializeEmulator } from "./initializeEmulator";
 export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
 export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"

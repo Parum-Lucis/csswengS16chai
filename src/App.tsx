@@ -20,6 +20,7 @@ import { DeletedVolunteerList } from "./routes/admin/DeletedVolunteerList.tsx";
 import { AuthLayout } from "./layouts/AuthLayout.tsx";
 import Temp from "./components/Temp.tsx";
 import UserManagement from "./components/UserManagement.tsx";
+import { Initializer } from "./routes/Initialize.tsx";
 
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
         <Route index element={<Login />} />
         <Route path="/forget-password" element={<ForgetMeNot />} />
         <Route path="/user-mgmt" element={<UserManagement />} />
+        <Route path="/init" element={<Initializer />} />
 
         <Route element={<AuthLayout />}>
 
