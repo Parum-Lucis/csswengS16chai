@@ -181,17 +181,18 @@ export function YourProfile() {
                         Fetching...
                     </h3>
                 )}
-
+                <ProfilePictureInput readOnly={isViewForm}
+                    pfpFile={volunteer?.pfpFile ?? null}
+                    onPfpChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                            const files = e.target.files;
+                            setVolunteer(prev => prev === null ? null : ({ ...prev, pfpFile: files[0] }))
+                        }
+                    }}
+                    className="mt-22"
+                />
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
-                    <ProfilePictureInput readOnly={isViewForm}
-                        pfpFile={volunteer?.pfpFile ?? null}
-                        onPfpChange={(e) => {
-                            if (e.target.files && e.target.files.length > 0) {
-                                const files = e.target.files;
-                                setVolunteer(prev => prev === null ? null : ({ ...prev, pfpFile: files[0] }))
-                            }
-                        }}
-                    />
+
 
                     <h3 className="text-secondary text-2xl text-center font-bold font-sans">
                         {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}

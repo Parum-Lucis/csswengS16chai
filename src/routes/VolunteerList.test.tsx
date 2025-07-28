@@ -57,6 +57,15 @@ describe('Volunteer List Page', () => {
         birthdate: { toDate: () => new Date('1995-01-01') },
       }),
     },
+    {
+      id: '2',
+      data: () => ({
+        docID: '3',
+        first_name: 'Next',
+        last_name: null,
+        role: 'Volunteer',
+      }),
+    },
   ];
 
   beforeEach(() => {
@@ -171,6 +180,16 @@ describe('Volunteer List Page', () => {
     await waitFor(() => {
       expect(screen.getByText(/Volunteer, Another/i)).toBeInTheDocument();
       expect(screen.queryByText(/Admin, Test/i)).not.toBeInTheDocument();
+    });
+  });
+
+  test('skips profiles with missing essential values', async () => {
+    renderVolunteerWithUser({ email: 'user@test.com' });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Admin, Test/i)).toBeInTheDocument();
+      expect(screen.getByText(/Volunteer, Another/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Next/i)).not.toBeInTheDocument();
     });
   });
 });

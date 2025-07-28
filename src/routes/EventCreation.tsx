@@ -4,9 +4,20 @@ import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { collection, addDoc, Timestamp } from "firebase/firestore"
 import { db } from "../firebase/firebaseConfig"
+import { useContext, useEffect } from "react";
+import { UserContext } from "../util/userContext";
 
 export function EventCreation() {
   const navigate = useNavigate();
+  const user = useContext(UserContext)
+
+  useEffect(() => {
+    // check for authorized user
+    if (user === null) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -14,17 +25,18 @@ export function EventCreation() {
     const submitBtn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
     if (submitBtn) submitBtn.disabled = true; // disable the button; stop multiple submissions
 
-    // check if all form input is non-empty
-    for (const [, value] of formData.entries()) {
-      if (!(value.toString().trim())) {
-        // cancel submission when a field is empty
-        toast.error("Please fill up all fields!");
-        return;
-      }
-    }
-
-    let start_timestamp, end_timestamp;
     try {
+      // check if all form input is non-empty
+      for (const [, value] of formData.entries()) {
+        if (!(value.toString().trim())) {
+          toast.error("Please fill up all fields!");
+          if (submitBtn) submitBtn.disabled = false;
+          return;
+        }
+      }
+
+      let start_timestamp, end_timestamp;
+
       // handle start date-time
       const date = new Date(formData.get("date") as string);
       const start_time = formData.get("stime") as string;
@@ -41,43 +53,42 @@ export function EventCreation() {
       // if end time is before start time
       if (end_timestamp < start_timestamp) {
         toast.error("Start time must strictly be before the end time!");
-        submitBtn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
         return;
       }
+      
+        // double check description length
+      if ((formData.get("description") as string).trim().length > 255) {
+        toast.error("Description must be at most 255 characters in length!");
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      // create object and trim whitespaces
+      var newEvent: Omit<Event, "attendees"> = {
+        name: (formData.get("eventName") as string).trim(),
+        description: (formData.get("description") as string).trim(),
+        start_date: start_timestamp,
+        end_date: end_timestamp,
+        location: (formData.get("location") as string).trim(),
+      };
+
+      // add to database
+      addDoc(collection(db, "events"), newEvent)
+        .then(() => {
+          toast.success("Event created successfully!");
+          navigate("/admin");
+        })
+        .catch((error) => {
+          toast.error("Failed to create event: " + error.message);
+          if (submitBtn) submitBtn.disabled = false;
+          return;
+        });
     } catch (error) {
-      console.error(error);
       toast.error("Please provide a valid date!");
-      submitBtn.disabled = false;
+      if (submitBtn) submitBtn.disabled = false;
       return;
     }
-
-    // double check description length
-    if ((formData.get("description") as string).trim().length > 255) {
-      toast.error("Description must be at most 255 characters in length!");
-      submitBtn.disabled = false;
-      return;
-    }
-
-    // create object and trim whitespaces
-    // note: create attendees subcollection when we're actually adding attendees na 
-    const newEvent: Omit<Event, "attendees"> = {
-      name: (formData.get("eventName") as string).trim(),
-      description: (formData.get("description") as string).trim(),
-      start_date: start_timestamp,
-      end_date: end_timestamp,
-      location: (formData.get("location") as string).trim(),
-    };
-
-    // add to database
-    addDoc(collection(db, "events"), newEvent)
-      .then(() => {
-        toast.success("Event created successfully!");
-        navigate("/admin");
-      })
-      .catch((error) => {
-        toast.error("Failed to create event: " + error.message);
-        submitBtn.disabled = false;
-      });
   };
 
   return (
@@ -129,7 +140,7 @@ export function EventCreation() {
                 type="date"
                 className="appearance-none input-text w-full"
                 required
-              // onChange={e => toast.info(`Selected date: ${new Date((e.target as HTMLInputElement).value)}`)} // checker
+                // onChange={e => toast.info(`Selected date: ${new Date((e.target as HTMLInputElement).value)}`)} // checker
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-4">

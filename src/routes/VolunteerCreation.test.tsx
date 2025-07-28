@@ -214,4 +214,92 @@ describe("Volunteer Creation Page", () => {
       expect(mockedUsedNavigate).toHaveBeenCalledWith(-1);
     });
   });
+
+  test("disables submit button during submission", async () => {
+    (callCreateVolunteerProfile as unknown as jest.Mock).mockImplementation(
+      () => new Promise((resolve) => setTimeout(() => resolve({ data: true }), 500))
+    );
+
+    renderWithRouter(<VolunteerProfileCreation />);
+
+    fireEvent.change(screen.getByLabelText(/Role/i), {
+      target: { value: "Volunteer" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Birth Date/i), {
+      target: { value: "2000-01-01" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Email/i), {
+      target: { value: "valid@example.com" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/First Name/i), {
+      target: { value: "Jane" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Last Name/i), {
+      target: { value: "Smith" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Sex/i), {
+      target: { value: "Female" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Address/i), {
+      target: { value: "456 Road" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Contact No./i), {
+      target: { value: "09121234567" },
+    });
+
+    fireEvent.click(screen.getByText(/Create Account/i));
+    expect(screen.getByText(/Create Account/i)).toBeDisabled();
+  });
+
+  test("re-enables submit button if there is a submission error", async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {}); // prevent log
+    (callCreateVolunteerProfile as unknown as jest.Mock).mockRejectedValueOnce(new Error("Simulated error"));
+
+    renderWithRouter(<VolunteerProfileCreation />);
+
+    fireEvent.change(screen.getByLabelText(/Role/i), {
+      target: { value: "Volunteer" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Birth Date/i), {
+      target: { value: "2000-01-01" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Email/i), {
+      target: { value: "error@example.com" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/First Name/i), {
+      target: { value: "Error" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Last Name/i), {
+      target: { value: "Case" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Sex/i), {
+      target: { value: "Female" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Address/i), {
+      target: { value: "789 Lane" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/Contact No./i), {
+      target: { value: "09129876543" },
+    });
+
+    fireEvent.click(screen.getByText(/Create Account/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Create Account/i)).not.toBeDisabled();
+    });
+  });
 });

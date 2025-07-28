@@ -289,4 +289,71 @@ describe('Beneficiary Creation', () => {
       expect(screen.getByText(/Cannot have 0 guardians!/i)).toBeInTheDocument();
     });
   });
+
+  test('disables submit button after submission to prevent multiple submissions', async () => {
+    (addDoc as jest.Mock).mockResolvedValue({ id: 'new-beneficiary-id' });
+
+    renderBeneficiaryProfileCreation();
+
+    fireEvent.change(screen.getByLabelText(/ID no./i), { target: { value: '123' } });
+    fireEvent.change(screen.getByLabelText(/Birth Date/i), { target: { value: '2010-01-01' } });
+    fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: 'John' } });
+    fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: 'Doe' } });
+    fireEvent.change(screen.getByLabelText(/Sex/i), { target: { value: 'Male' } });
+    fireEvent.change(screen.getByLabelText(/Grade Level/i), { target: { value: '5' } });
+    fireEvent.change(screen.getByLabelText(/Address/i), { target: { value: '123 Main St' } });
+
+    const guardian1Card = screen.getByText(/Guardian 1/i).closest('div')!;
+    fireEvent.change(within(guardian1Card).getByLabelText(/Name:/i), { target: { value: 'Jane Doe' } });
+    fireEvent.change(within(guardian1Card).getByLabelText(/Relation:/i), { target: { value: 'Mother' } });
+    fireEvent.change(within(guardian1Card).getByLabelText(/Email:/i), { target: { value: 'jane@example.com' } });
+    fireEvent.change(within(guardian1Card).getByLabelText(/Contact Number:/i), { target: { value: '09123456789' } });
+
+    const button = screen.getByRole('button', { name: /create account/i });
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(button).toBeDisabled();
+    });
+  });
+
+  test('re-enables submit button if there is a submission error', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    (addDoc as jest.MockedFunction<typeof addDoc>).mockRejectedValueOnce(new Error('Simulated error'));
+
+    renderBeneficiaryProfileCreation();
+
+    fireEvent.change(screen.getByLabelText(/ID no./i), { target: { value: '123' } });
+    fireEvent.change(screen.getByLabelText(/Birth Date/i), { target: { value: '2010-01-01' } });
+    fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: 'John' } });
+    fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: 'Doe' } });
+    fireEvent.change(screen.getByLabelText(/Sex/i), { target: { value: 'Male' } });
+    fireEvent.change(screen.getByLabelText(/Grade Level/i), { target: { value: '5' } });
+    fireEvent.change(screen.getByLabelText(/Address/i), { target: { value: '123 Main St' } });
+
+    const guardian1Card = screen.getByText(/Guardian 1/i).closest('div')!;
+    fireEvent.change(within(guardian1Card).getByLabelText(/Name:/i), { target: { value: 'Jane Doe' } });
+    fireEvent.change(within(guardian1Card).getByLabelText(/Relation:/i), { target: { value: 'Mother' } });
+    fireEvent.change(within(guardian1Card).getByLabelText(/Email:/i), { target: { value: 'jane@example.com' } });
+    fireEvent.change(within(guardian1Card).getByLabelText(/Contact Number:/i), { target: { value: '09123456789' } });
+
+    const button = screen.getByRole('button', { name: /create account/i });
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(button).not.toBeDisabled();
+    });
+  });
+
+  test('submit button can be used again after validation errors', async () => {
+    renderBeneficiaryProfileCreation();
+
+    const button = screen.getByRole('button', { name: /create account/i });
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Please fill up all fields!/i)).toBeInTheDocument();
+      expect(button).not.toBeDisabled();
+    });
+  });
 });
