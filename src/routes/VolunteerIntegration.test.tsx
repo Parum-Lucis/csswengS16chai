@@ -12,6 +12,11 @@ import { UserContext } from '../util/userContext';
 import type { UserStateType } from '../util/userContext';
 import type { User } from "firebase/auth";
 
+const mockCrypto = {
+  randomUUID: () => `mock-uuid-${Math.random()}`,
+};
+Object.defineProperty(global, 'crypto', { value: mockCrypto });
+
 type MockDoc = {
   id: string;
   data: () => {
@@ -31,32 +36,20 @@ let volunteerDocs: MockDoc[];
 
 jest.mock("firebase/firestore", () => {
     const originalModule = jest.requireActual("firebase/firestore");
-    const mockQuery = {
+    const mockQueryRef = {
+        withConverter: jest.fn().mockReturnThis(),
+    };
+     const mockDocRef = {
         withConverter: jest.fn().mockReturnThis(),
     };
     return {
         ...originalModule,
         collection: jest.fn(),
         getDocs: jest.fn(),
-        getDoc: jest.fn(() =>
-            Promise.resolve({
-                exists: () => true,
-                id: "123",
-                data: () => ({
-                    first_name: "Test",
-                    last_name: "User",
-                    birthdate: { seconds: 946684800 },
-                    sex: "F",
-                    is_admin: false,
-                    email: "test@example.com",
-                    address: "Original Address",
-                    contact_number: "09123456789",
-                }),
-            })
-        ),
-        doc: jest.fn(() => ({})),
+        getDoc: jest.fn(),
+        doc: jest.fn(() => mockDocRef),
         updateDoc: jest.fn(() => Promise.resolve()),
-        query: jest.fn(() => mockQuery),
+        query: jest.fn(() => mockQueryRef),
         where: jest.fn(),
     };
 });
@@ -66,6 +59,7 @@ jest.mock("../firebase/firebaseConfig", () => ({
     db: {
         _settings: { host: "localhost:8080", ssl: false },
     },
+    store: {},
     func: {},
 }));
 
@@ -81,42 +75,20 @@ jest.mock("react-router", () => ({
 }));
 
 const mockAdminUser: UserStateType = {
-  uid: "123",
-  email: "test@example.com",
-  emailVerified: true,
-  isAnonymous: false,
-  providerData: [],
-  metadata: {} as User["metadata"],
-  getIdToken: async () => "mock-token",
-  getIdTokenResult: async () => ({
-    authTime: "mock-auth-time",
-    expirationTime: "mock-expiration-time",
-    issuedAtTime: "mock-issued-time",
-    signInProvider: "password",
-    signInSecondFactor: null,
-    claims: {},
-    token: "mock-token",
-  }),
-  reload: async () => {},
-  refreshToken: "mock-refresh",
-  toJSON: () => ({}),
-  displayName: "Test User",
-  phoneNumber: null,
-  photoURL: null,
-  providerId: "firebase",
-  tenantId: null,
-  delete: async () => {},
+  uid: "admin123",
+  email: "admin-test@example.com",
   is_admin: true,
-} as User & { is_admin: boolean };
+} as any;
 
 const mockVolunteerUser: UserStateType = {
-    ...mockAdminUser,
-    is_admin: false,
-} as User & { is_admin: boolean };
+  uid: "123",
+  email: "test@example.com",
+  is_admin: false,
+} as any;
 
 describe("Volunteer Integration Tests", () => {
     const { callCreateVolunteerProfile, callDeleteVolunteerProfile } = require("../firebase/cloudFunctions");
-    const { updateDoc, getDocs } = require("firebase/firestore");
+    const { updateDoc, getDocs, getDoc } = require("firebase/firestore");
 
     beforeEach(() => {
         volunteerDocs = [
@@ -144,10 +116,24 @@ describe("Volunteer Integration Tests", () => {
             },
         ];
         getDocs.mockImplementation(() => Promise.resolve({ docs: volunteerDocs }));
-        callCreateVolunteerProfile.mockClear();
-        callDeleteVolunteerProfile.mockClear();
-        mockedNavigate.mockClear();
-        updateDoc.mockClear();
+        
+        const mockProfileData = {
+            exists: () => true,
+            id: "123",
+            data: () => ({
+                first_name: "Test",
+                last_name: "User",
+                birthdate: { seconds: 946684800, toDate: () => new Date('2000-01-01T00:00:00Z') },
+                sex: "F",
+                is_admin: false,
+                email: "test@example.com",
+                address: "Original Address",
+                contact_number: "09123456789",
+            }),
+        };
+        getDoc.mockResolvedValue(mockProfileData);
+
+        jest.clearAllMocks();
     });
 
     test("creates a volunteer profile successfully", async () => {
@@ -197,7 +183,7 @@ describe("Volunteer Integration Tests", () => {
               last_name: "Doe",
             })
           );
-          expect(mockedNavigate).toHaveBeenCalledWith("/admin");
+          expect(mockedNavigate).toHaveBeenCalledWith(-1);
         });
       });
 
@@ -247,7 +233,7 @@ describe("Volunteer Integration Tests", () => {
               is_admin: true,
             })
           );
-          expect(mockedNavigate).toHaveBeenCalledWith("/admin");
+          expect(mockedNavigate).toHaveBeenCalledWith(-1);
         });
       });
 
@@ -332,7 +318,7 @@ describe("Volunteer Integration Tests", () => {
           </UserContext.Provider>
         );
     
-        await screen.findByDisplayValue("test@example.com");
+        expect(await screen.findByDisplayValue("test@example.com")).toBeInTheDocument();
     
         fireEvent.click(screen.getByRole("button", { name: /edit/i }));
         fireEvent.change(screen.getByLabelText(/Address/i), {
@@ -350,6 +336,9 @@ describe("Volunteer Integration Tests", () => {
       test("deletes a volunteer account and removes from list", async () => {
         callDeleteVolunteerProfile.mockResolvedValue({ data: true });
     
+        // user to be deleted
+        volunteerDocs.push({ id: "123", data: () => ({ first_name: "Test", last_name: "User", role: 'Volunteer' }) });
+
         render(
           <UserContext.Provider value={mockVolunteerUser}>
             <MemoryRouter>
@@ -358,18 +347,17 @@ describe("Volunteer Integration Tests", () => {
           </UserContext.Provider>
         );
     
-        await screen.findByDisplayValue("test@example.com");
+        expect(await screen.findByDisplayValue("test@example.com")).toBeInTheDocument();
     
         fireEvent.click(screen.getByText(/delete account/i));
-        fireEvent.click(screen.getByText(/confirm delete/i));
+        fireEvent.click(await screen.findByRole('button', { name: /confirm delete/i }));
     
         await waitFor(() => {
           expect(callDeleteVolunteerProfile).toHaveBeenCalledWith("123");
         });
     
-        volunteerDocs = volunteerDocs.filter(doc => doc.data().first_name !== "Alice");
+        volunteerDocs = volunteerDocs.filter(doc => doc.id !== "123");
         getDocs.mockImplementation(() => Promise.resolve({ docs: volunteerDocs }));
-    
     
         render(
           <UserContext.Provider value={mockAdminUser}>
@@ -380,7 +368,8 @@ describe("Volunteer Integration Tests", () => {
         );
     
         await waitFor(() => {
-          expect(screen.queryByText(/Alice/i)).not.toBeInTheDocument();
+          expect(screen.queryByText(/Test User/i)).not.toBeInTheDocument();
+          expect(screen.getByText(/Alice/i)).toBeInTheDocument();
         });
       });
 });
