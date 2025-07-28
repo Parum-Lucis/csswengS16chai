@@ -2,7 +2,7 @@ import { useNavigate } from "react-router";
 import "../css/styles.css";
 import { UserContext } from "../util/userContext";
 import { useContext, useEffect, useState } from "react";
-import { auth, db } from "../firebase/firebaseConfig";
+import { auth, db, store } from "../firebase/firebaseConfig";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore"
 import type { Volunteer } from "@models/volunteerType";
 import { createPortal } from 'react-dom';
@@ -10,6 +10,9 @@ import { toast } from "react-toastify";
 import { callDeleteVolunteerProfile } from "../firebase/cloudFunctions";
 import { signOut } from "firebase/auth";
 import { emailRegex } from "../util/emailRegex";
+import { ProfilePictureInput } from "../components/ProfilePicture";
+import { volunteerConverter } from "../util/converters";
+import { deleteObject, getBlob, ref, uploadBytes } from "firebase/storage";
 
 export function YourProfile() {
 
@@ -19,7 +22,7 @@ export function YourProfile() {
     // const params = useParams()
     const [volunteer, setVolunteer] = useState<Volunteer | null>(null)
     const [originalVolunteer, setOriginalVolunteer] = useState<Volunteer | null>(null)
-    const [formState, setForm] = useState<boolean | null>(null);
+    const [isViewForm, setForm] = useState<boolean>(true);
     const [docID, setDocID] = useState(volunteer?.docID)
     const [showDeleteModal, setDeleteModal] = useState(false)
 
@@ -27,19 +30,25 @@ export function YourProfile() {
         const fetchBeneficiary = async () => {
             if (!user) return;
 
-            const getQuery = doc(db, "volunteers", user.uid)
+            const getQuery = doc(db, "volunteers", user.uid).withConverter(volunteerConverter)
             const volunteerSnap = await getDoc(getQuery)
-            console.log(volunteerSnap)
             if (volunteerSnap.exists()) {
-                setVolunteer(volunteerSnap.data() as Volunteer)
-                setOriginalVolunteer(volunteerSnap.data() as Volunteer)
+                const data = volunteerSnap.data();
+                setVolunteer(data)
+                setOriginalVolunteer(data)
                 setDocID(volunteerSnap.id)
                 setForm(true)
+                if (data.pfpPath) {
+                    const path = data.pfpPath;
+                    const r = ref(store, path);
+                    const blob = await getBlob(r);
+                    setVolunteer(prev => (prev === null ? null : { ...prev, pfpFile: new File([blob], path) }))
+                }
             }
         }
         fetchBeneficiary()
     }, [setVolunteer, user])
-    console.log(volunteer)
+
     const navigate = useNavigate();
     const { sex, contact_number: contact, email, address } = volunteer || {}
     const birthdate = new Date((volunteer?.birthdate.seconds ?? 0) * 1000)
@@ -76,15 +85,15 @@ export function YourProfile() {
     }
 
     function handleEdit() {
-        if (formState === false && originalVolunteer) {
+        if (isViewForm === false && originalVolunteer) {
             setVolunteer(originalVolunteer);
         }
-        setForm(!formState)
+        setForm(!isViewForm)
     }
 
     const handleSave =
         async () => {
-            setForm(!formState)
+            setForm(!isViewForm)
             if (!(sex!.toString().trim()) || !(contact!.toString().trim()) || !(email!.toString().trim()) || !(address!.toString().trim())) {
                 toast.error("Please fill up all fields!")
                 return
@@ -94,18 +103,40 @@ export function YourProfile() {
                 toast.error("Please input a proper email!");
                 return
             }
+            const newFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
             const updateRef = doc(db, "volunteers", docID!)
             console.log(volunteer)
             try {
-                await updateDoc(updateRef, {
-                    ...volunteer
-                })
+
+                // did they try to upload a picture?
+                if (volunteer?.pfpFile) {
+                    // delete the existing picture and upload new one.
+                    const { pfpFile, ...volunteerRed } = volunteer;
+                    if (originalVolunteer?.pfpPath) {
+                        const oldRef = ref(store, originalVolunteer.pfpPath);
+                        deleteObject(oldRef); // don't even wait for it.
+                    }
+
+                    // upload the new picture
+                    const newPfpRef = ref(store, newFilePath);
+                    await Promise.all([
+                        uploadBytes(newPfpRef, pfpFile),
+                        updateDoc(updateRef, {
+                            ...volunteerRed,
+                            pfpPath: newFilePath
+                        })
+                    ])
+                } else {
+                    await updateDoc(updateRef, {
+                        ...volunteer,
+                    })
+                }
+
+
                 setOriginalVolunteer(volunteer)
-                toast.success("Account update success!")
-                setTimeout(function () {
-                    location.reload();
-                }, 1000);
-            } catch {
+                toast.success("Account update successs!")
+            } catch (e) {
+                console.error(e);
                 toast.error("Something went wrong")
             }
         }
@@ -138,16 +169,13 @@ export function YourProfile() {
                 )
             )}
             <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6 overflow-hidden">
-                <div className="absolute sm:top-5 z-10 w-32 h-32 sm:w-36 sm:h-36 bg-gray-500 border-[10px] border-primary rounded-full flex items-center justify-center mb-1 mt-15">
-                    <i className="flex text-[6rem] sm:text-[8rem] text-gray-300 fi fi-ss-circle-user"></i>
-                </div>
 
                 <button
                     onClick={() => auth.signOut()}
                     className="absolute left-4 top-8 bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-onhover transition">
                     Sign Out
                 </button>
-                {(formState === null) && (
+                {(isViewForm === null) && (
                     <h3
                         className="z-1 fixed right-4 bottom-20 bg-[#e7c438] text-white px-4 py-2 rounded font-semibold md:right-5 md:bottom-25">
                         Fetching...
@@ -155,6 +183,16 @@ export function YourProfile() {
                 )}
 
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
+                    <ProfilePictureInput readOnly={isViewForm}
+                        pfpFile={volunteer?.pfpFile ?? null}
+                        onPfpChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                                const files = e.target.files;
+                                setVolunteer(prev => prev === null ? null : ({ ...prev, pfpFile: files[0] }))
+                            }
+                        }}
+                    />
+
                     <h3 className="text-secondary text-2xl text-center font-bold font-sans">
                         {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
                     </h3>
@@ -170,7 +208,7 @@ export function YourProfile() {
                                     type="date"
                                     id="bDate"
                                     className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                                    readOnly={formState ?? true}
+                                    readOnly={isViewForm ?? true}
                                     onChange={() => setVolunteer({ ...volunteer as Volunteer, birthdate: Timestamp.fromDate(birthdate) })}
                                     value={birthdate?.toISOString().substring(0, 10)} />
                             </div>
@@ -185,7 +223,7 @@ export function YourProfile() {
                                     type="text"
                                     id="Sex"
                                     className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                                    readOnly={formState ?? true}
+                                    readOnly={isViewForm ?? true}
                                     onChange={(e) => setVolunteer({ ...volunteer as Volunteer, sex: e.target.value })}
                                     value={sex} />
                             </div>
@@ -200,7 +238,7 @@ export function YourProfile() {
                                 type="email"
                                 id="email"
                                 className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                                readOnly={formState ?? true}
+                                readOnly={isViewForm ?? true}
                                 onChange={(e) => setVolunteer({ ...volunteer as Volunteer, email: e.target.value })}
                                 value={email}
                             />
@@ -215,7 +253,7 @@ export function YourProfile() {
                                 type="number"
                                 id="cNum"
                                 className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                                readOnly={formState ?? true}
+                                readOnly={isViewForm ?? true}
                                 onChange={(e) => setVolunteer({ ...volunteer as Volunteer, contact_number: e.target.value })}
                                 value={"0" + Number(contact)}
                             />
@@ -230,12 +268,12 @@ export function YourProfile() {
                                 type="text"
                                 id="add"
                                 className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                                readOnly={formState ?? true}
+                                readOnly={isViewForm ?? true}
                                 onChange={(e) => setVolunteer({ ...volunteer as Volunteer, address: e.target.value })}
                                 value={address} />
                         </div>
                         <div className="flex flex-row items-center justify-around w-full gap-4">
-                            {(!formState && formState !== null) && (
+                            {(!isViewForm && isViewForm !== null) && (
                                 <button
                                     type="submit"
                                     className="mt-2 w-full bg-red-600 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
@@ -246,16 +284,16 @@ export function YourProfile() {
                             <button
                                 type="submit"
                                 className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                                onClick={formState ? handleEdit : handleSave}
-                                disabled={formState === null}>
-                                {formState || formState === null ? "Edit" : "Save Changes"}
+                                onClick={isViewForm ? handleEdit : handleSave}
+                                disabled={isViewForm === null}>
+                                {isViewForm || isViewForm === null ? "Edit" : "Save Changes"}
                             </button>
                         </div>
                         <button
                             type="submit"
                             className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                             onClick={handleDelete}
-                            disabled={formState === null}>
+                            disabled={isViewForm === null}>
                             Delete Account
                         </button>
                     </div>

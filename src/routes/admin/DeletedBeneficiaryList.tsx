@@ -2,10 +2,11 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import { startTransition, useEffect, useOptimistic, useState } from "react";
 import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { differenceInDays, differenceInYears } from "date-fns";
-import { db } from "../../firebase/firebaseConfig";
+import { db, store } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { DeletedProfileList } from "./DeletedProfileList";
 import { beneficiaryConverter } from "../../util/converters";
+import { getBlob, ref } from "firebase/storage";
 
 export function DeletedBeneficiaryList() {
 
@@ -106,26 +107,53 @@ export function DeletedBeneficiaryList() {
 
 function DeletedBeneficiaryCard({ profile, onRestore }:
     { profile: Beneficiary, onRestore: (profile: Beneficiary) => void }) {
-    const { first_name, last_name, sex, birthdate, time_to_live } = profile;
-    console.log(time_to_live)
+    const { first_name, last_name, sex, birthdate, time_to_live, pfpPath } = profile;
+    const [isLoading, setIsLoading] = useState(true);
+    const [picURL, setPicURL] = useState("");
     const daysLeftuntilDeleted = time_to_live ? differenceInDays(time_to_live.toDate(), new Date()) : "?"
     // const daysLeftuntilDeleted = "hi"
+    useEffect(() => {
+        async function fetchPictureBlob() {
+            setIsLoading(true);
+            if (!pfpPath) {
+                setIsLoading(false);
+                return
+            }
+
+            try {
+                const r = ref(store, pfpPath);
+                const blob = await getBlob(r);
+                setPicURL(URL.createObjectURL(blob));
+            } catch (error) {
+                console.error(error);
+
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchPictureBlob();
+    }, [pfpPath]);
     return (
 
         <div
             className="flex items-center justify-between bg-[#45B29D] text-white rounded-xl p-4 shadow-md transition"
         >
             <div className="flex-grow flex items-center">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
-                    <svg
-                        className="w-6 h-6 text-[#45B29D]"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
-                        />
-                    </svg>
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 overflow-hidden">
+                    {
+                        isLoading || !picURL ?
+
+                            <svg
+                                className="w-6 h-6 text-[#45B29D]"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+                                />
+                            </svg> :
+                            <img src={picURL} />
+                    }
                 </div>
                 <div className="flex flex-col text-sm">
                     <span className="font-bold text-base font-[Montserrat]">

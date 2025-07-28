@@ -13,5 +13,7 @@ export interface Beneficiary {
   grade_level: number; // this will be string in later prs
   attended_events?: AttendedEvents[];
   guardians: Guardian[];
-  time_to_live?: Timestamp | null;
+  pfpPath?: string;
+  pfpFile?: File | null;
+  time_to_live?: Timestamp;
 }

@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
-import { callDeleteEvent } from '../firebase/cloudFunctions';
+import { add } from "date-fns";
 
 export function EventPage() {
   const params = useParams()
@@ -143,19 +143,19 @@ export function EventPage() {
 
   // delete event
   const handleConfirm = async () => {
+    if (!params.docId) return;
     setDeleteModal(!showDeleteModal)
 
     try {
-      callDeleteEvent(params.docId)
-        .then((result) => {
-          if (result.data) {
-            toast.success("Event delete success!")
-            navigate("/event");
-          } else { toast.error("Could not delete the event (no auth or event not found)") }
-        })
+      const d = doc(db, "events", params.docId);
+      await updateDoc(d, {
+        time_to_live: Timestamp.fromDate(add(new Date(), { days: 30 }))
+      })
+      toast.success("Event delete success!")
+      navigate("/event");
     }
     catch {
-      toast.error("Something went wrong!")
+      toast.error("Could not delete the event (no auth or event not found)");
     }
   }
 
