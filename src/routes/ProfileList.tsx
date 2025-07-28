@@ -451,20 +451,19 @@ export function VolunteerList() {
             )}
           </div>
         </div>
-
-        <div className="flex flex-col gap-4">
-          {loading ? (
-            // display loading while fetching from database.
-            <div className="text-center text-white py-8">Fetching...</div>
-          ) : filteredprofiles.length === 0 ? (
-            <div className="text-center text-white py-8">No profiles to show.</div>
-          ) : (
-            // non-empty profiles
-            filteredprofiles.map((profile) => (
-              <ProfileCard profile={profile} sort={sort} key={profile.docID} />
-            ))
-          )}
-        </div>
+      </div>
+      <div className="flex flex-col gap-4">
+        {loading ? (
+          // display loading while fetching from database.
+          <div className="text-center text-white py-8">Fetching...</div>
+        ) : filteredprofiles.length === 0 ? (
+          <div className="text-center text-white py-8">No profiles to show.</div>
+        ) : (
+          // non-empty profiles
+          filteredprofiles.map((profile) => (
+            <ProfileCard profile={profile} sort={sort} key={profile.docID} />
+          ))
+        )}
       </div>
     </div>
   );
