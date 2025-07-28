@@ -188,7 +188,25 @@ export function VolunteerList() {
 
       try {
         const volunteerSnap = await getDocs(q.withConverter(volunteerConverter));
-        setProfiles(volunteerSnap.docs.map(profile => profile.data()))
+        const profilesData: Volunteer[] = [];
+        let didFail = false;
+
+        volunteerSnap.docs.forEach(doc => {
+          const data = doc.data();
+          if (data.first_name && data.last_name) {
+            profilesData.push(data);
+          } else {
+            didFail = true;
+            console.error(`Error fetching volunteer: ${doc.id}`, 'Missing name fields');
+          }
+        });
+
+        setProfiles(profilesData);
+
+        if (didFail) {
+          toast.warn('One or more profiles failed to load.');
+        }
+
       } catch (error) {
         console.error(error);
         toast.error("failed to load volunteers");
