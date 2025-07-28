@@ -8,6 +8,18 @@ import { BrowserRouter } from 'react-router-dom';
 import { addDoc } from 'firebase/firestore';
 import { ToastContainer } from 'react-toastify';
 
+Object.defineProperty(global.self, 'crypto', {
+  value: {
+    randomUUID: () => `mock-uuid-${Math.random()}`,
+  },
+  configurable: true,
+});
+
+jest.mock('firebase/storage', () => ({
+  ref: jest.fn(() => ({})),
+  uploadBytes: jest.fn(() => Promise.resolve()),
+}));
+
 // Mock Firebase
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(() => ({})), // Return a mock object
@@ -38,6 +50,7 @@ jest.mock('../firebase/firebaseConfig', () => ({
         return jest.fn();
     }),
   },
+  storage: {},
 }));
 
 const mockedNavigate = jest.fn();

@@ -7,34 +7,78 @@ import { BeneficiaryProfile } from './BeneficiaryProfile';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ToastContainer } from 'react-toastify';
+import { add } from 'date-fns';
+
+Object.defineProperty(global.self, 'crypto', {
+  value: {
+    randomUUID: () => `mock-uuid-${Math.random()}`,
+  },
+  configurable: true,
+});
 
 // Mock Firebase
-jest.mock('firebase/firestore', () => ({
-  collection: jest.fn(() => ({})), // Return a mock object
-  addDoc: jest.fn(),
-  doc: jest.fn(() => ({})), // Return a mock object
-  getDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  Timestamp: {
-    fromMillis: jest.fn((ms) => ({
-      seconds: Math.floor(ms / 1000),
-      nanoseconds: (ms % 1000) * 1_000_000,
-      toDate: () => new Date(ms),
+jest.mock('firebase/firestore', () => {
+  const originalModule = jest.requireActual('firebase/firestore');
+
+  const mockBeneficiaryData = {
+    firstName: 'Test',
+    lastName: 'Beneficiary',
+    id: '123',
+    birthDate: {
+      toDate: () => new Date('2015-05-10'),
+    },
+    sex: 'Male',
+    gradeLevel: '5',
+    address: '123 Test Street',
+    guardians: [],
+  };
+
+  return {
+    ...originalModule,
+    Timestamp: {
+      fromDate: (date: Date) => ({
+        seconds: Math.floor(date.getTime() / 1000),
+        nanoseconds: (date.getTime() % 1000) * 1e6,
+        toDate: () => date,
+      }),
+    },
+    getFirestore: jest.fn(() => 'mock-db'),
+    doc: jest.fn((db, collection, id) => ({
+      id,
+      withConverter: jest.fn(() => ({
+        id,
+        collection,
+        db,
+      })),
     })),
-    fromDate: jest.fn((date: Date) => ({
-      seconds: Math.floor(date.getTime() / 1000),
-      nanoseconds: (date.getTime() % 1000) * 1_000_000,
-      toDate: () => date,
-    })),
-  },
-}));
+    getDoc: jest.fn(async (docRef) => {
+      if (
+        docRef.collection === 'beneficiaries' &&
+        docRef.id === 'test-beneficiary-id'
+      ) {
+        return Promise.resolve({
+          exists: () => true,
+          data: () => mockBeneficiaryData,
+        });
+      } else {
+        return Promise.resolve({
+          exists: () => false,
+          data: () => undefined,
+        });
+      }
+    }),
+    updateDoc: jest.fn(() => Promise.resolve()) ,
+    deleteDoc: jest.fn(() => Promise.resolve()),
+  };
+});
 
 jest.mock('../firebase/firebaseConfig', () => ({
   db: {},
+  store: {},
   auth: {
     signOut: jest.fn(),
     onAuthStateChanged: jest.fn(callback => {
-      callback({ uid: 'test-uid', email: 'test@example.com' }); // Simulate logged-in user
+      callback({ uid: 'test-uid', email: 'test@example.com' });
       return jest.fn();
     }),
   },
@@ -49,9 +93,9 @@ jest.mock('react-router', () => ({
 
 function renderBeneficiaryProfile(initialDocId = 'test-beneficiary-id') {
   return render(
-    <MemoryRouter initialEntries={[`/beneficiary-profile/${initialDocId}`]}>
+    <MemoryRouter initialEntries={[`/beneficiary/${initialDocId}`]}>
       <Routes>
-        <Route path="/beneficiary-profile/:docId" element={<BeneficiaryProfile />} />
+        <Route path="/beneficiary/:docId" element={<BeneficiaryProfile />} />
         <Route path="/" element={<div>Login Page</div>} />
       </Routes>
       <ToastContainer />
@@ -313,6 +357,32 @@ describe('Beneficiary Update', () => {
     })
   });
 
+  test('sets a 30-day TTL upon deletion', async () => {
+    const MOCK_DATE = new Date();
+    jest.useFakeTimers();
+    jest.setSystemTime(MOCK_DATE);
+
+    renderBeneficiaryProfile();
+
+    await waitFor(() => expect(screen.getByText('Beneficiary, Test')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: /delete account/i }));
+    fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
+
+    await waitFor(() => {
+      expect(updateDoc).toHaveBeenCalled();
+      const updatePayload = (updateDoc as jest.Mock).mock.calls[0][1];
+      expect(updatePayload).toHaveProperty('time_to_live');
+      const receivedTime = updatePayload.time_to_live.toDate().getTime();
+      const expectedTime = add(MOCK_DATE, { days: 30 }).getTime();
+      expect(Math.abs(receivedTime - expectedTime)).toBeLessThan(1000);
+      expect(screen.getByText(/Account delete success!/i)).toBeInTheDocument();
+      expect(mockedNavigate).toHaveBeenCalledWith('/beneficiary');
+    });
+
+    jest.useRealTimers();
+  });
+
   test('confirms account deletion and navigates to login', async () => {
     renderBeneficiaryProfile();
 
@@ -325,7 +395,7 @@ describe('Beneficiary Update', () => {
       expect(updateDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          time_to_live: expect.any(Number),
+          time_to_live: expect.any(Object),
         })
       );
       expect(screen.getByText(/Account delete success!/i)).toBeInTheDocument();

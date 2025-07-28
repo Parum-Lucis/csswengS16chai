@@ -235,7 +235,7 @@ describe('Login Page', () => {
     });
   });
 
-  test('redirects to /view-profile if user is already logged in', async () => {
+  test('redirects to /me if user is already logged in', async () => {
     (auth.onAuthStateChanged as jest.Mock).mockImplementation(callback => {
       callback({ uid: 'test-uid', email: 'test@example.com' });
       return jest.fn();
@@ -244,7 +244,7 @@ describe('Login Page', () => {
     renderLogin();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/view-profile');
+      expect(window.location.pathname).toBe('/me');
     });
   });
 });

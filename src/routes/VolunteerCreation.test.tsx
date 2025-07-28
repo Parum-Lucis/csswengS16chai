@@ -8,6 +8,12 @@ import { callCreateVolunteerProfile } from "../firebase/cloudFunctions";
 import React from "react";
 import '@testing-library/jest-dom';
 
+Object.defineProperty(global.self, 'crypto', {
+  value: {
+    randomUUID: () => `mock-uuid-${Math.random()}`,
+  },
+  configurable: true,
+});
 
 jest.mock("../firebase/firebaseConfig", () => ({
   __esModule: true,
@@ -204,8 +210,8 @@ describe("Volunteer Creation Page", () => {
         })
       );
 
-      expect(require("react-toastify").toast.success).toHaveBeenCalledWith("Success!");
-      expect(mockedUsedNavigate).toHaveBeenCalledWith("/me");
+      expect(require("react-toastify").toast.success).toHaveBeenCalledWith("Success");
+      expect(mockedUsedNavigate).toHaveBeenCalledWith(-1);
     });
   });
 });

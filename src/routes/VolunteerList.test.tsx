@@ -2,46 +2,66 @@
  * @jest-environment jsdom
  */
 import '@testing-library/jest-dom';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'; 
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { UserContext } from '../context/userContext';
-import { getDocs } from 'firebase/firestore';
+import { useNavigate } from 'react-router';
 import { VolunteerList } from './ProfileList';
+import { UserContext } from '../util/userContext';
+import { getDocs } from 'firebase/firestore';
 
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
   getDocs: jest.fn(),
+  where: jest.fn(),
+  query: jest.fn(() => ({
+    withConverter: jest.fn().mockReturnThis(),
+  })),
 }));
 
 jest.mock('../firebase/firebaseConfig', () => ({
-  db: {}, 
+  db: {},
 }));
 
 jest.mock('react-router', () => ({
   ...jest.requireActual('react-router'),
-  useNavigate: () => jest.fn(),
+  useNavigate: jest.fn(),
+}));
+
+jest.mock('react-toastify', () => ({
+  toast: {
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
 }));
 
 describe('Volunteer List Page', () => {
+  const mockNavigate = jest.fn();
   const mockVolunteers = [
-    { id: '1', data: () => ({
-      first_name: 'Another',
-      last_name: 'Admin',
-      birthdate: new Date('2015-01-01'),
-      sex: 'F',
-      is_admin: true
-    })},
-    { id: '2', data: () => ({
-      first_name: 'Test',
-      last_name: 'Volunteer',
-      birthdate: new Date('2010-01-01'),
-      sex: 'M',
-      is_admin: false
-    })}
+    {
+      id: '1',
+      data: () => ({
+        docID: '1',
+        first_name: 'Test',
+        last_name: 'Admin',
+        role: 'Admin',
+        birthdate: { toDate: () => new Date('1990-01-01') },
+      }),
+    },
+    {
+      id: '2',
+      data: () => ({
+        docID: '2',
+        first_name: 'Another',
+        last_name: 'Volunteer',
+        role: 'Volunteer',
+        birthdate: { toDate: () => new Date('1995-01-01') },
+      }),
+    },
   ];
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
     (getDocs as jest.Mock).mockResolvedValue({ docs: mockVolunteers });
   });
 
@@ -58,117 +78,99 @@ describe('Volunteer List Page', () => {
   test('renders title, filter, sort, and search inputs', () => {
     renderVolunteerWithUser({ email: 'user@test.com' });
 
-    expect(screen.getByRole('heading', { name: /profile list/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /volunteer list/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Filter By')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Sort by')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
   });
 
   test('shows "Fetching..." initially', () => {
+    (getDocs as jest.Mock).mockReturnValue(new Promise(() => {}));
     renderVolunteerWithUser({ email: 'user@test.com' });
     expect(screen.getByText(/fetching/i)).toBeInTheDocument();
   });
 
   test('renders volunteer cards after fetching', async () => {
     renderVolunteerWithUser({ email: 'user@test.com' });
-
     await waitFor(() => {
-      expect(screen.getByText(/Another/i)).toBeInTheDocument();
-      expect(screen.getByText(/Test/i)).toBeInTheDocument();
-
-      const matches = screen.getAllByText(/Admin|Volunteer/i);
-      expect(matches.length).toBeGreaterThan(0);
+      expect(screen.getByText(/Admin, Test/i)).toBeInTheDocument();
+      expect(screen.getByText(/Volunteer, Another/i)).toBeInTheDocument();
     });
   });
 
   test('filters by admin type', async () => {
     renderVolunteerWithUser({ email: 'user@test.com' });
-
     await waitFor(() => screen.getByText(/Another/i));
 
     fireEvent.change(screen.getByDisplayValue('Filter By'), {
       target: { value: 'admin' },
     });
 
-    expect(screen.getByText(/Another/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Test/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Admin, Test/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Volunteer, Another/i)).not.toBeInTheDocument();
   });
 
   test('filters by non-admin volunteers', async () => {
     renderVolunteerWithUser({ email: 'user@test.com' });
-
     await waitFor(() => screen.getByText(/Test/i));
 
     fireEvent.change(screen.getByDisplayValue('Filter By'), {
       target: { value: 'volunteer' },
     });
 
-    expect(screen.getByText(/Test/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Another/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Volunteer, Another/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Admin, Test/i)).not.toBeInTheDocument();
   });
 
   test('sorts volunteers by first name', async () => {
     renderVolunteerWithUser({ email: 'user@test.com' });
-
     await waitFor(() => screen.getByText(/Test/i));
 
     fireEvent.change(screen.getByDisplayValue('Sort by'), {
       target: { value: 'first' },
     });
-
-    const profileCards = screen.getAllByText(/(Test|Another)/i);
-    const firstNames = profileCards.map(card => card.textContent?.split(' ')[0].toLowerCase());
-
-    expect(firstNames[0]).toBe('another'); // A comes before T
-    expect(firstNames[1]).toBe('test');
+    
+    const profileCards = screen.getAllByRole('link');
+    expect(profileCards[0]).toHaveTextContent(/Another/i);
+    expect(profileCards[1]).toHaveTextContent(/Test/i);
   });
 
   test('sorts volunteers by last name', async () => {
     renderVolunteerWithUser({ email: 'user@test.com' });
-
     await waitFor(() => screen.getByText(/Another/i));
 
     fireEvent.change(screen.getByDisplayValue('Sort by'), {
       target: { value: 'last' },
     });
 
-    const profileCards = screen.getAllByText((content) =>
-      content.includes('Test') || content.includes('Another')
-    );
-
-    const names = profileCards.map(card => card.textContent?.toLowerCase() || '');
-
-    expect(names[0]).toContain('admin, another');     // A comes before V
-    expect(names[1]).toContain('volunteer, test');
+    const profileCards = screen.getAllByRole('link');
+    expect(profileCards[0]).toHaveTextContent(/Admin/i);
+    expect(profileCards[1]).toHaveTextContent(/Volunteer/i);
   });
 
   test('sorts volunteers by age', async () => {
     renderVolunteerWithUser({ email: 'user@test.com' });
-
     await waitFor(() => screen.getByText(/Test/i));
 
     fireEvent.change(screen.getByDisplayValue('Sort by'), {
       target: { value: 'age' },
     });
-
-    const profileCards = screen.getAllByText(/(Test|Another)/i);
-    const namesInOrder = profileCards.map(card => card.textContent?.toLowerCase());
-
-    // Assuming Another Admin is YOUNGER than Test Volunteer
-    expect(namesInOrder[0]).toContain('another');
-    expect(namesInOrder[1]).toContain('test');
+    
+    const profileCards = screen.getAllByRole('link');
+    expect(profileCards[0]).toHaveTextContent(/Another/i); // 1995 is younger
+    expect(profileCards[1]).toHaveTextContent(/Test/i); // 1990 is older
   });
 
   test('searches volunteer by name substring', async () => {
     renderVolunteerWithUser({ email: 'user@test.com' });
-
     await waitFor(() => screen.getByText(/Test/i));
 
     const searchInput = screen.getByPlaceholderText(/search/i);
     fireEvent.change(searchInput, { target: { value: 'Another' } });
 
-    expect(screen.getByText(/Another/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Test/i)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Volunteer, Another/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Admin, Test/i)).not.toBeInTheDocument();
+    });
   });
 });
-

@@ -32,14 +32,32 @@ export function BeneficiaryList() {
       const q = query(collection(db, "beneficiaries"), where("time_to_live", "==", null));
       try {
         const beneficiarySnap = await getDocs(q.withConverter(beneficiaryConverter));
-        setProfiles(beneficiarySnap.docs.map(beneficiary => beneficiary.data()))
+        const profilesData: Beneficiary[] = [];
+        let didFail = false;
+
+        beneficiarySnap.docs.forEach(doc => {
+          const data = doc.data();
+          // Check if essential data exists before adding it to the list
+          if (data.first_name && data.last_name) {
+            profilesData.push(data);
+          } else {
+            didFail = true;
+            console.error(`Error fetching beneficiary: ${doc.id}`, 'Missing name fields');
+          }
+        });
+
+        setProfiles(profilesData);
+
+        if (didFail) {
+          toast.warn('One or more profiles failed to load.');
+        }
+
       } catch (error) {
         console.error(error);
+        toast.error("Failed to load beneficiaries.");
       } finally {
         setLoading(false);
       }
-
-
     };
     fetchProfiles();
 
@@ -192,7 +210,7 @@ export function VolunteerList() {
   } else if (sort === "first") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
   } else if (sort === "age") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => compareAsc(a.birthdate.toDate(), b.birthdate.toDate()));
+    filteredprofiles = [...filteredprofiles].sort((a, b) => compareDesc(a.birthdate.toDate(), b.birthdate.toDate()));
   }
 
   // Search filter (partial or exact matches on name and age)
