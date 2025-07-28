@@ -530,9 +530,14 @@ export function EventPage() {
                             key={i}
                             className="flex items-center justify-between px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer"
                           >
-                            <span className="font-semibold text-md text-white">
-                              {notAtt.first_name + " " + notAtt.last_name}
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-md text-white">
+                                {notAtt.first_name + " " + notAtt.last_name}
+                              </span>
+                              <span className="text-sm text-gray-200">
+                                {isNaN(notAtt.accredited_id) ? "Waitlisted" : `ID: ${notAtt.accredited_id}`}
+                              </span>
+                            </div>
                             <div
                               className="cursor-pointer mr-3"
                               onClick={() => {
