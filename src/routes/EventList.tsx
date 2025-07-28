@@ -193,12 +193,11 @@ export function EventList() {
             )}
           </div>
         </div>
-
-        <div className="flex flex-col gap-4">
-          {modifiedList.map((event, i) => (
-            <EventCard event={event} key={`${i}${event.docID}`} />
-          ))}
-        </div>
+      </div>
+      <div className="flex flex-col gap-4">
+        {modifiedList.map((event, i) => (
+          <EventCard event={event} key={`${i}${event.docID}`} />
+        ))}
       </div>
     </div>
   );
