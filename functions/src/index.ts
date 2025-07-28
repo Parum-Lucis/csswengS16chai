@@ -59,8 +59,7 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
     if (!req.auth) return false;
     if (!req.auth.token.is_admin) return false;
 
-    const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate, pfpPath } = req.data;
-    console.log(req.data);
+    const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate } = req.data;
     try {
 
         const { uid } = await auth.createUser({
@@ -79,7 +78,6 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
                 is_admin,
                 sex,
                 address,
-                pfpPath: pfpPath === undefined || pfpPath.length === 0 ? null : pfpPath,
                 birthdate: new Timestamp(birthdate.seconds, birthdate.nanoseconds),
                 time_to_live: null
             })
@@ -96,7 +94,6 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 
 export const deleteVolunteerProfile = onCall<string>(async (req) => {
     if (!req.auth) return false;
-    if (req.auth.uid !== req.data && !req.auth.token.is_admin) return false;
 
     const uid = req.data;
     try {
@@ -114,6 +111,37 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
         return false;
     }
 })
+
+export const deleteBeneficiaryProfile = onCall<string>(async (req) => {
+    if (!req.auth) return false;
+
+    const uid = req.data;
+    try {
+        await firestore.doc(`beneficiaries/${uid}`).update(
+            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
+        )
+        return true;
+
+    } catch (error) {
+        logger.error(error)
+        return false;
+    }
+})
+
+export const deleteEvent = onCall<string>(async (req) => {
+    if (!req.auth) return false;
+
+    const uid = req.data;
+    try {
+        await firestore.doc(`events/${uid}`).update(
+            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
+        );
+        return true;
+    } catch (error) {
+        logger.error(error);
+        return false;
+    }
+});
 
 export const updateAttendees = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
     const batch = firestore.batch()

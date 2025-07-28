@@ -8,5 +8,6 @@ export interface Event {
   start_date: Timestamp;
   end_date: Timestamp;
   location: string;
-  attendees: AttendedEvents[];
+  attendees?: AttendedEvents[]; // optional because we use collection instead
+  time_to_live?: Timestamp | null;
 }
