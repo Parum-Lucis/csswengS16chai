@@ -30,6 +30,7 @@ export function EventCreation() {
       for (const [, value] of formData.entries()) {
         if (!(value.toString().trim())) {
           toast.error("Please fill up all fields!");
+          if (submitBtn) submitBtn.disabled = false;
           return;
         }
       }
@@ -52,12 +53,14 @@ export function EventCreation() {
       // if end time is before start time
       if (end_timestamp < start_timestamp) {
         toast.error("Start time must strictly be before the end time!");
+        if (submitBtn) submitBtn.disabled = false;
         return;
       }
 
       // double check description length
       if ((formData.get("description") as string).trim().length > 255) {
         toast.error("Description must be at most 255 characters in length!");
+        if (submitBtn) submitBtn.disabled = false;
         return;
       }
 
@@ -78,13 +81,13 @@ export function EventCreation() {
         })
         .catch((error) => {
           toast.error("Failed to create event: " + error.message);
+          if (submitBtn) submitBtn.disabled = false; 
           return;
         });
     } catch (error) {
       toast.error("Please provide a valid date!");
+      if (submitBtn) submitBtn.disabled = false; 
       return;
-    } finally {
-      if (submitBtn) submitBtn.disabled = false;
     }
   };
 

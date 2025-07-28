@@ -46,18 +46,21 @@ export function VolunteerProfileCreation() {
 
       if (err) {
         toast.error("Please fill up all fields!");
+        if (submitBtn) submitBtn.disabled = false;
         return;
       }
 
 
       if (!emailRegex.test(data.email)) {
         toast.error("Please input a proper email.");
+        if (submitBtn) submitBtn.disabled = false;
         return;
       }
 
       if (data.contact_number.length != 11 ||
         formData.get("cNum")?.slice(0, 2) != "09") {
         toast.error("Please input a valid phone number.");
+        if (submitBtn) submitBtn.disabled = false;
         return
       }
 
@@ -66,12 +69,15 @@ export function VolunteerProfileCreation() {
       if (res.data) {
         toast.success("Success!");
         navigate("/admin/volunteer");
+        // Don't re-enable button here since we're navigating away
       } else {
         toast.error("Couldn't create profile.");
+        if (submitBtn) submitBtn.disabled = false;
         return;
       }
-    } finally {
-      submitBtn.disabled = false;
+    } catch (error) {
+      toast.error("An error occurred while creating the profile.");
+      if (submitBtn) submitBtn.disabled = false;
     }
   };
 
@@ -260,6 +266,7 @@ export function BeneficiaryProfileCreation() {
             if (!(val.toString().trim())) {
               toast.error("Please fill up all fields for Guardian " + (i + 1));
               test = true
+              if (submitBtn) submitBtn.disabled = false;
               return
             }
           })
@@ -268,11 +275,13 @@ export function BeneficiaryProfileCreation() {
           else if (!emailRegex.test(guardian.email)) {
             toast.error("Please input a proper email for Guardian " + (i + 1));
             test = true
+            if (submitBtn) submitBtn.disabled = false;
             return
           }
           else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
             toast.error("Please input a proper contact number for Guardian " + (i + 1));
             test = true
+            if (submitBtn) submitBtn.disabled = false;
             return
           }
         });
@@ -304,12 +313,20 @@ export function BeneficiaryProfileCreation() {
           if (addRef) {
             toast.success("Success!");
             navigate("/beneficiary");
+            // Don't re-enable button here since we're navigating away
           }
-          else toast.error("Submission failed.");
+          else {
+            toast.error("Submission failed.");
+            if (submitBtn) submitBtn.disabled = false;
+          }
         }
-      } else toast.error("Please fill up all fields!");
+      } else {
+        toast.error("Please fill up all fields!");
+        if (submitBtn) submitBtn.disabled = false;
+      }
 
-    } finally {
+    } catch (error) {
+      toast.error("An error occurred while creating the profile.");
       if (submitBtn) submitBtn.disabled = false;
     }
   };
