@@ -267,12 +267,16 @@ export function BeneficiaryProfile() {
                         uploadBytes(newPfpRef, pfpFile),
                         updateDoc(updateRef, {
                             ...volunteerRed,
-                            pfpPath: newFilePath
+                            pfpPath: newFilePath,
+                            grade_level: gradeLevel,
+                            guardians,
                         })
                     ])
                 } else {
                     await updateDoc(updateRef, {
                         ...beneficiary,
+                        grade_level: gradeLevel,
+                        guardians,
                     })
                 }
 
@@ -341,7 +345,7 @@ export function BeneficiaryProfile() {
                     }} />
                 <div className="relative mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
                     <div className="flex flex-col items-end mt-[-5rem]">
-                        <SemiCircularProgress value={(attendance.present / attendance.events) * 100} />
+                        <SemiCircularProgress value={attendance.events > 0 ? (attendance.present / attendance.events) * 100 : 0} />
                         <h2 className=" text-center text-secondary text-sm">Attendance <br className="block sm:hidden" />Rate</h2>
                     </div>
                     <div className="flex flex-row justify-center gap-2">

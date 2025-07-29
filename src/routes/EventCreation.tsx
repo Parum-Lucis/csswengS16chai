@@ -61,6 +61,7 @@ export function EventCreation() {
         start_date: start_timestamp,
         end_date: end_timestamp,
         location: (formData.get("location") as string).trim(),
+        time_to_live: null,
       };
 
       // add to database
