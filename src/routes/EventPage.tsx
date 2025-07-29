@@ -29,6 +29,7 @@ export function EventPage() {
   const [editChecklist, setEditChecklist] = useState<boolean[]>([])
   // for dropdowns and navbar
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingAttendees, setIsEditingAttendees] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false)
   const [showOtherDropdown, setShowOtherDropdown] = useState(false)
 
@@ -144,12 +145,19 @@ export function EventPage() {
           ...event
         })
         setOriginalEvent(event)
+        setIsEditing(false)
         toast.success("Update success!")
         console.log(event)
       } catch {
         toast.error("Something went wrong")
       }
     }
+  }
+
+  // discard changes
+  const handleDiscard = () => {
+    setEvent(originalEvent)
+    setIsEditing(false)
   }
 
   // delete modal
@@ -234,9 +242,11 @@ export function EventPage() {
     return temp;
   }, [search, notAttendeeList]);
 
-  // adds new attendees to attendee list, then refreshes page
+  // adds new attendees to attendee list, then updates state
   const handleAddAttendees = async () => {
     let upd = false
+    const newAttendees: AttendedEvents[] = []
+    
     for (let i = 0; i < checklist.length; i++) {
       let type = ""
       switch (checklist[i]) {
@@ -251,7 +261,7 @@ export function EventPage() {
       }
       if (type) {
         const addRef = doc(collection(db, 'events/' + docID + "/attendees"))
-        await setDoc(addRef, {
+        const newAttendee = {
           attended: false,
           who_attended: type,
           event_name: event!.name,
@@ -262,28 +272,39 @@ export function EventPage() {
           contact_number: notAttendeeList[i].guardians[0].contact_number,
           beneficiaryID: notAttendeeList[i].docID,
           docID: addRef.id
-        });
+        }
+        
+        await setDoc(addRef, newAttendee);
         if (addRef) {
+          newAttendees.push(newAttendee as AttendedEvents)
           upd = true
         }
         else toast.error("Submission failed.");
       }
     }
+    
     if (upd) {
-      toast.success("Success!");
-      setTimeout(function () {
-        location.reload();
-      }, 1000);
+      // Hot update the attendees list
+      setAttendees(prev => [...prev, ...newAttendees].sort((a, b) => a.first_name.localeCompare(b.first_name)))
+      setEditChecklist(prev => [...prev, ...new Array(newAttendees.length).fill(false)])
+      
+      // Reset the add dropdown
+      setShowAddDropdown(false)
+      setChecklist([])
       setRunQuery(true)
+      
+      toast.success("Success!");
     }
     else {
       toast.success("Nothing to update")
     }
   }
 
-  // removes attendees from attendee list, then refreshes page
+  // removes attendees from attendee list, then updates state
   const handleRemoveAttendees = async () => {
     let refresh = false
+    const indicesToRemove: number[] = []
+    
     console.log("checklist is" + editChecklist)
     for (let i = 0; i < editChecklist.length; i++) {
       if (editChecklist[i]) {
@@ -291,15 +312,17 @@ export function EventPage() {
         console.log("docid is " + attendees[i].docID + ", bene is " + attendees[i].first_name)
         console.log("attended_events ID is " + attendees[i].beneficiaryID + "bene id is " + attendees[i].docID)
         await deleteDoc(doc(db, "events/" + docID + "/attendees/" + attendees[i].docID))
+        indicesToRemove.push(i)
         refresh = true
       }
     }
+    
     if (refresh) {
-      toast.success("Success!");
-      setTimeout(function () {
-        location.reload();
-      }, 1000);
+      // Hot update the attendees list by removing deleted items
+      setAttendees(prev => prev.filter((_, index) => !indicesToRemove.includes(index)))
+      setEditChecklist(prev => prev.filter((_, index) => !indicesToRemove.includes(index)))
       setRunQuery(true)
+      toast.success("Success!");
     }
     else toast.success("Nothing to update")
   }
@@ -338,24 +361,32 @@ export function EventPage() {
 
   const handleUpdateAttendance = async () => {
     let refresh = false
+    const updatedIndices: number[] = []
+    
     console.log("checklist is" + editChecklist)
     for (let i = 0; i < editChecklist.length; i++) {
       if (editChecklist[i]) {
-        console.log("im here at delete")
+        console.log("im here at update attendance")
         console.log("docid is " + attendees[i].docID + ", bene is " + attendees[i].first_name)
         console.log("attended_events ID is " + attendees[i].beneficiaryID + "bene id is " + attendees[i].docID)
         await updateDoc(doc(db, "events/" + docID + "/attendees/" + attendees[i].docID), {
           attended: !attendees[i].attended
         })
+        updatedIndices.push(i)
         refresh = true
       }
     }
+    
     if (refresh) {
-      toast.success("Success!");
-      setTimeout(function () {
-        location.reload();
-      }, 1000);
+      // Hot update the attendees list by toggling attendance
+      setAttendees(prev => prev.map((attendee, index) => 
+        updatedIndices.includes(index) 
+          ? { ...attendee, attended: !attendee.attended }
+          : attendee
+      ))
+      setEditChecklist(prev => prev.map(() => false)) // Reset edit checklist
       setRunQuery(true)
+      toast.success("Success!");
     }
     else toast.success("Nothing to update")
   }
@@ -389,7 +420,7 @@ export function EventPage() {
       )}
       <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6">
         <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
-          <form onSubmit={handleSave}>
+          <form onSubmit={isEditing ? handleSave : (e) => e.preventDefault()}>
             <h2 className="text-secondary text-2xl text-center font-bold font-sans">
               {name ?? "Event Name"}
             </h2>
@@ -408,6 +439,7 @@ export function EventPage() {
                   className="input-text w-full"
                   value={name}
                   onChange={e => setEvent(prev => ({ ...prev as Event, name: e.target.value }))}
+                  disabled={!isEditing}
                   required
                 />
               </div>
@@ -425,6 +457,7 @@ export function EventPage() {
                   className="input-text w-full"
                   value={description}
                   onChange={e => setEvent(prev => ({ ...prev as Event, description: e.target.value }))}
+                  disabled={!isEditing}
                 />
               </div>
 
@@ -444,6 +477,7 @@ export function EventPage() {
                       step="1"
                       value={start_date.toISOString().substring(0, 19)}
                       onChange={e => setEvent(prev => ({ ...prev as Event, start_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
+                      disabled={!isEditing}
                     />
                   </div>
                   <div className="flex flex-col flex-1 w-full">
@@ -459,6 +493,7 @@ export function EventPage() {
                       step="1"
                       value={end_date.toISOString().substring(0, 19)}
                       onChange={e => setEvent(prev => ({ ...prev as Event, end_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.end_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
+                      disabled={!isEditing}
                     />
                   </div>
                 </div>
@@ -475,20 +510,41 @@ export function EventPage() {
                   className="input-text w-full"
                   value={event_location}
                   onChange={e => setEvent(prev => ({ ...prev as Event, location: e.target.value }))}
+                  disabled={!isEditing}
                   required
                 />
               </div>
               <div className="flex flex-row items-center justify-around w-full gap-4">
+                {isEditing && (
+                  <button
+                    type="button"
+                    className="mt-2 w-full bg-red-600 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                    onClick={handleDiscard}
+                  >
+                    Discard
+                  </button>
+                )}
                 <button
-                  type="submit"
+                  type={isEditing ? "submit" : "button"}
                   className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                //  onClick={formState ? handleEdit : handleSave}
-                //  disabled={formState===null}>
-                //  {formState || formState === null ? "Edit" : "Save Changes"}</form>
+                  onClick={!isEditing ? (e) => {
+                    e.preventDefault();
+                    setIsEditing(true);
+                  } : undefined}
                 >
-                  Edit
+                  {isEditing ? "Save Changes" : "Edit"}
                 </button>
-
+                {!isEditing && (
+                  <button
+                    type="button"
+                    className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                    onClick={handleDelete}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+              {isEditing && (
                 <button
                   type="button"
                   className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
@@ -496,15 +552,15 @@ export function EventPage() {
                 >
                   Delete
                 </button>
-              </div>
+              )}
             </div>
           </form>
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between w-full max-w-2xl mt-4 sm:gap-4">
           <h2 className="text-primary text-2xl font-bold font-sans text-center sm:text-left mt-5">List of Attendees:</h2>
-          <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditing ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/4'}`}>
-            {isEditing && (
+          <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditingAttendees ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/4'}`}>
+            {isEditingAttendees && (
               <div className="flex flex-row gap-3 items-center">
                 <button
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
@@ -604,15 +660,15 @@ export function EventPage() {
               <button
                 className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                 onClick={() => {
-                  setIsEditing(!isEditing)
+                  setIsEditingAttendees(!isEditingAttendees)
                 }}
               >
-                {isEditing ? "Done" : "Edit"}
+                {isEditingAttendees ? "Done" : "Edit"}
               </button>
 
               <div className="relative">
                 <button
-                  type="submit"
+                  type="button"
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                   onClick={() => {
                     setShowOtherDropdown(!showOtherDropdown);
@@ -660,7 +716,7 @@ export function EventPage() {
                 name={attendees[i].first_name + " " + attendees[i].last_name}
                 attendance={att.attended ?? false}
                 who_attended={att.who_attended ?? "None"}
-                isEditing={isEditing}
+                isEditing={isEditingAttendees}
                 setEditChecklist={setEditChecklist}
                 editChecklist={editChecklist}
               />
