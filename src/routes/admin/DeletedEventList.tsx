@@ -1,7 +1,7 @@
 
 import { startTransition, useEffect, useMemo, useOptimistic, useState } from "react";
 import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
-import { compareAsc, formatDate } from "date-fns";
+import { compareAsc, differenceInDays, formatDate } from "date-fns";
 import { db } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { eventConverter } from "../../util/converters";
@@ -168,7 +168,7 @@ function EventCard(
     { event, onRestore }: { event: Event, onRestore: (e: Event) => void }
 ) {
 
-    const { name, start_date, location, description } = event;
+    const { name, start_date, location, description, time_to_live } = event;
 
     return (
         <div
@@ -191,6 +191,7 @@ function EventCard(
                 <div className="h-1" />
                 <div className="text-sm">Date: {formatDate(start_date.toDate(), "MMMM d, yyyy")}</div>
                 <div className="text-sm">Location: {location}</div>
+                <span>Days Left: <span className="text-red-500 font-bold">{time_to_live ? differenceInDays(time_to_live.toDate(), new Date()) : "?"}</span></span>
             </div>
             <button onClick={() => onRestore(event)} className="cursor-pointer h-full">
                 <svg xmlns="http://www.w3.org/2000/svg"
