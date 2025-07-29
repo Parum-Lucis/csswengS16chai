@@ -259,12 +259,6 @@ export function BeneficiaryList() {
           <PlusCircle />
           Create New Profile
         </Link>
-      </div>
-      <div className="flex flex-col gap-4">
-        <Link to="new" className="flex p-4 gap-2 bg-primary mb-4 rounded-xl">
-          <PlusCircle />
-          Create New Profile
-        </Link>
         {loading ? (
           // display loading while fetching from database.
           <div className="text-center text-white py-8">Fetching...</div>

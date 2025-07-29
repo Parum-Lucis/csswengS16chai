@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import type { Event } from "@models/eventType";
-import { collection, getDocs, QueryDocumentSnapshot, type FirestoreDataConverter } from "firebase/firestore";
+import { collection, getDocs, QueryDocumentSnapshot, type FirestoreDataConverter, query, where } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { compareAsc, formatDate } from "date-fns";
@@ -42,7 +42,8 @@ export function EventList() {
   useEffect(() => {
     async function fetchEvents() {
       try {
-        const snapshot = await getDocs(collection(db, "events").withConverter((converter)));
+        const q = query(collection(db, "events"), where("time_to_live", "==", null));
+        const snapshot = await getDocs(q.withConverter((converter)));
         setEvents(snapshot.docs.map(e => e.data()).sort((a, b) => compareAsc(a.start_date.toDate(), b.start_date.toDate())))
       } catch (error) {
         toast.error("Couldn't retrieve events")

@@ -64,8 +64,6 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 
     const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate, pfpPath } = req.data;
     console.log(req.data);
-    const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate, pfpPath } = req.data;
-    console.log(req.data);
     try {
 
         const { uid } = await auth.createUser({
@@ -75,19 +73,6 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 
         await Promise.all([
             auth.setCustomUserClaims(uid, { is_admin }),
-            firestore.doc(`volunteers/${uid}`).create({
-                first_name,
-                last_name,
-                contact_number,
-                email,
-                role,
-                is_admin,
-                sex,
-                address,
-                pfpPath: pfpPath === undefined || pfpPath.length === 0 ? null : pfpPath,
-                birthdate: new Timestamp(birthdate.seconds, birthdate.nanoseconds),
-                time_to_live: null
-            })
             firestore.doc(`volunteers/${uid}`).create({
                 first_name,
                 last_name,
@@ -239,7 +224,5 @@ export { importVolunteers, exportVolunteers } from "./csv/volunteers";
 export { importEvents, exportEvents } from "./csv/events";
 
 export { sendEmailReminder } from "./event/sendEmail";
-export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
-export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"
 export { getSMSCredits } from "./event/getSMSCredits"
