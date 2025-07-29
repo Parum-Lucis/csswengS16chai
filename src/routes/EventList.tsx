@@ -24,6 +24,7 @@ export function EventList() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Dropdown export
   useEffect(() => {
@@ -42,12 +43,15 @@ export function EventList() {
   useEffect(() => {
     async function fetchEvents() {
       try {
+        setIsLoading(true)
         const q = query(collection(db, "events"), where("time_to_live", "==", null));
         const snapshot = await getDocs(q.withConverter((converter)));
         setEvents(snapshot.docs.map(e => e.data()).sort((a, b) => compareAsc(a.start_date.toDate(), b.start_date.toDate())))
       } catch (error) {
         toast.error("Couldn't retrieve events")
         console.log(error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -195,11 +199,24 @@ export function EventList() {
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-4">
-        {modifiedList.map((event, i) => (
-          <EventCard event={event} key={`${i}${event.docID}`} />
-        ))}
-      </div>
+      
+      {isLoading ? (
+        <div className="text-center text-white mt-8">
+          <h2 className="text-lg">Fetching...</h2>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {modifiedList.length > 0 ? (
+            modifiedList.map((event, i) => (
+              <EventCard event={event} key={`${i}${event.docID}`} />
+            ))
+          ) : (
+            <div className="text-center text-white mt-8">
+              <h2 className="text-lg">No events to show.</h2>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
