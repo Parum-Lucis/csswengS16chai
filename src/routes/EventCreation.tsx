@@ -86,7 +86,7 @@ export function EventCreation() {
   return (
     <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 bg-secondary">
       <div className="relative w-full max-w-2xl flex flex-col items-center rounded-[5px] sm:p-6">
-        <div className="flex w-full bg-[#45B29D] rounded-[5px] p-4 pt-5">
+        <div className="flex w-full bg-primary rounded-[5px] p-4 pt-5">
           <form className="flex flex-col w-full space-y-3" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="eventName" className="text-white font-[Montserrat] font-semibold">
