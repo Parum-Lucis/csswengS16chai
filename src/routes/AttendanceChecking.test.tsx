@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../util/userContext";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { EventPage } from "./EventPage";
 import type { User } from "firebase/auth";
@@ -52,10 +52,11 @@ jest.mock("react-toastify", () => ({
   },
 }));
 
-const mockUser: User = {
+const mockUser: User & { is_admin: boolean } = {
     uid: "test-user-id",
     email: "test@example.com",
     emailVerified: true,
+    is_admin: false,
     isAnonymous: false,
     metadata: {} as any, // cast to any to avoid providing all metadata fields
     providerData: [],

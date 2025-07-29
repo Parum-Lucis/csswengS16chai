@@ -64,6 +64,8 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 
     const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate, pfpPath } = req.data;
     console.log(req.data);
+    const { first_name, last_name, contact_number, email, role, is_admin, sex, address, birthdate, pfpPath } = req.data;
+    console.log(req.data);
     try {
 
         const { uid } = await auth.createUser({
@@ -73,6 +75,19 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 
         await Promise.all([
             auth.setCustomUserClaims(uid, { is_admin }),
+            firestore.doc(`volunteers/${uid}`).create({
+                first_name,
+                last_name,
+                contact_number,
+                email,
+                role,
+                is_admin,
+                sex,
+                address,
+                pfpPath: pfpPath === undefined || pfpPath.length === 0 ? null : pfpPath,
+                birthdate: new Timestamp(birthdate.seconds, birthdate.nanoseconds),
+                time_to_live: null
+            })
             firestore.doc(`volunteers/${uid}`).create({
                 first_name,
                 last_name,
@@ -100,10 +115,14 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 export const deleteVolunteerProfile = onCall<string>(async (req) => {
     if (!req.auth) return false;
     if (req.auth.uid !== req.data && !req.auth.token.is_admin) return false;
+    if (req.auth.uid !== req.data && !req.auth.token.is_admin) return false;
 
     const uid = req.data;
     try {
 
+        await auth.updateUser(uid, {
+            disabled: true
+        })
         await auth.updateUser(uid, {
             disabled: true
         })
@@ -211,6 +230,9 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
     }
 })
 
+export { initializeEmulator } from "./initializeEmulator";
+export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
+export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 // CSV functions
 export { importBeneficiaries, exportBeneficiaries } from "./csv/beneficiaries";
 export { importVolunteers, exportVolunteers } from "./csv/volunteers";

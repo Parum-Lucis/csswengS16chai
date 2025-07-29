@@ -36,7 +36,25 @@ export function BeneficiaryProfile() {
 
 
     useEffect(() => {
+    useEffect(() => {
         const fetchBeneficiary = async () => {
+            const getQuery = doc(db, "beneficiaries", params.docId as string).withConverter(beneficiaryConverter)
+            const beneficiariesSnap = await getDoc(getQuery)
+            if (beneficiariesSnap.exists()) {
+                const data = beneficiariesSnap.data();
+                setBeneficiary(data)
+                setOriginalBeneficiary(data)
+                setGuardians(data.guardians)
+                setDocID(beneficiariesSnap.id)
+                setGradeLevel(data.grade_level.toString()) // see commit desc re: this change
+                if (data.pfpPath) {
+                    const path = data.pfpPath;
+                    const r = ref(store, path);
+                    const blob = await getBlob(r);
+                    setBeneficiary(prev => (prev === null ? null : { ...prev, pfpFile: new File([blob], path) }))
+                }
+            }
+
             const getQuery = doc(db, "beneficiaries", params.docId as string).withConverter(beneficiaryConverter)
             const beneficiariesSnap = await getDoc(getQuery)
             if (beneficiariesSnap.exists()) {
@@ -78,6 +96,7 @@ export function BeneficiaryProfile() {
     console.log(beneficiary)
     console.log(guardians)
     const navigate = useNavigate();
+    const { sex, address } = beneficiary || {}
     const { sex, address } = beneficiary || {}
 
     const birthdate = new Date((beneficiary?.birthdate.seconds ?? 0) * 1000)
@@ -137,6 +156,7 @@ export function BeneficiaryProfile() {
     }, [attendedEvents, filter, sort, status, search])
 
     function handleEdit() {
+    function handleEdit() {
         if (formState === false && originalBenificiary) {
             setBeneficiary(originalBenificiary);
             setGradeLevel(originalBenificiary.grade_level.toString());
@@ -149,9 +169,18 @@ export function BeneficiaryProfile() {
     }
 
     function handleMinimize() {
+    function handleMinimize() {
         setMinimize(!minimizeState)
     }
 
+    function handleAdd() {
+        if (guardians.length + 1 <= 3) {
+            setGuardians([...guardians, {
+                name: '',
+                relation: '',
+                email: '',
+                contact_number: ''
+            }])
     function handleAdd() {
         if (guardians.length + 1 <= 3) {
             setGuardians([...guardians, {
@@ -167,6 +196,11 @@ export function BeneficiaryProfile() {
 
     function handleSub() {
         if (guardians.length - 1 >= 1) {
+            toast.error("Cannot add more than 3 guardians!")
+    }
+
+    function handleSub() {
+        if (guardians.length - 1 >= 1) {
             // applied
             const reducedGuardians = guardians.slice(0, -1);
             setGuardians(reducedGuardians)
@@ -176,6 +210,7 @@ export function BeneficiaryProfile() {
             toast.error("Cannot have 0 guardians!")
     }
 
+    function handleDelete() {
     function handleDelete() {
         setDeleteModal(!showDeleteModal)
     }
@@ -194,7 +229,10 @@ export function BeneficiaryProfile() {
             })
             toast.success("Account delete success!")
             navigate("/beneficiary")
+            navigate("/beneficiary")
         }
+        catch (e) {
+            console.error(e)
         catch (e) {
             console.error(e)
             toast.error("Something went wrong")
@@ -293,6 +331,18 @@ export function BeneficiaryProfile() {
                             <h2 className="text-lg font-bold text-secondary mb-4">Confirm Deletion</h2>
                             <p className="mb-6 text-secondary">Are you sure you want to delete this account? This action cannot be undone.</p>
                             <div className="flex justify-end gap-3">
+                                <button
+                                    className="bg-gray-300 hover:bg-gray-400 text-secondary font-semibold px-4 py-2 rounded"
+                                    onClick={handleDelete}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
+                                    onClick={handleConfirm}
+                                >
+                                    Confirm Delete
+                                </button>
                                 <button
                                     className="bg-gray-300 hover:bg-gray-400 text-secondary font-semibold px-4 py-2 rounded"
                                     onClick={handleDelete}
@@ -525,6 +575,8 @@ export function BeneficiaryProfile() {
                 </div>
             </div>
                 <div className="w-full max-w-2xl mt-8">
+                    <h3 className="text-[#45B29D] text-2xl text-center font-bold font-[Montserrat] mb-4">
+                        Attended Events
                     <h3 className="text-[#45B29D] text-2xl text-center font-bold font-[Montserrat] mb-4">
                         Attended Events
                     </h3>

@@ -648,7 +648,6 @@ export function EventPage() {
 
         <div className="w-full max-w-2xl mt-3">
           {
-            // todo: refactor
             attendees.length > 0 ? attendees.map((att, i) => (
               <AttendeesCard
                 index={i}

@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { UserContext } from "../util/userContext";
@@ -10,7 +10,8 @@ import { getDocs, getDoc, addDoc, updateDoc, Timestamp } from "firebase/firestor
 import { EventCreation } from "./EventCreation";
 import { EventList } from "./EventList";
 import { EventPage } from "./EventPage";
-import { callDeleteEvent } from "../firebase/cloudFunctions";
+import { add } from "date-fns";
+// import { db } from "../firebase/firebaseConfig";
 
 const createMockTimestamp = (date: Date) => {
   const time = date.getTime();
@@ -40,12 +41,8 @@ jest.mock("firebase/firestore", () => ({
 }));
 
 jest.mock("../firebase/firebaseConfig", () => ({
-  db: {},
+  db: {}, // Mock db object
   auth: {},
-}));
-
-jest.mock("../firebase/cloudFunctions", () => ({
-    callDeleteEvent: jest.fn(),
 }));
 
 const mockedNavigate = jest.fn();
@@ -135,7 +132,7 @@ describe("Event Creation", () => {
     test("shows an error if any field is empty on creation", async () => {
         renderWithRouter(<EventCreation />);
         const form = screen.getByRole("button", { name: /create event/i }).closest('form');
-        
+
         fireEvent.submit(form!); // all fields empty
 
         await waitFor(() => {
@@ -146,17 +143,17 @@ describe("Event Creation", () => {
 
     test("shows an error if end time is before start time on creation", async () => {
         renderWithRouter(<EventCreation />);
-    
+
         fireEvent.change(screen.getByLabelText(/event name/i), { target: { value: "Time Travel Meeting" } });
         fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Discussing the temporal paradox." } });
         fireEvent.change(screen.getByLabelText(/date/i), { target: { value: "2025-12-25" } });
         fireEvent.change(screen.getByLabelText(/start time/i), { target: { value: "14:00" } });
         fireEvent.change(screen.getByLabelText(/end time/i), { target: { value: "11:00" } });
         fireEvent.change(screen.getByLabelText(/location/i), { target: { value: "The TARDIS" } });
-    
+
         const form = screen.getByRole("button", { name: /create event/i }).closest('form');
         fireEvent.submit(form!);
-    
+
         await waitFor(() => {
           expect(toast.error).toHaveBeenCalledWith("Start time must strictly be before the end time!");
         });
@@ -166,21 +163,86 @@ describe("Event Creation", () => {
     test("shows an error if description is too long on creation", async () => {
         renderWithRouter(<EventCreation />);
         const longDescription = "This description is intentionally made to be well over the maximum character limit of 255 to ensure that our validation logic correctly catches this error case and provides the appropriate feedback to the user. We must be thorough in our testing to prevent database errors and maintain a good user experience.".repeat(2);
-    
+
         fireEvent.change(screen.getByLabelText(/event name/i), { target: { value: "Novel Writing Contest" } });
         fireEvent.change(screen.getByLabelText(/description/i), { target: { value: longDescription } });
         fireEvent.change(screen.getByLabelText(/date/i), { target: { value: "2025-11-01" } });
         fireEvent.change(screen.getByLabelText(/start time/i), { target: { value: "09:00" } });
         fireEvent.change(screen.getByLabelText(/end time/i), { target: { value: "17:00" } });
         fireEvent.change(screen.getByLabelText(/location/i), { target: { value: "The Library" } });
-    
+
         const form = screen.getByRole("button", { name: /create event/i }).closest('form');
         fireEvent.submit(form!);
-    
+
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith("Description must be at most 255 characters in length!");
         });
         expect(addDoc).not.toHaveBeenCalled();
+    });
+
+    test("disables submit button after submission to prevent multiple submissions", async () => {
+      // Mock addDoc to return a promise that never resolves
+      const neverResolvingPromise = new Promise(() => {});
+      (addDoc as jest.Mock).mockReturnValue(neverResolvingPromise);
+
+      renderWithRouter(<EventCreation />);
+
+      fireEvent.change(screen.getByLabelText(/event name/i), { target: { value: "Spam Block" } });
+      fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Testing spam click" } });
+      fireEvent.change(screen.getByLabelText(/date/i), { target: { value: "2025-12-25" } });
+      fireEvent.change(screen.getByLabelText(/start time/i), { target: { value: "09:00" } });
+      fireEvent.change(screen.getByLabelText(/end time/i), { target: { value: "11:00" } });
+      fireEvent.change(screen.getByLabelText(/location/i), { target: { value: "Lab" } });
+
+      const button = screen.getByRole("button", { name: /create event/i });
+      
+      const form = button.closest('form')!;
+      
+      const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+      Object.defineProperty(submitEvent, 'target', {
+        value: form,
+        enumerable: true
+      });
+      
+      form.dispatchEvent(submitEvent);
+
+      await waitFor(() => {
+        expect(button).toBeDisabled();
+      });
+    });
+
+    test("re-enables submit button after validation error", async () => {
+      renderWithRouter(<EventCreation />);
+
+      const button = screen.getByRole("button", { name: /create event/i });
+
+      fireEvent.submit(button.closest("form")!);
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("Please fill up all fields!");
+        expect(button).not.toBeDisabled();
+      });
+    });
+
+    test("re-enables submit button if addDoc fails", async () => {
+      (addDoc as jest.Mock).mockRejectedValue(new Error("Firestore error"));
+
+      renderWithRouter(<EventCreation />);
+
+      fireEvent.change(screen.getByLabelText(/event name/i), { target: { value: "Test" } });
+      fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Error Test" } });
+      fireEvent.change(screen.getByLabelText(/date/i), { target: { value: "2025-12-25" } });
+      fireEvent.change(screen.getByLabelText(/start time/i), { target: { value: "09:00" } });
+      fireEvent.change(screen.getByLabelText(/end time/i), { target: { value: "11:00" } });
+      fireEvent.change(screen.getByLabelText(/location/i), { target: { value: "Field" } });
+
+      const button = screen.getByRole("button", { name: /create event/i });
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("Failed to create event"));
+        expect(button).not.toBeDisabled();
+      });
     });
 });
 
@@ -278,14 +340,14 @@ describe("Edit Event", () => {
             </Routes>,
             ["/view-event/test-event-id"]
         );
-    
+
         await waitFor(() => {
           expect(screen.getByLabelText(/Description:/i)).toBeInTheDocument();
         });
-    
+
         fireEvent.change(screen.getByLabelText(/Description:/i), { target: { value: "  " } });
         fireEvent.click(screen.getByRole("button", { name: /edit/i }));
-    
+
         await waitFor(() => {
           expect(toast.error).toHaveBeenCalledWith("Please fill up all fields!");
         });
@@ -299,18 +361,18 @@ describe("Edit Event", () => {
           </Routes>,
           ["/view-event/test-event-id"]
         );
-    
+
         await waitFor(() => {
           expect(screen.getByLabelText(/Start:/i)).toBeInTheDocument();
         });
-    
+
         // edit
         fireEvent.change(screen.getByLabelText(/Start:/i), { target: { value: "2025-12-25T12:00:00" } });
         fireEvent.change(screen.getByLabelText(/End:/i), { target: { value: "2025-12-25T10:00:00" } });
-    
+
         // confirm
         fireEvent.click(screen.getByRole("button", { name: /edit/i }));
-    
+
         // what should happen
         await waitFor(() => {
           expect(toast.error).toHaveBeenCalledWith("Start date cannot be greater than end date!");
@@ -330,7 +392,12 @@ describe("Delete Event", () => {
         attendees: [],
     };
 
+    const MOCK_DATE = new Date();
+
     beforeEach(() => {
+        jest.useFakeTimers();
+        jest.setSystemTime(MOCK_DATE);
+
         jest.clearAllMocks();
         (getDoc as jest.Mock).mockResolvedValue({
             exists: () => true,
@@ -338,13 +405,17 @@ describe("Delete Event", () => {
             id: "test-event-id",
         });
         (getDocs as jest.Mock).mockResolvedValue({ empty: true, docs: [] });
-        (callDeleteEvent as unknown as jest.Mock).mockResolvedValue({ data: true });
     });
 
-    test("shows delete confirmation and deletes event", async () => {
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    test("shows delete confirmation and 'deletes' event", async () => {
         renderWithMemoryRouter(
             <Routes>
                 <Route path="/view-event/:docId" element={<EventPage />} />
+                <Route path="/event" element={<div>Event List Page</div>} />
             </Routes>,
             ["/view-event/test-event-id"]
         );
@@ -359,7 +430,18 @@ describe("Delete Event", () => {
         fireEvent.click(screen.getByRole("button", { name: /confirm delete/i }));
 
         await waitFor(() => {
-            expect(callDeleteEvent).toHaveBeenCalledWith("test-event-id");
+            // bruh all because it difference in nanoseconds lmao
+            expect(updateDoc).toHaveBeenCalled();
+
+            const mockUpdateDocCall = (updateDoc as jest.Mock).mock.calls[0];
+            const updatePayload = mockUpdateDocCall[1];
+
+            expect(updatePayload).toHaveProperty("time_to_live");
+
+            const receivedTime = updatePayload.time_to_live.toDate().getTime();
+            const expectedTime = add(MOCK_DATE, { days: 30 }).getTime();
+            
+            expect(Math.abs(receivedTime - expectedTime)).toBeLessThan(1000); // Less than 1000ms (1 second) difference
             expect(toast.success).toHaveBeenCalledWith("Event delete success!");
             expect(mockedNavigate).toHaveBeenCalledWith("/event");
         });
@@ -393,7 +475,7 @@ describe("Search and Filtering Event List", () => {
         });
 
         fireEvent.change(screen.getByDisplayValue("Filter By"), { target: { value: "done" } });
-        
+
         await waitFor(() => {
             expect(screen.queryByText("Ongoing Event")).not.toBeInTheDocument();
             expect(screen.getByText("Done Event")).toBeInTheDocument();
@@ -409,7 +491,7 @@ describe("Search and Filtering Event List", () => {
         });
 
         fireEvent.change(screen.getByPlaceholderText(/search/i), { target: { value: "Pending" } });
-        
+
         await waitFor(() => {
             expect(screen.queryByText("Ongoing Event")).not.toBeInTheDocument();
             expect(screen.queryByText("Done Event")).not.toBeInTheDocument();
