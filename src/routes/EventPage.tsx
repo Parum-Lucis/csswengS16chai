@@ -242,9 +242,11 @@ export function EventPage() {
     return temp;
   }, [search, notAttendeeList]);
 
-  // adds new attendees to attendee list, then refreshes page
+  // adds new attendees to attendee list, then updates state
   const handleAddAttendees = async () => {
     let upd = false
+    const newAttendees: AttendedEvents[] = []
+    
     for (let i = 0; i < checklist.length; i++) {
       let type = ""
       switch (checklist[i]) {
@@ -259,7 +261,7 @@ export function EventPage() {
       }
       if (type) {
         const addRef = doc(collection(db, 'events/' + docID + "/attendees"))
-        await setDoc(addRef, {
+        const newAttendee = {
           attended: false,
           who_attended: type,
           event_name: event!.name,
@@ -270,28 +272,39 @@ export function EventPage() {
           contact_number: notAttendeeList[i].guardians[0].contact_number,
           beneficiaryID: notAttendeeList[i].docID,
           docID: addRef.id
-        });
+        }
+        
+        await setDoc(addRef, newAttendee);
         if (addRef) {
+          newAttendees.push(newAttendee as AttendedEvents)
           upd = true
         }
         else toast.error("Submission failed.");
       }
     }
+    
     if (upd) {
-      toast.success("Success!");
-      setTimeout(function () {
-        location.reload();
-      }, 1000);
+      // Hot update the attendees list
+      setAttendees(prev => [...prev, ...newAttendees].sort((a, b) => a.first_name.localeCompare(b.first_name)))
+      setEditChecklist(prev => [...prev, ...new Array(newAttendees.length).fill(false)])
+      
+      // Reset the add dropdown
+      setShowAddDropdown(false)
+      setChecklist([])
       setRunQuery(true)
+      
+      toast.success("Success!");
     }
     else {
       toast.success("Nothing to update")
     }
   }
 
-  // removes attendees from attendee list, then refreshes page
+  // removes attendees from attendee list, then updates state
   const handleRemoveAttendees = async () => {
     let refresh = false
+    const indicesToRemove: number[] = []
+    
     console.log("checklist is" + editChecklist)
     for (let i = 0; i < editChecklist.length; i++) {
       if (editChecklist[i]) {
@@ -299,15 +312,17 @@ export function EventPage() {
         console.log("docid is " + attendees[i].docID + ", bene is " + attendees[i].first_name)
         console.log("attended_events ID is " + attendees[i].beneficiaryID + "bene id is " + attendees[i].docID)
         await deleteDoc(doc(db, "events/" + docID + "/attendees/" + attendees[i].docID))
+        indicesToRemove.push(i)
         refresh = true
       }
     }
+    
     if (refresh) {
-      toast.success("Success!");
-      setTimeout(function () {
-        location.reload();
-      }, 1000);
+      // Hot update the attendees list by removing deleted items
+      setAttendees(prev => prev.filter((_, index) => !indicesToRemove.includes(index)))
+      setEditChecklist(prev => prev.filter((_, index) => !indicesToRemove.includes(index)))
       setRunQuery(true)
+      toast.success("Success!");
     }
     else toast.success("Nothing to update")
   }
@@ -346,24 +361,32 @@ export function EventPage() {
 
   const handleUpdateAttendance = async () => {
     let refresh = false
+    const updatedIndices: number[] = []
+    
     console.log("checklist is" + editChecklist)
     for (let i = 0; i < editChecklist.length; i++) {
       if (editChecklist[i]) {
-        console.log("im here at delete")
+        console.log("im here at update attendance")
         console.log("docid is " + attendees[i].docID + ", bene is " + attendees[i].first_name)
         console.log("attended_events ID is " + attendees[i].beneficiaryID + "bene id is " + attendees[i].docID)
         await updateDoc(doc(db, "events/" + docID + "/attendees/" + attendees[i].docID), {
           attended: !attendees[i].attended
         })
+        updatedIndices.push(i)
         refresh = true
       }
     }
+    
     if (refresh) {
-      toast.success("Success!");
-      setTimeout(function () {
-        location.reload();
-      }, 1000);
+      // Hot update the attendees list by toggling attendance
+      setAttendees(prev => prev.map((attendee, index) => 
+        updatedIndices.includes(index) 
+          ? { ...attendee, attended: !attendee.attended }
+          : attendee
+      ))
+      setEditChecklist(prev => prev.map(() => false)) // Reset edit checklist
       setRunQuery(true)
+      toast.success("Success!");
     }
     else toast.success("Nothing to update")
   }
@@ -495,7 +518,7 @@ export function EventPage() {
                 {isEditing && (
                   <button
                     type="button"
-                    className="mt-2 w-full bg-red-600 hover:bg-red-800 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                    className="mt-2 w-full bg-red-600 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                     onClick={handleDiscard}
                   >
                     Discard
