@@ -172,7 +172,7 @@ export function EventList() {
             className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-9/10"
           />
 
-          <div className="relative w-1/10">
+          <div className="relative w-2/10">
             <button
               type="submit"
               className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
