@@ -13,6 +13,7 @@ import { emailRegex } from "../util/emailRegex";
 import { ProfilePictureInput } from "../components/ProfilePicture";
 import { volunteerConverter } from "../util/converters";
 import { deleteObject, getBlob, ref, uploadBytes } from "firebase/storage";
+import { v4 as uuidv4 } from "uuid";
 
 export function YourProfile() {
 
@@ -103,7 +104,12 @@ export function YourProfile() {
                 toast.error("Please input a proper email!");
                 return
             }
-            const newFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
+            let newFilePath: string;
+            try {
+                newFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
+            } catch {
+                newFilePath = `pfp/volunteers/${uuidv4()}`;
+            }
             const updateRef = doc(db, "volunteers", docID!)
             console.log(volunteer)
             try {
@@ -192,8 +198,6 @@ export function YourProfile() {
                     className="mt-22"
                 />
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
-
-
                     <h3 className="text-secondary text-2xl text-center font-bold font-sans">
                         {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
                     </h3>
@@ -220,13 +224,16 @@ export function YourProfile() {
                                     className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
                                     Sex:
                                 </label>
-                                <input
-                                    type="text"
+                                <select
                                     id="Sex"
-                                    className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                                    readOnly={isViewForm ?? true}
-                                    onChange={(e) => setVolunteer({ ...volunteer as Volunteer, sex: e.target.value })}
-                                    value={sex} />
+                                    className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                                    disabled={isViewForm ?? true}
+                                    onChange={(e) => setVolunteer({...volunteer as Volunteer, sex : e.target.value})}
+                                    value={sex}
+                                >
+                                    <option className="bg-secondary text-white" value="M">Male</option>
+                                    <option className="bg-secondary text-white" value="F">Female</option>
+                                </select>
                             </div>
                         </div>
                         <div className="flex flex-col">
@@ -289,6 +296,13 @@ export function YourProfile() {
                                 disabled={isViewForm === null}>
                                 {isViewForm || isViewForm === null ? "Edit" : "Save Changes"}
                             </button>
+                            {/* <button
+                                    type="submit"
+                                    className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                                    onClick={handleDelete}
+                                    disabled={isViewForm===null}>
+                                    Delete Account
+                            </button> */}
                         </div>
                         <button
                             type="submit"

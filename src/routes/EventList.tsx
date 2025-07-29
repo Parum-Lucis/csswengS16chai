@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import type { Event } from "@models/eventType";
-import { collection, getDocs, QueryDocumentSnapshot, type FirestoreDataConverter } from "firebase/firestore";
+import { collection, getDocs, QueryDocumentSnapshot, type FirestoreDataConverter, query, where } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { compareAsc, formatDate } from "date-fns";
+import { EllipsisVertical } from 'lucide-react';
+import { callExportEvents } from "../firebase/cloudFunctions";
 
 const converter: FirestoreDataConverter<Event> = {
   toFirestore: (event) => event,
@@ -19,16 +21,37 @@ const converter: FirestoreDataConverter<Event> = {
 }
 
 export function EventList() {
+  const [showDropdown, setShowDropdown] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
+  const [exporting, setExporting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Dropdown export
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const dropdown = document.getElementById("dropdownSearch");
+      if (dropdown && !dropdown.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
 
   useEffect(() => {
     async function fetchEvents() {
       try {
-        const snapshot = await getDocs(collection(db, "events").withConverter((converter)));
+        setIsLoading(true)
+        const q = query(collection(db, "events"), where("time_to_live", "==", null));
+        const snapshot = await getDocs(q.withConverter((converter)));
         setEvents(snapshot.docs.map(e => e.data()).sort((a, b) => compareAsc(a.start_date.toDate(), b.start_date.toDate())))
       } catch (error) {
         toast.error("Couldn't retrieve events")
         console.log(error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -78,6 +101,41 @@ export function EventList() {
     return filteredprofiles
   }, [events, filter, sort, search])
 
+  const handleExport = async () => {
+    console.log("Export clicked!")
+    setExporting(true);
+    try {
+      // create date and time string for filename
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
+      const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+      const filename = `events-${dateStr}-${timeStr}.csv`;
+
+      // call cloud function, return csv string
+      const result = await callExportEvents();
+      const csvString = result.data as string;
+
+      // create csv file to send
+      const blob = new Blob([csvString], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Exported events to csv file.");
+    } catch (error) {
+      toast.error("Failed to export events.");
+      console.error("Export error:", error);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto mt-6 p-4">
       <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Event List</h1>
@@ -86,7 +144,7 @@ export function EventList() {
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-1/4"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Filter By</option>
           <option className="bg-secondary text-white" value="ongoing">Ongoing</option>
@@ -97,7 +155,7 @@ export function EventList() {
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="appearance-none p-2 rounded-md border border-gray-300 text-sm"
+          className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
         >
           <option className="bg-secondary text-white" value="">Sort by</option>
           <option className="bg-secondary text-white" value="name">A - Z</option>
@@ -105,20 +163,60 @@ export function EventList() {
           <option className="bg-secondary text-white" value="oldest">Oldest Event</option>
         </select>
 
-        <input
-          type="text"
-          placeholder="Search"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="p-2 rounded-md border border-gray-300 text-sm"
-        />
-      </div>
+        <div className="flex items-center gap-2 w-full sm:w-5/10">
+          <input
+            type="text"
+            placeholder="Search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-9/10"
+          />
 
-      <div className="flex flex-col gap-4">
-        {modifiedList.map((event, i) => (
-          <EventCard event={event} key={`${i}${event.docID}`} />
-        ))}
+          <div className="relative w-2/10">
+            <button
+              type="submit"
+              className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
+              onClick={() => {
+                setShowDropdown(!showDropdown);
+              }}
+              data-dropdown-toggle="dropdownSearch"
+            >
+              <EllipsisVertical className="w-5 h-5" />
+            </button>
+
+            {showDropdown && (
+              <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
+                <ul className="py-1">
+                  <li
+                    className={`font-extraboldsans px-4 py-2 text-gray-700 ${exporting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                    onClick={exporting ? undefined : handleExport}
+                  >
+                    {exporting ? "Exporting..." : "Export"}
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+      
+      {isLoading ? (
+        <div className="text-center text-white mt-8">
+          <h2 className="text-lg">Fetching...</h2>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {modifiedList.length > 0 ? (
+            modifiedList.map((event, i) => (
+              <EventCard event={event} key={`${i}${event.docID}`} />
+            ))
+          ) : (
+            <div className="text-center text-white mt-8">
+              <h2 className="text-lg">No events to show.</h2>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

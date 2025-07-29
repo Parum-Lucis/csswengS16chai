@@ -13,6 +13,7 @@ import { signOut } from "firebase/auth";
 import { ProfilePictureInput } from "../components/ProfilePicture";
 import { volunteerConverter } from "../util/converters";
 import { deleteObject, getBlob, ref, uploadBytes } from "firebase/storage";
+import { v4 as uuidv4 } from "uuid";
 
 export function VolunteerProfile() {
     const params = useParams()
@@ -30,6 +31,7 @@ export function VolunteerProfile() {
             const volunteerSnap = await getDoc(getQuery)
             if (volunteerSnap.exists()) {
                 const data = volunteerSnap.data()
+                console.log(data)
                 setVolunteer(data)
                 setOriginalVolunteer(data)
                 setDocID(volunteerSnap.id)
@@ -101,7 +103,13 @@ export function VolunteerProfile() {
                 toast.error("Please input a proper email!");
                 return
             }
-            const newFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
+
+            let newFilePath: string;
+                try {
+                    newFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
+                } catch {
+                    newFilePath = `pfp/volunteers/${uuidv4()}`;
+                }
             const updateRef = doc(db, "volunteers", docID!)
             try {
 
@@ -190,7 +198,7 @@ export function VolunteerProfile() {
 
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
                     <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                        {originalVolunteer?.last_name}, {originalVolunteer?.first_name} {originalVolunteer?.is_admin ? "(Admin)" : ""}
+                        {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
                     </h3>
                     <div className="flex flex-col gap-4 mt-6">
                         <ProfilePictureInput readOnly={isViewForm} pfpFile={volunteer?.pfpFile ?? null}
@@ -315,5 +323,3 @@ export function VolunteerProfile() {
         </div>
     );
 }
-
-

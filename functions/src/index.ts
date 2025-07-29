@@ -14,13 +14,14 @@ import { onCall } from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 
 import { Volunteer } from "@models/volunteerType";
-// import { generateRandomPassword } from "./util/generatePassword";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { generateRandomPassword } from "./utils/generatePassword";
 import { onSchedule } from "firebase-functions/scheduler";
 import { createTimestampFromNow } from "./utils/time";
 import { onDocumentUpdated } from "firebase-functions/firestore";
 import { Beneficiary } from "@models/beneficiaryType";
+import { Event } from "@models/eventType";
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
@@ -41,6 +42,8 @@ setGlobalOptions({ maxInstances: 10 });
 const app = initializeApp();
 const auth = getAuth(app);
 const firestore = getFirestore(app);
+
+// issue with Timestamp type used; dapat from firebase-admin package but our model
 
 export const promoteMetoAdmin = onCall(async (req) => {
     if (!req.auth) return false;
@@ -97,10 +100,14 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 export const deleteVolunteerProfile = onCall<string>(async (req) => {
     if (!req.auth) return false;
     if (req.auth.uid !== req.data && !req.auth.token.is_admin) return false;
+    if (req.auth.uid !== req.data && !req.auth.token.is_admin) return false;
 
     const uid = req.data;
     try {
 
+        await auth.updateUser(uid, {
+            disabled: true
+        })
         await auth.updateUser(uid, {
             disabled: true
         })
@@ -115,12 +122,28 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
     }
 })
 
-export const updateAttendees = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
+export const updateAttendeesBeneficiary = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
     const batch = firestore.batch()
     const attRef = firestore.collectionGroup("attendees").where("beneficiaryID", "==", event.data?.after.id);
+    (await attRef.get()).forEach((att) => {
+        const data = event.data?.after.data() as Beneficiary;
+        batch.update(att.ref, {
+            "first_name": data.first_name,
+            "last_name": data.last_name,
+            "contact_number": data.guardians[0].contact_number,
+            "email": data.guardians[0].email
+        })
+    })
+
+    await batch.commit()
+})
+
+export const updateAttendeesEvent = onDocumentUpdated("events/{docID}", async (event) => {
+    const batch = firestore.batch()
+    const attRef = firestore.collectionGroup("attendees").where("docID", "==", event.data?.after.id);
     (await attRef.get()).forEach((att) => batch.update(att.ref, {
-        "first_name": (event.data?.after.data() as Beneficiary).first_name,
-        "last_name": (event.data?.after.data() as Beneficiary).last_name
+        "event_name": (event.data?.after.data() as Event).name,
+        "event_start": (event.data?.after.data() as Event).start_date
     }))
 
     await batch.commit()
@@ -195,3 +218,11 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
 export { initializeEmulator } from "./initializeEmulator";
 export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
 export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
+// CSV functions
+export { importBeneficiaries, exportBeneficiaries } from "./csv/beneficiaries";
+export { importVolunteers, exportVolunteers } from "./csv/volunteers";
+export { importEvents, exportEvents } from "./csv/events";
+
+export { sendEmailReminder } from "./event/sendEmail";
+export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"
+export { getSMSCredits } from "./event/getSMSCredits"
