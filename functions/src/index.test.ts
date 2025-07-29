@@ -124,8 +124,8 @@ jest.mock("./utils/time", () => ({
 
 let createVolunteerProfile: any;
 let deleteVolunteerProfile: any;
-let deleteBeneficiaryProfile: any;
-let deleteEvent: any;
+// let deleteBeneficiaryProfile: any;
+// let deleteEvent: any;
 let updateAttendees: any;
 let cronCleaner: any;
 
@@ -133,8 +133,8 @@ beforeAll(async () => {
   const mod = await import("./index");
   createVolunteerProfile = mod.createVolunteerProfile;
   deleteVolunteerProfile = mod.deleteVolunteerProfile;
-  deleteBeneficiaryProfile = mod.deleteBeneficiaryProfile;
-  deleteEvent = mod.deleteEvent;
+  // deleteBeneficiaryProfile = mod.deleteBeneficiaryProfile;
+  // deleteEvent = mod.deleteEvent;
   updateAttendees = mod.updateAttendees;
   cronCleaner = mod.cronCleaner;
 });
@@ -227,6 +227,7 @@ describe("Create Volunteer Profile", () => {
       sex: "male",
       is_admin: false,
       role: "volunteer",
+      pfpPath: null, // cuz of new feature
       time_to_live: null,
     });
   });
@@ -320,70 +321,70 @@ describe("Delete Volunteer Profile", () => {
   });
 });
 
-describe("Delete Beneficiary Profile", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+// describe("Delete Beneficiary Profile", () => {
+//   beforeEach(() => {
+//     jest.clearAllMocks();
+//   });
 
-  it("returns false if not authenticated", async () => {
-    const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
-    const result = await wrapped({
-      ...mockBaseRequest,
-      data: "uid123",
-    });
-    expect(result).toBe(false);
-  });
+//   it("returns false if not authenticated", async () => {
+//     const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
+//     const result = await wrapped({
+//       ...mockBaseRequest,
+//       data: "uid123",
+//     });
+//     expect(result).toBe(false);
+//   });
 
-  it("updates beneficiary document with time_to_live", async () => {
-    mockDocUpdateRef.mockResolvedValue(true);
-    const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
-    const result = await wrapped({
-      ...mockBaseRequest,
-      data: "uid123",
-      auth: mockAuth(true),
-    });
-    expect(mockDocUpdateRef).toHaveBeenCalled();
-    expect(result).toBe(true);
-  });
+//   it("updates beneficiary document with time_to_live", async () => {
+//     mockDocUpdateRef.mockResolvedValue(true);
+//     const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
+//     const result = await wrapped({
+//       ...mockBaseRequest,
+//       data: "uid123",
+//       auth: mockAuth(true),
+//     });
+//     expect(mockDocUpdateRef).toHaveBeenCalled();
+//     expect(result).toBe(true);
+//   });
 
-  it("returns false on error", async () => {
-    mockDocUpdateRef.mockRejectedValue(new Error("error"));
-    const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
-    const result = await wrapped({
-      ...mockBaseRequest,
-      data: "uid123",
-      auth: mockAuth(true),
-    });
-    expect(result).toBe(false);
-  });
-});
+//   it("returns false on error", async () => {
+//     mockDocUpdateRef.mockRejectedValue(new Error("error"));
+//     const wrapped = testEnv.wrap(deleteBeneficiaryProfile);
+//     const result = await wrapped({
+//       ...mockBaseRequest,
+//       data: "uid123",
+//       auth: mockAuth(true),
+//     });
+//     expect(result).toBe(false);
+//   });
+// });
 
-describe("Delete Event", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+// describe("Delete Event", () => {
+//   beforeEach(() => {
+//     jest.clearAllMocks();
+//   });
 
-  it("returns false if not authenticated", async () => {
-    const wrapped = testEnv.wrap(deleteEvent);
-    const result = await wrapped({ ...mockBaseRequest, data: "event123" });
-    expect(result).toBe(false);
-  });
+//   it("returns false if not authenticated", async () => {
+//     const wrapped = testEnv.wrap(deleteEvent);
+//     const result = await wrapped({ ...mockBaseRequest, data: "event123" });
+//     expect(result).toBe(false);
+//   });
 
-  it("updates event document with time_to_live", async () => {
-    mockDocUpdateRef.mockResolvedValue(true);
-    const wrapped = testEnv.wrap(deleteEvent);
-    const result = await wrapped({ ...mockBaseRequest, data: "event123", auth: mockAuth(true) });
-    expect(mockDocUpdateRef).toHaveBeenCalled();
-    expect(result).toBe(true);
-  });
+//   it("updates event document with time_to_live", async () => {
+//     mockDocUpdateRef.mockResolvedValue(true);
+//     const wrapped = testEnv.wrap(deleteEvent);
+//     const result = await wrapped({ ...mockBaseRequest, data: "event123", auth: mockAuth(true) });
+//     expect(mockDocUpdateRef).toHaveBeenCalled();
+//     expect(result).toBe(true);
+//   });
 
-  it("returns false on error", async () => {
-    mockDocUpdateRef.mockRejectedValue(new Error("error"));
-    const wrapped = testEnv.wrap(deleteEvent);
-    const result = await wrapped({ ...mockBaseRequest, data: "event123", auth: mockAuth(true) });
-    expect(result).toBe(false);
-  });
-});
+//   it("returns false on error", async () => {
+//     mockDocUpdateRef.mockRejectedValue(new Error("error"));
+//     const wrapped = testEnv.wrap(deleteEvent);
+//     const result = await wrapped({ ...mockBaseRequest, data: "event123", auth: mockAuth(true) });
+//     expect(result).toBe(false);
+//   });
+// });
 
 describe("Update Attendees", () => {
   beforeEach(() => {

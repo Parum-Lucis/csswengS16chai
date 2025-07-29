@@ -27,86 +27,84 @@ export function VolunteerProfileCreation() {
 
     const formData = new FormData(e.target as HTMLFormElement);
 
-    const data: Volunteer = {
-      docID: "nonsense",
-      contact_number: formData.get("cNum") as string,
-      email: formData.get("email") as string,
-      first_name: formData.get("fName") as string,
-      last_name: formData.get("lName") as string,
-      is_admin: formData.get("dropdown") as string == "Admin",
-      birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
-      address: formData.get("address") as string,
-      sex: formData.get("SexDropdown") as string,
-      role: formData.get("dropdown") as string,
-      pfpPath: "",
-      time_to_live: null
-    }
-    /*
-    Error:
-    whitespaces are allowed in the form
+    const submitBtn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
+    if (submitBtn) submitBtn.disabled = true; 
 
-    Possibile Solution:
-    let err = false;
-    for (const [, value] of formData.entries()) {
-      // Trim the value if it's a string before checking
-      if (typeof value === 'string' && !value.trim()) {
-        err = true;
-      } else if (!value) {
-        err = true;
-      }
-    }
-    */
-
-    let err = false;
-    for (const [, value] of formData.entries()) {
-      // console.log(value.toString(), err);
-      if (!(value.toString().trim())) err = true;
-    }
-
-    if (err) {
-      toast.error("Please fill up all fields!");
-      return;
-    }
-
-
-    if (!emailRegex.test(data.email)) {
-      toast.error("Please input a proper email.");
-      return;
-    }
-
-    if (data.contact_number.length != 11 ||
-      formData.get("cNum")?.slice(0, 2) != "09") {
-      toast.error("Please input a valid phone number.");
-      return
-    }
-
-    let pfpFilePath: string;
     try {
-      pfpFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
-    } catch {
-      pfpFilePath = `pfp/volunteers/${uuidv4()}`;
-    }
+      const data: Volunteer = {
+        docID: "nonsense",
+        contact_number: formData.get("cNum") as string,
+        email: formData.get("email") as string,
+        first_name: formData.get("fName") as string,
+        last_name: formData.get("lName") as string,
+        is_admin: formData.get("dropdown") as string == "Admin",
+        birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
+        address: formData.get("address") as string,
+        sex: formData.get("SexDropdown") as string,
+        role: formData.get("dropdown") as string,
+        pfpPath: "",
+        time_to_live: null
+      }
 
-    if ((formData.get("pfp") as File).size > 0) {
-      data.pfpPath = pfpFilePath
-      const [uploadRes, createRes] = await Promise.all([
-        uploadBytes(ref(store, pfpFilePath), formData.get("pfp") as File),
-        callCreateVolunteerProfile(data)
-      ])
-      if (createRes.data && uploadRes.ref) {
-        toast.success("Success!");
-        navigate(-1);
-      } else {
-        toast.error("Couldn't create profile.");
+      let err = false;
+      for (const [, value] of formData.entries()) {
+        if (!(value.toString().trim())) err = true;
       }
-    } else {
-      const res = await callCreateVolunteerProfile(data);
-      if (res.data) {
-        toast.success("Success")!
-        navigate(-1);
-      } else {
-        toast.error("Couldn't create profile");
+
+      if (err) {
+        toast.error("Please fill up all fields!");
+        if (submitBtn) submitBtn.disabled = false;
+        return;
       }
+      
+      if (!emailRegex.test(data.email)) {
+        toast.error("Please input a proper email.");
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      if (data.contact_number.length != 11 ||
+        formData.get("cNum")?.slice(0, 2) != "09") {
+        toast.error("Please input a valid phone number.");
+        if (submitBtn) submitBtn.disabled = false;
+        return
+      }
+
+      let pfpFilePath: string;
+      try {
+        pfpFilePath = `pfp/volunteers/${crypto.randomUUID()}`;
+      } catch {
+        pfpFilePath = `pfp/volunteers/${uuidv4()}`;
+      }
+
+      if ((formData.get("pfp") as File).size > 0) {
+        data.pfpPath = pfpFilePath
+        const [uploadRes, createRes] = await Promise.all([
+          uploadBytes(ref(store, pfpFilePath), formData.get("pfp") as File),
+          callCreateVolunteerProfile(data)
+        ])
+        if (createRes.data && uploadRes.ref) {
+          toast.success("Success!");
+          navigate(-1);
+        } else {
+          toast.error("Couldn't create profile.");
+          if (submitBtn) submitBtn.disabled = false;
+          return;
+        }
+      } else {
+        const res = await callCreateVolunteerProfile(data);
+        if (res.data) {
+          toast.success("Success")!
+          navigate(-1);
+        } else {
+          toast.error("Couldn't create profile");
+          if (submitBtn) submitBtn.disabled = false;
+          return;
+        } 
+      } 
+    } catch (error) {
+      toast.error("An error occurred while creating the profile.");
+      if (submitBtn) submitBtn.disabled = false;
     }
 
 
@@ -263,106 +261,106 @@ export function BeneficiaryProfileCreation() {
 
     const formData = new FormData(e.target as HTMLFormElement);
 
+    const submitBtn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
+    if (submitBtn) submitBtn.disabled = true;
+
     let err = false;
     let is_waitlisted = false;
-
-    /* changed */
-    /*
-    for (const [key, value] of formData.entries()) {
-      console.log(value.toString(), err);
-      if (!(value.toString().trim()))
-        key == "idNum" ? is_waitlisted = true : err = true
-    }
-    */
 
     // gemini suggested this, better logic daw
     const formValues: { [key: string]: FormDataEntryValue } = {};
     for (const [key, value] of formData.entries()) {
       formValues[key] = value;
     }
-
-    for (const key in formValues) {
-      const value = formValues[key];
-      if (typeof value === 'string' && !value.trim()) {
-        if (key === "idNum") {
-          is_waitlisted = true;
-        } else {
+    try {
+      for (const key in formValues) {
+        const value = formValues[key];
+        if (typeof value === 'string' && !value.trim()) {
+          if (key === "idNum") {
+            is_waitlisted = true;
+          } else {
+            err = true;
+          }
+        } else if (!value && key !== "idNum") {
           err = true;
         }
-      } else if (!value && key !== "idNum") {
-        err = true;
       }
-    }
-    /* end of change */
+      /* end of change */
 
-    if (!err) {
+      if (!err) {
 
-      let test = false
-      guardians.forEach((guardian, i) => {
-        Object.values(guardian).forEach((val) => {
-          if (!(val.toString().trim())) {
-            toast.error("Please fill up all fields for Guardian " + (i + 1));
+        let test = false
+        guardians.forEach((guardian, i) => {
+          Object.values(guardian).forEach((val) => {
+            if (!(val.toString().trim())) {
+              toast.error("Please fill up all fields for Guardian " + (i + 1));
+              test = true
+              if (submitBtn) submitBtn.disabled = false;
+              return
+            }
+          })
+          if (test)
+            return
+          else if (!emailRegex.test(guardian.email)) {
+            console.log(guardian.email)
+            toast.error("Please input a proper email for Guardian " + (i + 1));
             test = true
+            if (submitBtn) submitBtn.disabled = false;
             return
           }
-        })
+          else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
+            toast.error("Please input a proper contact number for Guardian " + (i + 1));
+            test = true
+            if (submitBtn) submitBtn.disabled = false;
+            return
+          }
+        });
         if (test)
           return
-        else if (!emailRegex.test(guardian.email)) {
-          console.log(guardian.email)
-          toast.error("Please input a proper email for Guardian " + (i + 1));
-          test = true
-          return
-        }
-        else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
-          toast.error("Please input a proper contact number for Guardian " + (i + 1));
-          test = true
-          return
-        }
-      });
-      if (test)
-        return
-      else {
-        /* changed */
-        /*
-        const accredited_id = Number((formData.get("idNum") as string).trim())
-        const addRef = await addDoc(collection(db, "beneficiaries"), {
-        */
-        const idNumValue = (formData.get("idNum") as string);
-        const accredited_id = idNumValue.trim() ? Number(idNumValue) : NaN;
-        /* end of change */
+        else {
+          /* changed */
+          /*
+          const accredited_id = Number((formData.get("idNum") as string).trim())
+          const addRef = await addDoc(collection(db, "beneficiaries"), {
+          */
+          const idNumValue = (formData.get("idNum") as string);
+          const accredited_id = idNumValue.trim() ? Number(idNumValue) : NaN;
+          /* end of change */
 
-        let pfpFilePath: string;
-        try {
-          pfpFilePath = `pfp/beneficiaries/${crypto.randomUUID()}`;
-        } catch {
-          pfpFilePath = `pfp/beneficiaries/${uuidv4()}`;
-        }
-        if (formData.get("pfp") as File) {
-          await uploadBytes(ref(store, pfpFilePath), formData.get("pfp") as File);
-        }
-        const addRef = await addDoc(collection(db, "beneficiaries"), {
-          /* accredited_id: accredited_id == 0 ? accredited_id : NaN,*/ // already converts an empty string to NaN
-          accredited_id: accredited_id,
-          first_name: formData.get("fName") as string,
-          last_name: formData.get("lName") as string,
-          address: formData.get("address") as string,
-          birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
-          grade_level: Number(formData.get("gradelevel") as string),
-          is_waitlisted: is_waitlisted,
-          guardians: guardians,
-          sex: formData.get("SexDropdown") as string, /* this was missing pala? */
-          pfpPath: (formData.get("pfp") as File).size > 0 ? pfpFilePath : null,
-          time_to_live: null,
-        });
+          const pfpFilePath = `pfp/beneficiaries/${crypto.randomUUID()}`;
+          if (formData.get("pfp") as File) {
+            await uploadBytes(ref(store, pfpFilePath), formData.get("pfp") as File);
+          }
+          const addRef = await addDoc(collection(db, "beneficiaries"), {
+            /* accredited_id: accredited_id == 0 ? accredited_id : NaN,*/ // already converts an empty string to NaN
+            accredited_id: accredited_id,
+            first_name: formData.get("fName") as string,
+            last_name: formData.get("lName") as string,
+            address: formData.get("address") as string,
+            birthdate: Timestamp.fromMillis(Date.parse(formData.get("birthdate") as string)),
+            grade_level: Number(formData.get("gradelevel") as string),
+            is_waitlisted: is_waitlisted,
+            guardians: guardians,
+            sex: formData.get("SexDropdown") as string, /* this was missing pala? */
+            pfpPath: (formData.get("pfp") as File).size > 0 ? pfpFilePath : null,
+            time_to_live: null,
+          });
 
-        if (addRef) {
-          toast.success("Success!");
-          navigate("/beneficiary");
+          if (addRef) {
+            toast.success("Success!");
+            navigate("/beneficiary");
+          }
+          else toast.error("Submission failed.");
+          if (submitBtn) submitBtn.disabled = false;
         }
-        else toast.error("Submission failed.");
+      } else {
+        toast.error("Please fill up all fields!");
+        if (submitBtn) submitBtn.disabled = false;
       }
-    } else toast.error("Please fill up all fields!");
+    } catch (error) {
+      toast.error("An error occurred while creating the profile.");
+      if (submitBtn) submitBtn.disabled = false;
+    }
   };
 
   function handleAdd() {

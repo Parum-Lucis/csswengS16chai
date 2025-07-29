@@ -7,7 +7,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Login from './Login';
 import ForgetMeNot from './ForgetMeNot';
 import { YourProfile } from './YourProfile';
-import { UserContext } from '../context/userContext';
+import { UserContext } from '../util/userContext';
 import { ToastContainer } from 'react-toastify';
 import { FirebaseError } from 'firebase/app';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
@@ -117,14 +117,23 @@ describe('Login Module Integration Test Suite', () => {
 
   test('successful password reset flow', async () => {
     (sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
-
+  
     renderLoginModule('/forget-password');
-
+  
     fireEvent.change(screen.getByLabelText(/enter email/i), { target: { value: 'reset@test.com' } });
-    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
-
+    fireEvent.click(screen.getByRole('button', { name: /submit email/i }));
+  
     await waitFor(() => {
-      expect(sendPasswordResetEmail).toHaveBeenCalledWith(auth, 'reset@test.com');
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(auth, 'reset@test.com', {"url": "https://chai-met.firebaseapp.com/"});
+    });
+  });
+  
+  test('back to login button navigates to login page', async () => {
+    renderLoginModule('/forget-password');
+  
+    fireEvent.click(screen.getByText(/back to login/i));
+  
+    await waitFor(() => {
       expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
     });
   });

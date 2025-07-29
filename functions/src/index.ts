@@ -100,10 +100,14 @@ export const createVolunteerProfile = onCall<Volunteer>(async (req) => {
 export const deleteVolunteerProfile = onCall<string>(async (req) => {
     if (!req.auth) return false;
     if (req.auth.uid !== req.data && !req.auth.token.is_admin) return false;
+    if (req.auth.uid !== req.data && !req.auth.token.is_admin) return false;
 
     const uid = req.data;
     try {
 
+        await auth.updateUser(uid, {
+            disabled: true
+        })
         await auth.updateUser(uid, {
             disabled: true
         })
@@ -211,13 +215,14 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
     }
 })
 
+export { initializeEmulator } from "./initializeEmulator";
+export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
+export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 // CSV functions
 export { importBeneficiaries, exportBeneficiaries } from "./csv/beneficiaries";
 export { importVolunteers, exportVolunteers } from "./csv/volunteers";
 export { importEvents, exportEvents } from "./csv/events";
 
 export { sendEmailReminder } from "./event/sendEmail";
-export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
-export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"
 export { getSMSCredits } from "./event/getSMSCredits"

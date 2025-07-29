@@ -1,6 +1,6 @@
 import "../css/styles.css";
 import { NavLink } from "react-router";
-import { Baby, BookUser, CalendarPlus, Undo2, UserPlus, Wallet, Import} from "lucide-react";
+import { Baby, BookUser, CalendarPlus, Undo2, UserPlus, Wallet, Import } from "lucide-react";
 import { toast } from "react-toastify";
 import { callImportBeneficiaries, callImportEvents, callImportVolunteers } from "../firebase/cloudFunctions";
 
@@ -92,13 +92,11 @@ const beneficiaryURLs = [
 
 ]
 
-
 const eventURLs = [
     { name: "Create", pldt: "event/new", Icon: CalendarPlus },
     { name: "SMS", pldt: "event/smscredits", Icon: Wallet },
     { name: "Import", onClick: () => handleImport(2), Icon: Import }
 ]
-
 
 const URLs = [
     { title: "Volunteer", list: volunteerURLs },

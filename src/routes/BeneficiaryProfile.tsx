@@ -32,8 +32,7 @@ export function BeneficiaryProfile() {
     const [gradeLevel, setGradeLevel] = useState<string>("");
     // attendee list
     const [attendedEvents, setAttendedEvents] = useState<AttendedEvents[]>([])
-    const [attendance, setAttendance] = useState({present: 0, events: 0})
-
+    const [attendance, setAttendance] = useState({ present: 0, events: 0 })
 
     useEffect(() => {
         const fetchBeneficiary = async () => {
@@ -62,16 +61,16 @@ export function BeneficiaryProfile() {
             const attRef = await getDocs(query(collectionGroup(db, "attendees"), where("beneficiaryID", "==", beneficiariesSnap.id)))
             attRef.forEach((att) => {
                 const attData = att.data() as AttendedEvents
-                attList.push({...attData, docID : att.id});
+                attList.push({ ...attData, docID: att.id });
                 // ignore if null/undefined (means event hasn't happened)
-                if(attData.event_start.toMillis() < (Date.now() - ((new Date()).getTimezoneOffset() * 60000))) {
-                    if(attData.attended ?? false) 
+                if (attData.event_start.toMillis() < (Date.now() - ((new Date()).getTimezoneOffset() * 60000))) {
+                    if (attData.attended ?? false)
                         pres += 1
                     events += 1
                 }
             })
             setAttendedEvents(attList)
-            setAttendance({present: pres, events: events})
+            setAttendance({ present: pres, events: events })
         }
         fetchBeneficiary()
     }, [setBeneficiary, setAttendedEvents, params.docId])
@@ -96,7 +95,7 @@ export function BeneficiaryProfile() {
 
         // Filter profiles based on who attended
         if (filter === "beneficiary") {
-            filteredAtt = filteredAtt.filter(e => e.who_attended == "Beneficiary" )
+            filteredAtt = filteredAtt.filter(e => e.who_attended == "Beneficiary")
         } else if (filter === "parent") {
             filteredAtt = filteredAtt.filter(e => e.who_attended == "Parent")
         } else if (filter === "family") {
@@ -108,7 +107,7 @@ export function BeneficiaryProfile() {
             filteredAtt = filteredAtt.filter(e => e.attended);
         } else if (status === "absent") {
             filteredAtt = filteredAtt.filter(e => !(e.attended))
-        } 
+        }
 
         // Sort profiles based on event
         if (sort === "name") {
@@ -165,6 +164,7 @@ export function BeneficiaryProfile() {
             toast.error("Cannot add more than 3 guardians!")
     }
 
+
     function handleSub() {
         if (guardians.length - 1 >= 1) {
             // applied
@@ -194,6 +194,7 @@ export function BeneficiaryProfile() {
             })
             toast.success("Account delete success!")
             navigate("/beneficiary")
+            navigate("/beneficiary")
         }
         catch (e) {
             console.error(e)
@@ -201,45 +202,45 @@ export function BeneficiaryProfile() {
         }
     }
 
-    const handleSave = 
-    async () => {
-        if (!sex?.trim() || !gradeLevel.trim() || !address?.trim() || !birthdate) {
-            toast.error("Please fill up all fields!")
-            return
-        }       
+    const handleSave =
+        async () => {
+            if (!sex?.trim() || !gradeLevel.trim() || !address?.trim() || !birthdate) {
+                toast.error("Please fill up all fields!")
+                return
+            }
 
-        if(!gradeLevel.trim()){
-            toast.error("Please put a valid Grade Number")
-            return 
-        }
-        const updateRef = doc(db, "beneficiaries", docID!)
-        console.log(beneficiary)
-        
-        const emailRegEx = new RegExp(
-            /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-        ); // from https://emailregex.com/
-        let test = false
-        guardians.forEach((guardian, i) => {
-            Object.values(guardian).forEach((val, _) => {
-                if(!(val.toString().trim())) {
-                    toast.error("Please fill up all fields for Guardian " + (i+1));
+            if (!gradeLevel.trim()) {
+                toast.error("Please put a valid Grade Number")
+                return
+            }
+            const updateRef = doc(db, "beneficiaries", docID!)
+            console.log(beneficiary)
+
+            const emailRegEx = new RegExp(
+                /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+            ); // from https://emailregex.com/
+            let test = false
+            guardians.forEach((guardian, i) => {
+                Object.values(guardian).forEach((val, _) => {
+                    if (!(val.toString().trim())) {
+                        toast.error("Please fill up all fields for Guardian " + (i + 1));
+                        test = true
+                        return
+                    }
+                })
+                if (test)
+                    return
+                else if (!emailRegEx.test(guardian.email)) {
+                    console.log(guardian.email)
+                    toast.error("Please input a proper email for Guardian " + (i + 1));
                     test = true
                     return
                 }
-            })
-            if(test)
-                return
-            else if (!emailRegEx.test(guardian.email)) {
-                console.log(guardian.email)
-                toast.error("Please input a proper email for Guardian " + (i+1));
-                test = true
-                return
-            }
-            else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
-                toast.error("Please input a proper contact number for Guardian " + (i+1));
-                test = true
-                return
-            }
+                else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
+                    toast.error("Please input a proper contact number for Guardian " + (i + 1));
+                    test = true
+                    return
+                }
 
             });
             if (test)
@@ -275,10 +276,10 @@ export function BeneficiaryProfile() {
                     })
                 }
 
-                setOriginalBeneficiary({ ...beneficiary as Beneficiary, grade_level: gradeLevelNum, guardians: guardians })
+                setOriginalBeneficiary({ ...beneficiary as Beneficiary, grade_level: gradeLevel, guardians: guardians })
                 setForm(true);
                 toast.success("Account update success!")
-            } catch (e: any){
+            } catch (e: any) {
                 toast.error("Something went wrong!");
                 console.log(e.message);
             }
@@ -293,6 +294,18 @@ export function BeneficiaryProfile() {
                             <h2 className="text-lg font-bold text-secondary mb-4">Confirm Deletion</h2>
                             <p className="mb-6 text-secondary">Are you sure you want to delete this account? This action cannot be undone.</p>
                             <div className="flex justify-end gap-3">
+                                <button
+                                    className="bg-gray-300 hover:bg-gray-400 text-secondary font-semibold px-4 py-2 rounded"
+                                    onClick={handleDelete}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
+                                    onClick={handleConfirm}
+                                >
+                                    Confirm Delete
+                                </button>
                                 <button
                                     className="bg-gray-300 hover:bg-gray-400 text-secondary font-semibold px-4 py-2 rounded"
                                     onClick={handleDelete}
@@ -327,47 +340,47 @@ export function BeneficiaryProfile() {
                         }
                     }} />
                 <div className="relative mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
-                <div className="flex flex-col items-end mt-[-5rem]">
-                    <SemiCircularProgress value={(attendance.present/attendance.events)*100} />
-                    <h2 className=" text-center text-secondary text-sm">Attendance <br className="block sm:hidden"/>Rate</h2>
-                </div>
-                <div className="flex flex-row justify-center gap-2">
-                    { formState === true && (
-                        <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                            {beneficiary?.last_name}, {beneficiary?.first_name}
-                        </h3>
-                    )}
-                    {(formState === false) && (
-                        <div className="flex flex-col justify-center sm:flex-row sm:gap-4">
-                            <div className="flex flex-col w-full sm:w-1/2">
-                                <label htmlFor="fName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                                First Name
-                                </label>
-                                <input
-                                id="fName"
-                                name="fName"
-                                type="text"
-                                className="input-text w-full text-sm"
-                                onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, first_name : e.target.value})}
-                                value={beneficiary?.first_name}
-                                />
+                    <div className="flex flex-col items-end mt-[-5rem]">
+                        <SemiCircularProgress value={(attendance.present / attendance.events) * 100} />
+                        <h2 className=" text-center text-secondary text-sm">Attendance <br className="block sm:hidden" />Rate</h2>
+                    </div>
+                    <div className="flex flex-row justify-center gap-2">
+                        {formState === true && (
+                            <h3 className="text-secondary text-2xl text-center font-bold font-sans">
+                                {beneficiary?.last_name}, {beneficiary?.first_name}
+                            </h3>
+                        )}
+                        {(formState === false) && (
+                            <div className="flex flex-col justify-center sm:flex-row sm:gap-4">
+                                <div className="flex flex-col w-full sm:w-1/2">
+                                    <label htmlFor="fName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                        First Name
+                                    </label>
+                                    <input
+                                        id="fName"
+                                        name="fName"
+                                        type="text"
+                                        className="input-text w-full text-sm"
+                                        onChange={(e) => setBeneficiary({ ...beneficiary as Beneficiary, first_name: e.target.value })}
+                                        value={beneficiary?.first_name}
+                                    />
+                                </div>
+                                <div className="flex flex-col w-full sm:w-1/2">
+                                    <label htmlFor="lName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                        Last Name
+                                    </label>
+                                    <input
+                                        id="lName"
+                                        name="lName"
+                                        type="text"
+                                        className="input-text w-full"
+                                        onChange={(e) => setBeneficiary({ ...beneficiary as Beneficiary, last_name: e.target.value })}
+                                        value={beneficiary?.last_name}
+                                    />
+                                </div>
                             </div>
-                            <div className="flex flex-col w-full sm:w-1/2">
-                                <label htmlFor="lName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                                Last Name
-                                </label>
-                                <input
-                                id="lName"
-                                name="lName"
-                                type="text"
-                                className="input-text w-full"
-                                onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, last_name : e.target.value})}
-                                value={beneficiary?.last_name}
-                                />
-                            </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
                     <div className="w-full flex justify-center mt-1">
                         <div className="flex flex-row gap-2 text-secondary font-sans m-2">
                             <label htmlFor="idNum">ID:</label>
@@ -398,140 +411,140 @@ export function BeneficiaryProfile() {
                                     onChange={(e) => setBeneficiary({ ...beneficiary as Beneficiary, birthdate: Timestamp.fromDate((new Date(e.target.value))) })}
                                     value={birthdate?.toISOString().substring(0, 10)} />
                             </div>
-                    <div className="flex flex-col flex-1">
-                        <label
-                            htmlFor="Sex"
-                            className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                            Sex:
-                        </label>
-                        <select
-                            id="Sex"
-                            className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                            disabled={formState ?? true}
-                            onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, sex : e.target.value})}
-                            value={sex}
-                        >
-                            <option className="bg-secondary text-white" value="M">Male</option>
-                            <option className="bg-secondary text-white" value="F">Female</option>
-                        </select>
-                    </div>
-                </div>
-                <div className="flex flex-col">
-                <label
-                    htmlFor="gLevel"
-                    className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                    Grade Level:
-                </label>
-                <select
-                    id="gLevel"
-                    className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                    disabled={formState ?? true}
-                    onChange={(e) => setGradeLevel(e.target.value)}
-                    value={gradeLevel}
-                >
-                    <option className="bg-secondary text-white" value="N">Nursery</option>
-                    <option className="bg-secondary text-white" value="K">Kindergarten</option>
-                    <option className="bg-secondary text-white" value="1">1</option>
-                    <option className="bg-secondary text-white" value="2">2</option>
-                    <option className="bg-secondary text-white" value="3">3</option>
-                    <option className="bg-secondary text-white" value="4">4</option>
-                    <option className="bg-secondary text-white" value="5">5</option>
-                    <option className="bg-secondary text-white" value="6">6</option>
-                    <option className="bg-secondary text-white" value="7">7</option>
-                    <option className="bg-secondary text-white" value="8">8</option>
-                    <option className="bg-secondary text-white" value="9">9</option>
-                    <option className="bg-secondary text-white" value="10">10</option>
-                    <option className="bg-secondary text-white" value="11">11</option>
-                    <option className="bg-secondary text-white" value="12">12</option>
-                </select>
-                </div>
-                <div className="flex flex-col">
-                    <label
-                        htmlFor="add"
-                        className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                    Address:
-                    </label>
-                    <input
-                        type="text"
-                        id="add"
-                        className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                        readOnly={formState ?? true}
-                        onChange={(e) => setBeneficiary({...beneficiary as Beneficiary, address : e.target.value})}
-                        value={address}/>
-                </div>
-                {formState === false && (
-                    <div className="flex flex-row justify-end gap-1">
-                        <button
-                        type="button"
-                        className={`flex w-fit bg-secondary text-primary p-1 px-3 rounded-sm font-semibold font-sans cursor-pointer`}
-                        onClick={handleAdd}>
-                        +
-                        </button>
-                        <button
-                        type="button"
-                        className={`flex w-fit bg-secondary text-primary p-1 px-3 rounded-sm font-semibold font-sans cursor-pointer`}
-                        onClick={handleSub}>
-                        -
-                        </button>
-                    </div>
-                )}
-                <div className="flex flex-col">
-                    <button
-                        className={`flex items-center justify-between bg-secondary text-primary px-2 py-1 rounded-t-sm font-semibold font-sans transition-all duration-300 cursor-pointer ${minimizeState ? "rounded-b-sm" : "rounded-t-sm"}`}
-                        onClick={handleMinimize}>
-                        Guardian Information
-                        <span className="flex items-center justify-center">
-                            <i className={`text-3xl mb-[-0.5rem] fi fi-ss-angle-small-down transition-all duration-300 ${minimizeState ? "rotate-180 mt-[-1rem]" : "rotate-0"}`}></i>
-                        </span>
-                    </button>
-                    <div className={` overflow-auto transition-all duration-300 ease-in-out ${minimizeState ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}>
-                      <div className="w-full rounded-b-sm text-white border border-secondary bg-tertiary p-3">
-                        {Array.from(
-                          {length: guardians.length},
-                          (_, i) => (
-                            <div className="pb-4">
-                              <h3 className="font-sans mb-2">Guardian {i + 1}</h3>
-                              <GuardianCard formState={formState} index={i} guardians={guardians} setGuardians={setGuardians} />
+                            <div className="flex flex-col flex-1">
+                                <label
+                                    htmlFor="Sex"
+                                    className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                    Sex:
+                                </label>
+                                <select
+                                    id="Sex"
+                                    className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                                    disabled={formState ?? true}
+                                    onChange={(e) => setBeneficiary({ ...beneficiary as Beneficiary, sex: e.target.value })}
+                                    value={sex}
+                                >
+                                    <option className="bg-secondary text-white" value="M">Male</option>
+                                    <option className="bg-secondary text-white" value="F">Female</option>
+                                </select>
                             </div>
-                          )
+                        </div>
+                        <div className="flex flex-col">
+                            <label
+                                htmlFor="gLevel"
+                                className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                Grade Level:
+                            </label>
+                            <select
+                                id="gLevel"
+                                className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                                disabled={formState ?? true}
+                                onChange={(e) => setGradeLevel(e.target.value)}
+                                value={gradeLevel}
+                            >
+                                <option className="bg-secondary text-white" value="N">Nursery</option>
+                                <option className="bg-secondary text-white" value="K">Kindergarten</option>
+                                <option className="bg-secondary text-white" value="1">1</option>
+                                <option className="bg-secondary text-white" value="2">2</option>
+                                <option className="bg-secondary text-white" value="3">3</option>
+                                <option className="bg-secondary text-white" value="4">4</option>
+                                <option className="bg-secondary text-white" value="5">5</option>
+                                <option className="bg-secondary text-white" value="6">6</option>
+                                <option className="bg-secondary text-white" value="7">7</option>
+                                <option className="bg-secondary text-white" value="8">8</option>
+                                <option className="bg-secondary text-white" value="9">9</option>
+                                <option className="bg-secondary text-white" value="10">10</option>
+                                <option className="bg-secondary text-white" value="11">11</option>
+                                <option className="bg-secondary text-white" value="12">12</option>
+                            </select>
+                        </div>
+                        <div className="flex flex-col">
+                            <label
+                                htmlFor="add"
+                                className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                Address:
+                            </label>
+                            <input
+                                type="text"
+                                id="add"
+                                className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                                readOnly={formState ?? true}
+                                onChange={(e) => setBeneficiary({ ...beneficiary as Beneficiary, address: e.target.value })}
+                                value={address} />
+                        </div>
+                        {formState === false && (
+                            <div className="flex flex-row justify-end gap-1">
+                                <button
+                                    type="button"
+                                    className={`flex w-fit bg-secondary text-primary p-1 px-3 rounded-sm font-semibold font-sans cursor-pointer`}
+                                    onClick={handleAdd}>
+                                    +
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`flex w-fit bg-secondary text-primary p-1 px-3 rounded-sm font-semibold font-sans cursor-pointer`}
+                                    onClick={handleSub}>
+                                    -
+                                </button>
+                            </div>
                         )}
-                      </div>
+                        <div className="flex flex-col">
+                            <button
+                                className={`flex items-center justify-between bg-secondary text-primary px-2 py-1 rounded-t-sm font-semibold font-sans transition-all duration-300 cursor-pointer ${minimizeState ? "rounded-b-sm" : "rounded-t-sm"}`}
+                                onClick={handleMinimize}>
+                                Guardian Information
+                                <span className="flex items-center justify-center">
+                                    <i className={`text-3xl mb-[-0.5rem] fi fi-ss-angle-small-down transition-all duration-300 ${minimizeState ? "rotate-180 mt-[-1rem]" : "rotate-0"}`}></i>
+                                </span>
+                            </button>
+                            <div className={` overflow-auto transition-all duration-300 ease-in-out ${minimizeState ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}>
+                                <div className="w-full rounded-b-sm text-white border border-secondary bg-tertiary p-3">
+                                    {Array.from(
+                                        { length: guardians.length },
+                                        (_, i) => (
+                                            <div className="pb-4">
+                                                <h3 className="font-sans mb-2">Guardian {i + 1}</h3>
+                                                <GuardianCard formState={formState} index={i} guardians={guardians} setGuardians={setGuardians} />
+                                            </div>
+                                        )
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-row items-center justify-around w-full gap-4">
+                            {(!formState && formState !== null) && (
+                                <button
+                                    type="submit"
+                                    className="mt-2 w-full bg-red-600 hover:bg-red-800 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                                    onClick={handleEdit}>
+                                    Discard
+                                </button>
+                            )}
+                            <button
+                                type="submit"
+                                className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                                onClick={formState ? handleEdit : handleSave}
+                                disabled={formState === null}>
+                                {formState || formState === null ? "Edit" : "Save Changes"}
+                            </button>
+                        </div>
+                        <button
+                            type="submit"
+                            className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                            onClick={handleDelete}
+                            disabled={formState === null}>
+                            Delete Account
+                        </button>
                     </div>
                 </div>
-                <div className="flex flex-row items-center justify-around w-full gap-4">
-                    {(!formState && formState !== null) && (
-                    <button
-                        type="submit"
-                        className="mt-2 w-full bg-red-600 hover:bg-red-800 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                        onClick={handleEdit}>
-                        Discard
-                    </button>
-                    )}
-                    <button
-                        type="submit"
-                        className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                        onClick={formState ? handleEdit : handleSave}
-                        disabled={formState===null}>
-                    {formState || formState === null ? "Edit" : "Save Changes"}
-                    </button>
-                </div>
-                <button
-                        type="submit"
-                        className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                        onClick={handleDelete}
-                        disabled={formState===null}>
-                        Delete Account
-                </button>
-                </div>
-            </div>
                 <div className="w-full max-w-2xl mt-8">
                     <h3 className="text-[#45B29D] text-2xl text-center font-bold font-[Montserrat] mb-4">
                         Attended Events
                     </h3>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                         <select
-                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
-                        onChange={e => setFilter(e.target.value)}
+                            className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
+                            onChange={e => setFilter(e.target.value)}
                         >
                             <option className="bg-secondary text-white" value="">Filter By</option>
                             <option className="bg-secondary text-white" value="beneficiary">Beneficiary</option>
@@ -539,16 +552,16 @@ export function BeneficiaryProfile() {
                             <option className="bg-secondary text-white" value="family">Family</option>
                         </select>
                         <select
-                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
-                        onChange={e => setStatus(e.target.value)}
+                            className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
+                            onChange={e => setStatus(e.target.value)}
                         >
                             <option className="bg-secondary text-white" value="">Attendance Status</option>
                             <option className="bg-secondary text-white" value="present">Present</option>
                             <option className="bg-secondary text-white" value="absent">Absent</option>
                         </select>
                         <select
-                        className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
-                        onChange={e => setSort(e.target.value)}
+                            className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
+                            onChange={e => setSort(e.target.value)}
                         >
                             <option className="bg-secondary text-white" value="">Sort by</option>
                             <option className="bg-secondary text-white" value="name">Event Name</option>
@@ -557,15 +570,15 @@ export function BeneficiaryProfile() {
                         </select>
 
                         <input
-                        type="text"
-                        placeholder="Search"
-                        className="p-2 rounded-md border border-gray-300 text-sm w-full"
-                        onChange={e => setSearch(e.target.value)}
+                            type="text"
+                            placeholder="Search"
+                            className="p-2 rounded-md border border-gray-300 text-sm w-full"
+                            onChange={e => setSearch(e.target.value)}
                         />
                     </div>
                     <div className={`space-y-2 gap-2 ${modifiedList.length === 0 ? "text-center" : ""}`}>
                         {modifiedList.map((att, index) => (
-                            <EventCard key={index} attEvent={att}/>
+                            <EventCard key={index} attEvent={att} />
                         ))}
                         <span>{modifiedList.length === 0 ? "No Events Attended!" : ""}</span>
                     </div>
@@ -576,12 +589,12 @@ export function BeneficiaryProfile() {
 }
 
 interface SemiCircularProgressProps {
-        value: number
-    }
-    const SemiCircularProgress = (props: SemiCircularProgressProps) => {
+    value: number
+}
+const SemiCircularProgress = (props: SemiCircularProgressProps) => {
     return (
         <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
-        <span className="text-sm text-secondary">{props.value}%</span>
+            <span className="text-sm text-secondary">{props.value}%</span>
         </div>
     )
 }

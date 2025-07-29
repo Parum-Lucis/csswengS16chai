@@ -38,15 +38,32 @@ export function BeneficiaryList() {
       const q = query(collection(db, "beneficiaries"), where("time_to_live", "==", null));
       try {
         const beneficiarySnap = await getDocs(q.withConverter(beneficiaryConverter));
-        setProfiles(beneficiarySnap.docs.map(beneficiary => beneficiary.data()))
-        // hi Allen kulang ung name check here!
+        const profilesData: Beneficiary[] = [];
+        let didFail = false;
+
+        beneficiarySnap.docs.forEach(doc => {
+          const data = doc.data();
+          // Check if essential data exists before adding it to the list
+          if (data.first_name && data.last_name) {
+            profilesData.push(data);
+          } else {
+            didFail = true;
+            console.error(`Error fetching beneficiary: ${doc.id}`, 'Missing name fields');
+          }
+        });
+
+        setProfiles(profilesData);
+
+        if (didFail) {
+          toast.warn('One or more profiles failed to load.');
+        }
+
       } catch (error) {
         console.error(error);
+        toast.error("Failed to load beneficiaries.");
       } finally {
         setLoading(false);
       }
-
-
     };
     fetchProfiles();
 
@@ -242,8 +259,6 @@ export function BeneficiaryList() {
           <PlusCircle />
           Create New Profile
         </Link>
-      </div>
-      <div className="flex flex-col gap-4">
         {loading ? (
           // display loading while fetching from database.
           <div className="text-center text-white py-8">Fetching...</div>
@@ -281,19 +296,32 @@ export function VolunteerList() {
     const fetchProfiles = async () => {
       setLoading(true); // display "fetching..."
       const q = query(collection(db, "volunteers"), where("time_to_live", "==", null));
-      // IF PROFILES AREN'T LOADING, PROBABLY COZ UR MISSING time_to_live = null ON UR DOCS
+
       try {
         const volunteerSnap = await getDocs(q.withConverter(volunteerConverter));
-        setProfiles(volunteerSnap.docs.map(profile => ({
-          ...profile.data(),
-          accredited_id: null // NEED THIS PLSPLSPLS FOR PROFILECARD ID DISPLAY PLDPDPLPLSPLSPLS
-        })))
+        const profilesData: Volunteer[] = [];
+        let didFail = false;
 
-        console.log(profiles)
-      } catch (error: any) {
+        volunteerSnap.docs.forEach(doc => {
+          const data = doc.data();
+          if (data.first_name && data.last_name) {
+            profilesData.push(data);
+            // {...data, accredited_id: null}
+          } else {
+            didFail = true;
+            console.error(`Error fetching volunteer: ${doc.id}`, 'Missing name fields');
+          }
+        });
+
+        setProfiles(profilesData);
+
+        if (didFail) {
+          toast.warn('One or more profiles failed to load.');
+        }
+
+      } catch (error) {
         console.error(error);
-        toast.error("Failed to load volunteers");
-        console.log(error.message)
+        toast.error("failed to load volunteers");
       } finally {
         setLoading(false);
       }
@@ -325,7 +353,7 @@ export function VolunteerList() {
   } else if (sort === "first") {
     filteredprofiles = [...filteredprofiles].sort((a, b) => a.first_name.localeCompare(b.first_name));
   } else if (sort === "age") {
-    filteredprofiles = [...filteredprofiles].sort((a, b) => compareAsc(a.birthdate.toDate(), b.birthdate.toDate()));
+    filteredprofiles = [...filteredprofiles].sort((a, b) => compareDesc(a.birthdate.toDate(), b.birthdate.toDate()));
   }
 
   // Search filter (partial or exact matches on name and age)
