@@ -538,7 +538,7 @@ export function BeneficiaryProfile() {
                     </div>
                 </div>
                 <div className="w-full max-w-2xl mt-8">
-                    <h3 className="text-[#45B29D] text-2xl text-center font-bold font-[Montserrat] mb-4">
+                    <h3 className="text-primary text-2xl text-center font-bold font-[Montserrat] mb-4">
                         Attended Events
                     </h3>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">

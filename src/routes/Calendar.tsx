@@ -1,7 +1,7 @@
 import "../css/styles.css";
 import { useState, useEffect } from "react";
 import { db } from "../firebase/firebaseConfig";
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, query, where } from "firebase/firestore"
 import EventCalendarCard from "../components/EventCalendarCard";
 import type { Event } from "@models/eventType";
 import { toast } from "react-toastify";
@@ -20,7 +20,7 @@ export function Calendar() {
     useEffect(() => {
         const fetchEvents = async () => {
             let flag = false
-            const getQuery = collection(db, "events")
+            const getQuery = query(collection(db, "events"), where("time_to_live", "==", null));
             const eventsSnap = await getDocs(getQuery)
             const events: Event[] = []
             eventsSnap.forEach((event) => {
