@@ -144,6 +144,7 @@ export function EventPage() {
           ...event
         })
         setOriginalEvent(event)
+        setIsEditing(false)
         toast.success("Update success!")
         console.log(event)
       } catch {
@@ -408,6 +409,7 @@ export function EventPage() {
                   className="input-text w-full"
                   value={name}
                   onChange={e => setEvent(prev => ({ ...prev as Event, name: e.target.value }))}
+                  disabled={!isEditing}
                   required
                 />
               </div>
@@ -425,6 +427,7 @@ export function EventPage() {
                   className="input-text w-full"
                   value={description}
                   onChange={e => setEvent(prev => ({ ...prev as Event, description: e.target.value }))}
+                  disabled={!isEditing}
                 />
               </div>
 
@@ -444,6 +447,7 @@ export function EventPage() {
                       step="1"
                       value={start_date.toISOString().substring(0, 19)}
                       onChange={e => setEvent(prev => ({ ...prev as Event, start_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
+                      disabled={!isEditing}
                     />
                   </div>
                   <div className="flex flex-col flex-1 w-full">
@@ -459,6 +463,7 @@ export function EventPage() {
                       step="1"
                       value={end_date.toISOString().substring(0, 19)}
                       onChange={e => setEvent(prev => ({ ...prev as Event, end_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.end_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
+                      disabled={!isEditing}
                     />
                   </div>
                 </div>
@@ -475,18 +480,17 @@ export function EventPage() {
                   className="input-text w-full"
                   value={event_location}
                   onChange={e => setEvent(prev => ({ ...prev as Event, location: e.target.value }))}
+                  disabled={!isEditing}
                   required
                 />
               </div>
               <div className="flex flex-row items-center justify-around w-full gap-4">
                 <button
-                  type="submit"
+                  type={isEditing ? "submit" : "button"}
                   className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                //  onClick={formState ? handleEdit : handleSave}
-                //  disabled={formState===null}>
-                //  {formState || formState === null ? "Edit" : "Save Changes"}</form>
+                  onClick={isEditing ? undefined : () => setIsEditing(true)}
                 >
-                  Edit
+                  {isEditing ? "Save Changes" : "Edit"}
                 </button>
 
                 <button
