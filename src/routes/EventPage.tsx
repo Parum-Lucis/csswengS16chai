@@ -29,6 +29,7 @@ export function EventPage() {
   const [editChecklist, setEditChecklist] = useState<boolean[]>([])
   // for dropdowns and navbar
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingAttendees, setIsEditingAttendees] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false)
   const [showOtherDropdown, setShowOtherDropdown] = useState(false)
 
@@ -144,12 +145,19 @@ export function EventPage() {
           ...event
         })
         setOriginalEvent(event)
+        setIsEditing(false)
         toast.success("Update success!")
         console.log(event)
       } catch {
         toast.error("Something went wrong")
       }
     }
+  }
+
+  // discard changes
+  const handleDiscard = () => {
+    setEvent(originalEvent)
+    setIsEditing(false)
   }
 
   // delete modal
@@ -389,7 +397,7 @@ export function EventPage() {
       )}
       <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6">
         <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
-          <form onSubmit={handleSave}>
+          <form onSubmit={isEditing ? handleSave : (e) => e.preventDefault()}>
             <h2 className="text-secondary text-2xl text-center font-bold font-sans">
               {name ?? "Event Name"}
             </h2>
@@ -408,6 +416,7 @@ export function EventPage() {
                   className="input-text w-full"
                   value={name}
                   onChange={e => setEvent(prev => ({ ...prev as Event, name: e.target.value }))}
+                  disabled={!isEditing}
                   required
                 />
               </div>
@@ -425,6 +434,7 @@ export function EventPage() {
                   className="input-text w-full"
                   value={description}
                   onChange={e => setEvent(prev => ({ ...prev as Event, description: e.target.value }))}
+                  disabled={!isEditing}
                 />
               </div>
 
@@ -444,6 +454,7 @@ export function EventPage() {
                       step="1"
                       value={start_date.toISOString().substring(0, 19)}
                       onChange={e => setEvent(prev => ({ ...prev as Event, start_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.start_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
+                      disabled={!isEditing}
                     />
                   </div>
                   <div className="flex flex-col flex-1 w-full">
@@ -459,6 +470,7 @@ export function EventPage() {
                       step="1"
                       value={end_date.toISOString().substring(0, 19)}
                       onChange={e => setEvent(prev => ({ ...prev as Event, end_date: isNaN(Date.parse(e.target.value)) ? originalEvent!.end_date : Timestamp.fromMillis(Date.parse(e.target.value)) }))}
+                      disabled={!isEditing}
                     />
                   </div>
                 </div>
@@ -475,20 +487,41 @@ export function EventPage() {
                   className="input-text w-full"
                   value={event_location}
                   onChange={e => setEvent(prev => ({ ...prev as Event, location: e.target.value }))}
+                  disabled={!isEditing}
                   required
                 />
               </div>
               <div className="flex flex-row items-center justify-around w-full gap-4">
+                {isEditing && (
+                  <button
+                    type="button"
+                    className="mt-2 w-full bg-red-600 hover:bg-red-800 text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                    onClick={handleDiscard}
+                  >
+                    Discard
+                  </button>
+                )}
                 <button
-                  type="submit"
+                  type={isEditing ? "submit" : "button"}
                   className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                //  onClick={formState ? handleEdit : handleSave}
-                //  disabled={formState===null}>
-                //  {formState || formState === null ? "Edit" : "Save Changes"}</form>
+                  onClick={!isEditing ? (e) => {
+                    e.preventDefault();
+                    setIsEditing(true);
+                  } : undefined}
                 >
-                  Edit
+                  {isEditing ? "Save Changes" : "Edit"}
                 </button>
-
+                {!isEditing && (
+                  <button
+                    type="button"
+                    className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                    onClick={handleDelete}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+              {isEditing && (
                 <button
                   type="button"
                   className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
@@ -496,15 +529,15 @@ export function EventPage() {
                 >
                   Delete
                 </button>
-              </div>
+              )}
             </div>
           </form>
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between w-full max-w-2xl mt-4 sm:gap-4">
           <h2 className="text-primary text-2xl font-bold font-sans text-center sm:text-left mt-5">List of Attendees:</h2>
-          <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditing ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/4'}`}>
-            {isEditing && (
+          <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditingAttendees ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/4'}`}>
+            {isEditingAttendees && (
               <div className="flex flex-row gap-3 items-center">
                 <button
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
@@ -604,15 +637,15 @@ export function EventPage() {
               <button
                 className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                 onClick={() => {
-                  setIsEditing(!isEditing)
+                  setIsEditingAttendees(!isEditingAttendees)
                 }}
               >
-                {isEditing ? "Done" : "Edit"}
+                {isEditingAttendees ? "Done" : "Edit"}
               </button>
 
               <div className="relative">
                 <button
-                  type="submit"
+                  type="button"
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                   onClick={() => {
                     setShowOtherDropdown(!showOtherDropdown);
@@ -660,7 +693,7 @@ export function EventPage() {
                 name={attendees[i].first_name + " " + attendees[i].last_name}
                 attendance={att.attended ?? false}
                 who_attended={att.who_attended ?? "None"}
-                isEditing={isEditing}
+                isEditing={isEditingAttendees}
                 setEditChecklist={setEditChecklist}
                 editChecklist={editChecklist}
               />
