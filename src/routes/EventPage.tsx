@@ -210,29 +210,29 @@ export function EventPage() {
   // thx liana part 2
   const [search, setSearch] = useState<string>("");
   const filteredBeneficiaries = useMemo(() => {
-      // Filter profiles based on filter val
-      let temp = [...notAttendeeList];
-  
-      // Search filter (partial or exact matches on name and age)
-      if (search.trim() !== "") {
-        const searchLower = search.trim().toLowerCase();
-        const terms = searchLower.split(/[\s,]+/).filter(Boolean);
-  
-        temp = temp.filter(profile => {
-          const values = [
-            profile.first_name.toLowerCase(),
-            profile.last_name.toLowerCase(),
-            // dont include birthdate, messes up results
-            isNaN(profile.accredited_id) ? "waitlisted" : profile.accredited_id.toString(),
-            // dont include age, messes up results when looking for id
-          ];
-          return terms.every(term =>
-            values.some(value => value.includes(term))
-          );
-        });
-      }
-      return temp;
-    }, [search, notAttendeeList]);
+    // Filter profiles based on filter val
+    let temp = [...notAttendeeList];
+
+    // Search filter (partial or exact matches on name and age)
+    if (search.trim() !== "") {
+      const searchLower = search.trim().toLowerCase();
+      const terms = searchLower.split(/[\s,]+/).filter(Boolean);
+
+      temp = temp.filter(profile => {
+        const values = [
+          profile.first_name.toLowerCase(),
+          profile.last_name.toLowerCase(),
+          // dont include birthdate, messes up results
+          isNaN(profile.accredited_id) ? "waitlisted" : profile.accredited_id.toString(),
+          // dont include age, messes up results when looking for id
+        ];
+        return terms.every(term =>
+          values.some(value => value.includes(term))
+        );
+      });
+    }
+    return temp;
+  }, [search, notAttendeeList]);
 
   // adds new attendees to attendee list, then refreshes page
   const handleAddAttendees = async () => {
@@ -305,11 +305,14 @@ export function EventPage() {
   }
 
   function handleSendSMSButtonClick() {
-    if(originalEvent?.name != event?.name || originalEvent?.description != event?.description || originalEvent?.end_date != event?.end_date ||  originalEvent?.start_date != event?.start_date || originalEvent?.location != event?.location){ 
+    if (originalEvent?.name != event?.name || originalEvent?.description != event?.description ||
+      originalEvent?.end_date.toMillis() != event?.end_date.toMillis() ||
+      originalEvent?.start_date.toMillis() != event?.start_date.toMillis() ||
+      originalEvent?.location != event?.location) {
       toast.error("Please save your changes first!")
       return;
     }
-    else if(attendees.length == 0){
+    else if (attendees.length == 0) {
       toast.error("Attendees list is empty!")
       return;
     }
@@ -318,11 +321,14 @@ export function EventPage() {
   }
 
   function handleSendEmailButtonClick() {
-    if(originalEvent?.name != event?.name || originalEvent?.description != event?.description || originalEvent?.end_date != event?.end_date ||  originalEvent?.start_date != event?.start_date || originalEvent?.location != event?.location){ 
+    if (originalEvent?.name != event?.name || originalEvent?.description != event?.description ||
+      originalEvent?.end_date.toMillis() != event?.end_date.toMillis() ||
+      originalEvent?.start_date.toMillis() != event?.start_date.toMillis() ||
+      originalEvent?.location != event?.location) {
       toast.error("Please save your changes first!")
       return;
     }
-    else if(attendees.length == 0){
+    else if (attendees.length == 0) {
       toast.error("Attendees list is empty!")
       return;
     }
