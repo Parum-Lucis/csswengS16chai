@@ -5,79 +5,83 @@ import { toast } from "react-toastify";
 import { callImportBeneficiaries, callImportEvents, callImportVolunteers } from "../firebase/cloudFunctions";
 
 const handleImport = async (type: 0 | 1 | 2) => {
-        // 0 = import beneficiaries
-        // 1 = import volunteers
-        // 2 = import event
+    // 0 = import beneficiaries
+    // 1 = import volunteers
+    // 2 = import event
 
-        // prompt user to upload file
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.csv';
-                
-        input.onchange = async (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            // when at least one file is uploaded
-            if (target.files && target.files.length > 0) {
-                const file = target.files[0];
-                const reader = new FileReader();
+    // prompt user to upload file
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
 
-                // check file size
-                const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-                if (file.size > maxSize) {
-                    toast.error("File size exceeds 10MB limit. Please upload a smaller file.");
-                    return;
-                }
+    input.onchange = async (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        // when at least one file is uploaded
+        if (target.files && target.files.length > 0) {
+            const file = target.files[0];
+            const reader = new FileReader();
 
-                // check file extension before reading
-                if (!file.name.endsWith('.csv')) {
-                    toast.error("Please upload a valid CSV file.");
-                    return;
-                }
-
-                // send csv content to relative function
-                reader.onload = async (event) => {
-                    // get csv content, store as string
-                    const csvContent = event.target?.result as string;
-                    
-                    // check if file is empty
-                    if (!csvContent || !csvContent.trim().length) {
-                        toast.error("The uploaded file is empty. Please try again!");
-                        return;
-                    }
-                
-                    try {
-                        if (type === 0) {
-                            const result = await callImportBeneficiaries(csvContent);
-                            const { imported, skipped } = result.data;
-
-                            skipped === 0 ?
-                                toast.success(`Beneficiaries imported successfully! (${imported} added)`) :
-                                toast.warn(`Beneficiaries partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
-                        } else if (type === 1) {
-                            const result = await callImportVolunteers(csvContent);
-                            const { imported, skipped } = result.data;
-
-                            skipped === 0 ?
-                                toast.success(`Volunteers imported successfully! (${imported} added)`) :
-                                toast.warn(`Volunteers partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
-                        } else if (type === 2) {
-                            const result = await callImportEvents(csvContent);
-                            const { imported, skipped } = result.data;
-
-                            skipped === 0 ?
-                                toast.success(`Events imported successfully! (${imported} added)`) :
-                                toast.warn(`Events partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
-                        }
-                    } catch (error: any) {
-                        console.error(error);
-                        toast.error(error.message ?? "Something went wrong. Please try again later.");                    
-                    }
-                };
-                reader.readAsText(file);
+            // check file size
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            if (file.size > maxSize) {
+                toast.error("File size exceeds 10MB limit. Please upload a smaller file.");
+                return;
             }
-        };
-        input.click();
+
+            // check file extension before reading
+            if (!file.name.endsWith('.csv')) {
+                toast.error("Please upload a valid CSV file.");
+                return;
+            }
+
+            // send csv content to relative function
+            reader.onload = async (event) => {
+                // get csv content, store as string
+                const csvContent = event.target?.result as string;
+
+                // check if file is empty
+                if (!csvContent || !csvContent.trim().length) {
+                    toast.error("The uploaded file is empty. Please try again!");
+                    return;
+                }
+
+                try {
+                    if (type === 0) {
+                        const result = await callImportBeneficiaries(csvContent);
+                        const { imported, skipped } = result.data;
+
+                        if (skipped === 0)
+                            toast.success(`Beneficiaries imported successfully! (${imported} added)`)
+                        else
+                            toast.warn(`Beneficiaries partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
+                    } else if (type === 1) {
+                        const result = await callImportVolunteers(csvContent);
+                        const { imported, skipped } = result.data;
+
+                        if (skipped === 0)
+                            toast.success(`Volunteers imported successfully! (${imported} added)`)
+                        else
+                            toast.warn(`Volunteers partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
+                    } else if (type === 2) {
+                        const result = await callImportEvents(csvContent);
+                        const { imported, skipped } = result.data;
+
+                        if (skipped === 0)
+                            toast.success(`Events imported successfully! (${imported} added)`)
+                        else
+                            toast.warn(`Events partially imported (added: ${imported}, skipped: ${skipped}. Either existing or non-conforming data was skipped.`);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    if (error instanceof Error)
+                        toast.error(error.message ?? "Something went wrong. Please try again later.");
+                }
+            };
+            reader.readAsText(file);
+        }
     };
+    input.click();
+};
 const volunteerURLs = [
     { name: "View", pldt: "volunteer", Icon: BookUser },
     { name: "Create", pldt: "volunteer/new", Icon: UserPlus },
@@ -95,6 +99,7 @@ const beneficiaryURLs = [
 const eventURLs = [
     { name: "Create", pldt: "event/new", Icon: CalendarPlus },
     { name: "SMS", pldt: "event/smscredits", Icon: Wallet },
+    { name: "Restore", pldt: "event/deleted", Icon: Undo2 },
     { name: "Import", onClick: () => handleImport(2), Icon: Import }
 ]
 

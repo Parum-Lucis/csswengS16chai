@@ -92,7 +92,7 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
                                 <p className="italic text-sm">This will cost
                                     <span className="text-green-600 font-bold"> {cost} </span>
                                     pesos. Remember to top-up{" "}
-                                    <Link to="https://sms.iprogtech.com/" className="underline text-shadow-primary">here</Link>
+                                    <Link to="https://sms.iprogtech.com/" className="underline text-shadow-primary" target="_blank">here</Link>
                                 </p>
                             </div>
                         </div>
