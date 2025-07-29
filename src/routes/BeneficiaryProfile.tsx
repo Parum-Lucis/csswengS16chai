@@ -310,18 +310,6 @@ export function BeneficiaryProfile() {
                                 >
                                     Confirm Delete
                                 </button>
-                                <button
-                                    className="bg-gray-300 hover:bg-gray-400 text-secondary font-semibold px-4 py-2 rounded"
-                                    onClick={handleDelete}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                    onClick={handleConfirm}
-                                >
-                                    Confirm Delete
-                                </button>
                             </div>
                         </div>
                     </div>,
