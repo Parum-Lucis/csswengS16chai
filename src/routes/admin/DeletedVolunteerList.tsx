@@ -75,7 +75,7 @@ export function DeletedVolunteerList() {
             temp.sort((a, b) => compareDesc(a.birthdate.toDate(), b.birthdate.toDate()));
         } else if (sort === "deletion") {
             temp.sort((a, b) =>
-                a.time_to_live !== null && b.time_to_live !== null ?
+                a.time_to_live !== null && a.time_to_live !== undefined && b.time_to_live !== null && b.time_to_live !== undefined ?
                     b.time_to_live?.toMillis() - a.time_to_live?.toMillis() : -1)
         }
 
