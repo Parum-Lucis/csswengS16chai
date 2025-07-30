@@ -216,9 +216,9 @@ export function BeneficiaryProfile() {
             const updateRef = doc(db, "beneficiaries", docID!)
             console.log(beneficiary)
 
-            const emailRegEx = new RegExp(
-                /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-            ); // from https://emailregex.com/
+            // const emailRegEx = new RegExp(
+            //     /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+            // ); // from https://emailregex.com/
             let test = false
             guardians.forEach((guardian, i) => {
                 Object.values(guardian).forEach((val, _) => {
@@ -230,14 +230,14 @@ export function BeneficiaryProfile() {
                 })
                 if (test)
                     return
-                else if (!emailRegEx.test(guardian.email)) {
+                else if (!emailRegex.test(guardian.email)) {
                     console.log(guardian.email)
                     toast.error("Please input a proper email for Guardian " + (i + 1));
                     test = true
                     return
                 }
                 else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
-                    toast.error("Please input a proper contact number for Guardian " + (i + 1));
+                    toast.error('Please input an 11-digit contact number starting with "09" for Guardian ' + (i + 1));
                     test = true
                     return
                 }

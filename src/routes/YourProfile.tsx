@@ -28,7 +28,7 @@ export function YourProfile() {
     const [showDeleteModal, setDeleteModal] = useState(false)
 
     useEffect(() => {
-        const fetchBeneficiary = async () => {
+        const fetchUser = async () => {
             if (!user) return;
 
             const getQuery = doc(db, "volunteers", user.uid).withConverter(volunteerConverter)
@@ -47,11 +47,11 @@ export function YourProfile() {
                 }
             }
         }
-        fetchBeneficiary()
+        fetchUser()
     }, [setVolunteer, user])
 
     const navigate = useNavigate();
-    const { sex, contact_number: contact, email, address } = volunteer || {}
+    const { first_name, last_name, sex, contact_number: contact, email, address } = volunteer || {}
     const birthdate = new Date((volunteer?.birthdate.seconds ?? 0) * 1000)
 
     useEffect(() => {
@@ -95,8 +95,13 @@ export function YourProfile() {
     const handleSave =
         async () => {
             setForm(!isViewForm)
-            if (!(sex!.toString().trim()) || !(contact!.toString().trim()) || !(email!.toString().trim()) || !(address!.toString().trim())) {
+            if (!(first_name!.toString().trim()) || !(last_name!.toString().trim()) || !(sex!.toString().trim()) || !(contact!.toString().trim()) || !(email!.toString().trim()) || !(address!.toString().trim())) {
                 toast.error("Please fill up all fields!")
+                return
+            }
+
+            if (contact!.length != 11 || contact!.slice(0, 2) != "09") {
+                toast.error('Please input an 11-digit contact number starting with "09"!');
                 return
             }
 
@@ -215,7 +220,7 @@ export function YourProfile() {
                                         type="text"
                                         className="input-text w-full"
                                         onChange={(e) => setVolunteer({ ...volunteer as Volunteer, first_name: e.target.value })}
-                                        value={volunteer?.first_name}
+                                        value={first_name}
                                     />
                                 </div>
                                 <div className="flex flex-col">
@@ -228,7 +233,7 @@ export function YourProfile() {
                                         type="text"
                                         className="input-text w-full"
                                         onChange={(e) => setVolunteer({ ...volunteer as Volunteer, last_name: e.target.value })}
-                                        value={volunteer?.last_name}
+                                        value={last_name}
                                     />
                                 </div>
                             </div>
@@ -247,7 +252,7 @@ export function YourProfile() {
                                     id="bDate"
                                     className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
                                     readOnly={isViewForm ?? true}
-                                    onChange={() => setVolunteer({ ...volunteer as Volunteer, birthdate: Timestamp.fromDate(birthdate) })}
+                                    onChange={(e) => setVolunteer({ ...volunteer as Volunteer, birthdate: Timestamp.fromMillis(Date.parse(e.target.value)) })}
                                     value={birthdate?.toISOString().substring(0, 10)} />
                             </div>
 
@@ -296,7 +301,7 @@ export function YourProfile() {
                                 className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
                                 readOnly={isViewForm ?? true}
                                 onChange={(e) => setVolunteer({ ...volunteer as Volunteer, contact_number: e.target.value })}
-                                value={"0" + Number(contact)}
+                                value={contact}
                             />
                         </div>
                         <div className="flex flex-col">
