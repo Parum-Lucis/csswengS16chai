@@ -103,17 +103,19 @@ export function BeneficiaryProfile() {
 
         // Sort profiles based on attendance status
         if (status === "present") {
-            filteredAtt = filteredAtt.filter(e => e.attended);
+            filteredAtt = filteredAtt.filter(e => e.attended && Date.now() > e.event_start.toMillis());
         } else if (status === "absent") {
-            filteredAtt = filteredAtt.filter(e => !(e.attended))
+            filteredAtt = filteredAtt.filter(e => !(e.attended) && Date.now() > e.event_start.toMillis())
+        } else if (status === "upcoming") {
+            filteredAtt = filteredAtt.filter(e => Date.now() < e.event_start.toMillis())
         }
 
         // Sort profiles based on event
         if (sort === "name") {
             filteredAtt.sort((a, b) => a.event_name.localeCompare(b.event_name));
-        } else if (sort === "latest") {
-            filteredAtt.sort((a, b) => compareAsc(a.event_start.toDate(), b.event_start.toDate()))
         } else if (sort === "oldest") {
+            filteredAtt.sort((a, b) => compareAsc(a.event_start.toDate(), b.event_start.toDate()))
+        } else if (sort === "latest") {
             filteredAtt.sort((a, b) => compareAsc(b.event_start.toDate(), a.event_start.toDate()))
         }
 
@@ -530,7 +532,7 @@ export function BeneficiaryProfile() {
                 </div>
                 <div className="w-full max-w-2xl mt-8">
                     <h3 className="text-primary text-2xl text-center font-bold font-[Montserrat] mb-4">
-                        Attended Events
+                        Event Record
                     </h3>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                         <select
@@ -549,6 +551,7 @@ export function BeneficiaryProfile() {
                             <option className="bg-secondary text-white" value="">Attendance Status</option>
                             <option className="bg-secondary text-white" value="present">Present</option>
                             <option className="bg-secondary text-white" value="absent">Absent</option>
+                            <option className="bg-secondary text-white" value="upcoming">Upcoming Events</option>
                         </select>
                         <select
                             className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
@@ -571,7 +574,7 @@ export function BeneficiaryProfile() {
                         {modifiedList.map((att, index) => (
                             <EventCard key={index} attEvent={att}  />
                         ))}
-                        <span>{modifiedList.length === 0 ? "No Events Attended!" : ""}</span>
+                        <span>{modifiedList.length === 0 ? "No Events Recorded!" : ""}</span>
                     </div>
                 </div>
             </div>

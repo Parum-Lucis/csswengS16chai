@@ -4,6 +4,21 @@ import { UsersRound, Baby, UserRound } from 'lucide-react';
 import { Link } from "react-router";
 
 function EventCard({attEvent}: {attEvent: AttendedEvents}) {
+  let attendance = ""
+  switch(attEvent.attended) {
+    case true:
+      attendance = "Present"
+      break;
+    case false:
+      attendance = "Absent"
+      break;
+    default:
+      attendance = "Upcoming Event"
+      break;
+  }
+  if(Date.now() < (attEvent.event_start.toMillis() ?? 0))
+    attendance = "Upcoming Event"
+
   return (
     <Link
       to={`/event/${attEvent.docID}`} className="flex items-center bg-primary text-white rounded-xl p-4 shadow-md">
@@ -21,7 +36,7 @@ function EventCard({attEvent}: {attEvent: AttendedEvents}) {
           <div>
             <div className="text-sm">Date: {formatDate(new Date((attEvent.event_start.seconds ?? 0)*1000), "MM/d/yy")}<br />Time: {formatDate(new Date((attEvent.event_start.seconds ?? 0)*1000), "h:mm aa")}</div>
             <div className="text-sm">Attendee: {attEvent.who_attended}</div>
-            <div className="text-sm">Status: {String(attEvent.attended ?? "Upcoming")}</div>
+            <div className="text-sm">Attendance: {attendance}</div>
           </div>
       </div>
 {/* import { formatDate } from "date-fns";
