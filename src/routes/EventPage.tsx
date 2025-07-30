@@ -78,6 +78,8 @@ export function EventPage() {
       console.log((eventsSnap.data() as Event))
       setDocID(eventsSnap.id)
       setRunQuery(true)
+      if((eventsSnap.data() as Event).time_to_live)
+        toast.warn("Warning: This event will be deleted soon. Restore this event if you still need it.")
     }
     fetchEvent()
   }, [setEvent, setAttendees, params.docId])
