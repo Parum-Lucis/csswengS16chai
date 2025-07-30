@@ -10,7 +10,7 @@ export function DeletedProfileList<T extends { docID: string }>({
 }) {
 
     return (
-        <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
+        <div className="bg-primary p-4 rounded-xl shadow-lg">
             <div className="flex flex-col gap-4">
                 {loading ? (
                     // display loading while fetching from database.
