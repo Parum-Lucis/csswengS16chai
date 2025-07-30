@@ -197,9 +197,42 @@ export function VolunteerProfile() {
                 )}
 
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
-                    <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                        {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
-                    </h3>
+                    <div className="flex flex-col items-center">
+                        {isViewForm ? (
+                            <h3 className="text-secondary text-2xl text-center font-bold font-sans">
+                                {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
+                            </h3>
+                        ) : (
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex flex-col">
+                                    <label htmlFor="fName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                        First Name
+                                    </label>
+                                    <input
+                                        id="fName"
+                                        name="fName"
+                                        type="text"
+                                        className="input-text w-full"
+                                        onChange={(e) => setVolunteer({ ...volunteer as Volunteer, first_name: e.target.value })}
+                                        value={volunteer?.first_name}
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <label htmlFor="lName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                        Last Name
+                                    </label>
+                                    <input
+                                        id="lName"
+                                        name="lName"
+                                        type="text"
+                                        className="input-text w-full"
+                                        onChange={(e) => setVolunteer({ ...volunteer as Volunteer, last_name: e.target.value })}
+                                        value={volunteer?.last_name}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
                     <div className="flex flex-col gap-4 mt-6">
                         <ProfilePictureInput readOnly={isViewForm} pfpFile={volunteer?.pfpFile ?? null}
                             onPfpChange={(e) => {
