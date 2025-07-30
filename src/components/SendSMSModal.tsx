@@ -132,7 +132,7 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
                                 <button onClick={handleCopy(phoneNumbers)} className="hover:opacity-80 focus:opacity-50">
                                     <FilesIcon />
                                 </button>
-                                <details className="border-black border-2 flex-grow p-2">
+                                <details className="border-black border-2 flex-grow p-2 break-all">
                                     <summary>Phone numbers</summary>
                                     {phoneNumbers}
                                 </details>
@@ -143,7 +143,7 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
                                 <button onClick={handleCopy(eventDetails)} className="hover:opacity-80 focus:opacity-50">
                                     <FilesIcon />
                                 </button>
-                                <details className="border-black border-2 flex-grow p-2">
+                                <details className="border-black border-2 flex-grow p-2 break-all">
                                     <summary>Event Details</summary>
                                     {eventDetails}
                                 </details>
