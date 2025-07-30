@@ -8,7 +8,8 @@ import { createPortal } from 'react-dom';
 import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
-import { SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound, Baby, UserRound, MessageSquareMore, Mail } from 'lucide-react';
+import { SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound, 
+         Baby, UserRound, MessageSquareMore, Mail, UserRoundCheck, SquarePen } from 'lucide-react';
 import { add } from "date-fns";
 import { SendSMSModal } from "../components/SendSMSModal";
 import { SendEmailModal } from "../components/SendEmailModal";
@@ -655,7 +656,7 @@ export function EventPage() {
                   type="button"
                   onClick={handleUpdateAttendance}
                 >
-                  <SquareCheck className="w-5 h-5 inline-block" />
+                  <UserRoundCheck className="w-5 h-5 inline-block" />
                 </button>
               </div>
             )}
@@ -667,7 +668,7 @@ export function EventPage() {
                   setIsEditingAttendees(!isEditingAttendees)
                 }}
               >
-                {isEditingAttendees ? "Done" : "Edit"}
+                {isEditingAttendees ? <SquarePen className="w-5 h-5 inline-block"/> : <SquareCheck className="w-5 h-5 inline-block" />}
               </button>
 
               {user && user.is_admin ? (
