@@ -14,7 +14,7 @@ import { onCall } from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 
 import { Volunteer } from "@models/volunteerType";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { DocumentData, getFirestore, QuerySnapshot, Timestamp } from "firebase-admin/firestore";
 import { generateRandomPassword } from "./utils/generatePassword";
 import { onSchedule } from "firebase-functions/scheduler";
 import { createTimestampFromNow } from "./utils/time";
@@ -150,11 +150,15 @@ export const updateAttendeesEvent = onDocumentUpdated("events/{docID}", async (e
     await batch.commit()
 })
 
+
+const isFulfilled = <T>(input: PromiseSettledResult<T>): input is PromiseFulfilledResult<T> =>
+    input.status === 'fulfilled'
 /*
  * firebase functions:shell
  * setInterval(() => cronCleaner(), 60000)
  */
-export const cronCleaner = onSchedule("every 1 minutes", async () => {
+// this will now run every hour instead of every minute
+export const cronCleaner = onSchedule("0 * * * *", async () => {
     try {
         logger.log("Cleanup running!")
         // Clean volunteers
@@ -176,6 +180,11 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
 
             logger.info("Successfully deleted a bunch of volunteers! Count: " + snapshot.size)
         }
+    } catch (e) {
+        logger.error(e)
+    }
+
+    try {
 
         // Clean beneficiaries
         const beneficiarySnapshot = await firestore.collection("beneficiaries")
@@ -193,7 +202,11 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
 
             logger.info("Successfully deleted beneficiaries! Count:" + beneficiarySnapshot.size)
         }
+    } catch (e) {
+        logger.error(e)
+    }
 
+    try {
         // clean events
         const eventSnapshot = await firestore.collection("events")
             .where("time_to_live", "<=", Timestamp.now())
@@ -202,15 +215,30 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
         if (eventSnapshot.size === 0) {
             logger.log("No expired events.");
             return;
+        } else {
+            const bulk = firestore.bulkWriter();
+            const attendeesPromise: Promise<QuerySnapshot<DocumentData, DocumentData>>[] = [];
+            eventSnapshot.forEach(async doc => {
+                bulk.delete(doc.ref);
+                attendeesPromise.push(doc.ref.collection("attendees").get());
+            })
+            const attendees = await Promise.allSettled(attendeesPromise)
+            attendees.forEach(res => {
+                if (isFulfilled<QuerySnapshot>(res))
+                    res.value.forEach(attendee => bulk.delete(attendee.ref))
+            })
+
+            // eventSnapshot.forEach(async doc => {
+            //     logger.info(`Deleting event ${doc.id}`);
+            //     await firestore.doc(`events/${doc.id}`).delete();
+            //     logger.info(`Successfully deleted event ${doc.id}`);
+            // });
+
+            await bulk.flush()
+            await bulk.close()
+
+            logger.info("Successfully deleted events! Count: " + eventSnapshot.size);
         }
-
-        eventSnapshot.forEach(async doc => {
-            logger.info(`Deleting event ${doc.id}`);
-            await firestore.doc(`events/${doc.id}`).delete();
-            logger.info(`Successfully deleted event ${doc.id}`);
-        });
-
-        logger.info("Successfully deleted events! Count: " + eventSnapshot.size);
     } catch (error) {
         logger.error(error)
     }
