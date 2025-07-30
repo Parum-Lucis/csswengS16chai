@@ -1,10 +1,12 @@
 import type { AttendedEvents } from "@models/attendedEventsType";
 import { formatDate } from "date-fns";
 import { UsersRound, Baby, UserRound } from 'lucide-react';
+import { Link } from "react-router";
 
 function EventCard({attEvent}: {attEvent: AttendedEvents}) {
   return (
-    <div className="flex items-center bg-primary text-white rounded-xl p-4 shadow-md">
+    <Link
+      to={`/event/${attEvent.docID}`} className="flex items-center bg-primary text-white rounded-xl p-4 shadow-md">
       <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 shrink-0">
           <svg
             className="w-6 h-6 text-primary"
@@ -32,7 +34,7 @@ function EventCard({ date, name }: { date: Timestamp, name: string }) {
         <h4>{formatDate(date.toDate(), "mm d, yyyy")}</h4>
       </div>
       <h3 className="flex">{name}</h3> */}
-    </div>
+    </Link>
   );
 }
 

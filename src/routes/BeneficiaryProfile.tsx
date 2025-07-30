@@ -19,7 +19,6 @@ import { beneficiaryConverter } from "../util/converters";
 import { deleteObject, getBlob, ref, uploadBytes } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 
-
 export function BeneficiaryProfile() {
     const params = useParams()
     const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null)
@@ -61,7 +60,7 @@ export function BeneficiaryProfile() {
             const attRef = await getDocs(query(collectionGroup(db, "attendees"), where("beneficiaryID", "==", beneficiariesSnap.id)))
             attRef.forEach((att) => {
                 const attData = att.data() as AttendedEvents
-                attList.push({ ...attData, docID: att.id });
+                attList.push({ ...attData, docID: att.ref.parent.parent!.id }); // docID is eventID here
                 // ignore if null/undefined (means event hasn't happened)
                 if (attData.event_start.toMillis() < (Date.now() - ((new Date()).getTimezoneOffset() * 60000))) {
                     if (attData.attended ?? false)
@@ -570,7 +569,7 @@ export function BeneficiaryProfile() {
                     </div>
                     <div className={`space-y-2 gap-2 ${modifiedList.length === 0 ? "text-center" : ""}`}>
                         {modifiedList.map((att, index) => (
-                            <EventCard key={index} attEvent={att} />
+                            <EventCard key={index} attEvent={att}  />
                         ))}
                         <span>{modifiedList.length === 0 ? "No Events Attended!" : ""}</span>
                     </div>
