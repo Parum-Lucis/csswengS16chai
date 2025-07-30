@@ -112,7 +112,7 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
             disabled: true
         })
         await firestore.doc(`volunteers/${uid}`).update(
-            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
+            { time_to_live: createTimestampFromNow({ days: 30 }) }
         )
         return true;
 
