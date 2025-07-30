@@ -102,7 +102,7 @@ export function DeletedVolunteerList() {
 
     return (
         <div className="w-full max-w-md mx-auto mt-6 p-4">
-            <h1 className="text-center text-5xl font-bold text-primary mb-4 font-[Montserrat]">Deleted Volunteers</h1>
+            <h1 className="text-center text-5xl font-bold text-primary mb-4 font-[Montserrat]">Deleted List</h1>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <select
