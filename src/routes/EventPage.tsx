@@ -668,6 +668,7 @@ export function EventPage() {
                 {isEditingAttendees ? "Done" : "Edit"}
               </button>
 
+              {user && user.is_admin ? (
               <div className="relative">
                 <button
                   type="button"
@@ -681,7 +682,7 @@ export function EventPage() {
                   <EllipsisVertical className="w-5 h-5" />
                 </button>
 
-                {showOtherDropdown && user && user.is_admin && (
+                {showOtherDropdown && (
                   <div
                     id="dropdownOther"
                     className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
@@ -706,6 +707,7 @@ export function EventPage() {
                   </div>
                 )}
               </div>
+              ) : null}
             </div>
           </div>
         </div>
