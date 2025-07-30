@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
 import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, deleteDoc, setDoc, query, where } from "firebase/firestore"
@@ -12,8 +12,10 @@ import { SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, Use
 import { add } from "date-fns";
 import { SendSMSModal } from "../components/SendSMSModal";
 import { SendEmailModal } from "../components/SendEmailModal";
+import { UserContext } from "../util/userContext";
 
 export function EventPage() {
+  const user = useContext(UserContext); // only admin can send email/sms
   const params = useParams()
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null)
@@ -679,7 +681,7 @@ export function EventPage() {
                   <EllipsisVertical className="w-5 h-5" />
                 </button>
 
-                {showOtherDropdown && (
+                {showOtherDropdown && user && user.is_admin && (
                   <div
                     id="dropdownOther"
                     className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
