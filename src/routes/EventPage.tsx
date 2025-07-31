@@ -668,7 +668,7 @@ export function EventPage() {
                   setIsEditingAttendees(!isEditingAttendees)
                 }}
               >
-                {isEditingAttendees ? <SquarePen className="w-5 h-5 inline-block"/> : <SquareCheck className="w-5 h-5 inline-block" />}
+                {isEditingAttendees ? <SquareCheck className="w-5 h-5 inline-block"/> : <SquarePen className="w-5 h-5 inline-block" />}
               </button>
 
               {user && user.is_admin ? (
