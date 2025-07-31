@@ -589,6 +589,7 @@ interface SemiCircularProgressProps {
 const SemiCircularProgress = (props: SemiCircularProgressProps) => {
     return (
         <div className="flex flex-col items-center z-10">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
                 <span className="text-sm text-secondary">{props.value}%</span>
             </div>
