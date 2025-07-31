@@ -208,8 +208,10 @@ export function VolunteerProfile() {
                                 {`${volunteer?.last_name}, ${volunteer?.first_name}`.length > 15
                                     ? `${volunteer?.last_name}, ${volunteer?.first_name}`.slice(0, 15) + "..."
                                     : `${volunteer?.last_name}, ${volunteer?.first_name}`}
+                                
+                                <br />
 
-                                {`${volunteer?.is_admin ? " (Admin)" : ""}`}
+                                {`${volunteer?.is_admin ? "(Admin)" : ""}`}
                             </h3>
                         ) : (
                             <div className="flex flex-col sm:flex-row gap-4">

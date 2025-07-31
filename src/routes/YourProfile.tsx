@@ -206,12 +206,13 @@ export function YourProfile() {
                     <div className="flex flex-col items-center">
                         {isViewForm ? (
                             <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                                {`${volunteer?.last_name}, ${volunteer?.first_name}`.length > 10
-                                    ? `${volunteer?.last_name}, ${volunteer?.first_name}`.slice(0, 10) + "..."
+                                {`${volunteer?.last_name}, ${volunteer?.first_name}`.length > 15
+                                    ? `${volunteer?.last_name}, ${volunteer?.first_name}`.slice(0, 15) + "..."
                                     : `${volunteer?.last_name}, ${volunteer?.first_name}`}
                                 
-                                {`${volunteer?.is_admin ? " (Admin)" : ""}`}
-                                
+                                <br />
+
+                                {`${volunteer?.is_admin ? "(Admin)" : ""}`}
                             </h3>
                         ) : (
                             <div className="flex flex-col sm:flex-row gap-4">
