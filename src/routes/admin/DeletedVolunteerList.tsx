@@ -108,7 +108,7 @@ export function DeletedVolunteerList() {
                 <select
                     value={filter}
                     onChange={e => setFilter(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
                     <option value="">Filter By</option>
                     <option value="admin">Admins</option>
@@ -118,7 +118,7 @@ export function DeletedVolunteerList() {
                 <select
                     value={sort}
                     onChange={e => setSort(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
                     <option value="">Sort by</option>
                     <option value="last">Last Name</option>
@@ -132,7 +132,7 @@ export function DeletedVolunteerList() {
                     placeholder="Search"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-5/10"
                 />
             </div>
             <DeletedProfileList<Volunteer>
