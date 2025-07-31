@@ -60,28 +60,41 @@ export function DeletedBeneficiaryList() {
 
     return (
         <div className="w-full max-w-md mx-auto mt-6 p-4">
-            <h1 className="text-center text-5xl font-bold text-primary mb-4 font-[Montserrat]">Deleted List</h1>
+            <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Deleted List</h1>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <select
                     value={filter}
                     onChange={e => setFilter(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
-                    <option value="">Filter By</option>
-                    <option value="admin">Admins</option>
-                    <option value="volunteer">Volunteers (Non-Admin)</option>
+                    <option className="bg-secondary text-white" value="">Filter By</option>
+                    <option className="bg-secondary text-white" value="student">
+                        Students
+                    </option>
+                    <option className="bg-secondary text-white" value="waitlist">
+                        Waitlisted
+                    </option>
                 </select>
 
                 <select
                     value={sort}
                     onChange={e => setSort(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
-                    <option value="">Sort by</option>
-                    <option value="last">Last Name</option>
-                    <option value="first">First Name</option>
-                    <option value="age">Age</option>
+                    <option className="bg-secondary text-white" value="">Sort by</option>
+                    <option className="bg-secondary text-white" value="last">
+                        Last Name
+                    </option>
+                    <option className="bg-secondary text-white" value="first">
+                        First Name
+                    </option>
+                    <option className="bg-secondary text-white" value="id">
+                        Child ID
+                    </option>
+                    <option className="bg-secondary text-white" value="age">
+                        Age
+                    </option>
                 </select>
 
                 <input
@@ -89,7 +102,7 @@ export function DeletedBeneficiaryList() {
                     placeholder="Search"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-5/10"
                 />
             </div>
             <DeletedProfileList<Beneficiary>

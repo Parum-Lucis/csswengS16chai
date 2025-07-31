@@ -113,7 +113,7 @@ export function DeletedEventList() {
                 <select
                     value={filter}
                     onChange={e => setFilter(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
                     <option value="">Filter By</option>
                     <option value="admin">Admins</option>
@@ -123,7 +123,7 @@ export function DeletedEventList() {
                 <select
                     value={sort}
                     onChange={e => setSort(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
                     <option value="">Sort by</option>
                     <option value="last">Last Name</option>
@@ -137,10 +137,10 @@ export function DeletedEventList() {
                     placeholder="Search"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-5/10"
                 />
             </div>
-            <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
+            <div className="bg-primary p-4 rounded-xl shadow-lg">
                 <div className="flex flex-col gap-4">
                     {loading ? (
                         // display loading while fetching from database.
