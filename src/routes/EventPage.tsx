@@ -542,6 +542,7 @@ export function EventPage() {
                     Discard
                   </button>
                 )}
+              
                 <button
                   type={isEditing ? "submit" : "button"}
                   className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
@@ -552,6 +553,7 @@ export function EventPage() {
                 >
                   {isEditing ? "Save" : "Edit"}
                 </button>
+                </div>
                 {!isEditing && (
                   <button
                     type="button"
@@ -561,7 +563,6 @@ export function EventPage() {
                     Delete
                   </button>
                 )}
-              </div>
               <div className="flex flex-col flex-1">
               {isEditing && (
                 <button
