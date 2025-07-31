@@ -8,12 +8,12 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
-import { Baby, Notebook, Pencil, Percent, SquareChartGantt, UserRound } from 'lucide-react';
+// import { Baby, Notebook, Pencil, Percent, SquareChartGantt, UserRound } from 'lucide-react';
 import type { Guardian } from "@models/guardianType";
 import type { AttendedEvents } from "@models/attendedEventsType";
 import { emailRegex } from "../util/emailRegex";
 import { add, compareAsc } from "date-fns";
-import type { Event } from "@models/eventType";
+// import type { Event } from "@models/eventType";
 import { ProfilePictureInput } from "../components/ProfilePicture";
 import { beneficiaryConverter } from "../util/converters";
 import { deleteObject, getBlob, ref, uploadBytes } from "firebase/storage";
@@ -222,7 +222,7 @@ export function BeneficiaryProfile() {
             // ); // from https://emailregex.com/
             let test = false
             guardians.forEach((guardian, i) => {
-                Object.values(guardian).forEach((val, _) => {
+                Object.values(guardian).forEach((val) => {
                     if (!(val.toString().trim())) {
                         toast.error("Please fill up all fields for Guardian " + (i + 1));
                         test = true
@@ -284,9 +284,9 @@ export function BeneficiaryProfile() {
                 setOriginalBeneficiary({ ...beneficiary as Beneficiary, grade_level: gradeLevel, guardians: guardians })
                 setForm(true);
                 toast.success("Account update success!")
-            } catch (e: any) {
+            } catch (e) {
                 toast.error("Something went wrong!");
-                console.log(e.message);
+                console.log(e);
             }
         }
 
@@ -573,7 +573,7 @@ export function BeneficiaryProfile() {
                     </div>
                     <div className={`space-y-2 gap-2 ${modifiedList.length === 0 ? "text-center" : ""}`}>
                         {modifiedList.map((att, index) => (
-                            <EventCard key={index} attEvent={att}  />
+                            <EventCard key={index} attEvent={att} />
                         ))}
                         <span>{modifiedList.length === 0 ? "No Events Recorded!" : ""}</span>
                     </div>
@@ -587,14 +587,14 @@ interface SemiCircularProgressProps {
     value: number
 }
 const SemiCircularProgress = (props: SemiCircularProgressProps) => {
-  return (
-    <div className="flex flex-col items-center z-10">
-      <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
-        <span className="text-sm text-secondary">{props.value}%</span>
-      </div>
-      <div className="mt-1 text-sm text-secondary font-semibold">
-        Attendance
-      </div>
-    </div>
-  );
+    return (
+        <div className="flex flex-col items-center z-10">
+            <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
+                <span className="text-sm text-secondary">{props.value}%</span>
+            </div>
+            <div className="mt-1 text-sm text-secondary font-semibold">
+                Attendance
+            </div>
+        </div>
+    );
 };
