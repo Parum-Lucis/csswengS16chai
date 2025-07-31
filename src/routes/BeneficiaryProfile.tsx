@@ -335,7 +335,7 @@ export function BeneficiaryProfile() {
                 <div className="relative mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
                     <div className="flex flex-col items-end mt-[-5rem]">
                         <SemiCircularProgress value={attendance.events > 0 ? (attendance.present / attendance.events) * 100 : 0} />
-                        <div className="flex flex-row w-14 sm:w-30 justify-center"><SquareChartGantt className="text-secondary text-sm"/> <Percent className="text-secondary text-sm"/></div>
+                        <div className="flex flex-row w-14 sm:w-30 justify-center"><SquareChartGantt className="text-secondary text-sm w-4 h-4 sm:w-6 sm:h-6"/> <Percent className="text-secondary text-sm w-4 h-4 sm:w-6 sm:h-6"/></div>
                     </div>
                     <div className="flex flex-row justify-center gap-2">
                         {formState === true && (
