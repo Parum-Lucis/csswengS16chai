@@ -592,8 +592,8 @@ const SemiCircularProgress = (props: SemiCircularProgressProps) => {
       <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
         <span className="text-sm text-secondary">{props.value}%</span>
       </div>
-      <div className="mt-1 text-sm text-secondary font-semibold">
-        Attendance
+      <div className="mt-1 text-sm text-center text-secondary font-semibold">
+        Attendance <br></br> Rate
       </div>
     </div>
   );
