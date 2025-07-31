@@ -728,7 +728,7 @@ export function EventPage() {
                 isEditing={isEditingAttendees}
                 setEditChecklist={setEditChecklist}
                 editChecklist={editChecklist}
-                docID={att.docID}
+                docID={att.beneficiaryID}
               />
             )) : <div className="text-center text-white w-full max-w-2xl items-center mt-2 mr-2 font-sans bg-primary p-5 rounded-[5px] font-semibold mb-2"> "No data to show" </div>
           }
