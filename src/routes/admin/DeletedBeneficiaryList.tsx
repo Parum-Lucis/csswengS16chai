@@ -203,7 +203,7 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
     return (
 
         <div
-            className="flex items-center justify-between bg-[#45B29D] text-white rounded-xl p-4 shadow-md transition"
+            className="flex items-center justify-between bg-tertiary text-white rounded-xl p-4 transition"
         >
             <div className="flex-grow flex items-center">
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 overflow-hidden">
@@ -211,7 +211,7 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
                         isLoading || !picURL ?
 
                             <svg
-                                className="w-6 h-6 text-[#45B29D]"
+                                className="w-6 h-6 text-tertiary"
                                 fill="currentColor"
                                 viewBox="0 0 24 24"
                             >
@@ -224,7 +224,9 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
                 </div>
                 <div className="flex flex-col text-sm">
                     <span className="font-bold text-base font-[Montserrat]">
-                        {`${last_name.toUpperCase()}, ${first_name}`}
+                        {`${last_name}, ${first_name}`.length > 15
+                            ? `${last_name}, ${first_name}`.slice(0, 15) + "..."
+                            : `${last_name}, ${first_name}`}
                     </span>
                     <span>Age: {differenceInYears(new Date(), birthdate.toDate())}</span>
                     <span>Sex: {sex}</span>

@@ -172,7 +172,7 @@ function EventCard(
 
     return (
         <div
-            className="flex items-center bg-[#45B29D] text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
+            className="flex items-center bg-tertiary text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
         >
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 shrink-0">
                 <svg
@@ -184,13 +184,25 @@ function EventCard(
                 </svg>
             </div>
             <div className="grow min-w-0">
-                <div className="text-base font-bold">{name}</div>
+                <div className="text-base font-bold">
+                    {`${name}, ${name}`.length > 10
+                            ? `${name}, ${name}`.slice(0, 10) + "..."
+                            : `${name}, ${name}`}
+                </div>
                 <div className="text-sm truncate">
-                    <span className="">{description}</span>
+                    <span className="">
+                        {`${description}, ${description}`.length > 10
+                            ? `${description}, ${description}`.slice(0, 10) + "..."
+                            : `${description}, ${description}`}
+                    </span>
                 </div>
                 <div className="h-1" />
                 <div className="text-sm">Date: {formatDate(start_date.toDate(), "MMMM d, yyyy")}</div>
-                <div className="text-sm">Location: {location}</div>
+                <div className="text-sm">Location: 
+                         {`${location}, ${location}`.length > 10
+                            ? `${location}, ${location}`.slice(0, 10) + "..."
+                            : `${location}, ${location}`}
+                </div>
                 <span>Days Left: <span className="text-red-500 font-bold">{time_to_live ? differenceInDays(time_to_live.toDate(), new Date()) : "?"}</span></span>
             </div>
             <button onClick={() => onRestore(event)} className="cursor-pointer h-full">
