@@ -11,7 +11,7 @@ function EventCard({ uid, date, event, time }: { date: string; event: string; ti
       </div>
       <div className="grow bg-primary h-full flex items-center">
 
-        <h3 className="flex p-2">{event.length > 30 ? event.slice(0, 30) + "..." : event}</h3>
+        <h3 className="flex p-2">{event.length > 20 ? event.slice(0, 20) + "..." : event}</h3>
       </div>
     </Link>
   );

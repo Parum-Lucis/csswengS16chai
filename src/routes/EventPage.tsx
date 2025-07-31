@@ -9,8 +9,8 @@ import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
 import {
-  SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound,
-  Baby, UserRound, MessageSquareMore, Mail, UserRoundCheck, SquarePen
+  SquarePlus, SquareMinus, Pen, EllipsisVertical, CirclePlus, UsersRound,
+  Baby, UserRound, MessageSquareMore, Mail, UserCheck , PenOff
 } from 'lucide-react';
 import { add } from "date-fns";
 import { SendSMSModal } from "../components/SendSMSModal";
@@ -433,7 +433,7 @@ export function EventPage() {
         <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
           <form onSubmit={isEditing ? handleSave : (e) => e.preventDefault()}>
             <h2 className="text-secondary text-2xl text-center font-bold font-sans">
-              {name ? truncate(name, 30) : "Event Name"}
+              {name ? truncate(name, 15) : "Event Name"}
             </h2>
             <div className="flex flex-col gap-4 mt-6">
               <div className="flex flex-col flex-1">
@@ -572,7 +572,7 @@ export function EventPage() {
 
         <div className="flex flex-col sm:flex-row justify-between w-full max-w-2xl mt-4 sm:gap-4">
           <h2 className="text-primary text-2xl font-bold font-sans text-center sm:text-left mt-5">List of Attendees:</h2>
-          <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditingAttendees ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/4'}`}>
+          <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditingAttendees ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/5'}`}>
             {isEditingAttendees && (
               <div className="flex flex-row gap-3 items-center">
                 <button
@@ -666,7 +666,7 @@ export function EventPage() {
                   type="button"
                   onClick={handleUpdateAttendance}
                 >
-                  <UserRoundCheck className="w-5 h-5 inline-block" />
+                  <UserCheck className="w-5 h-5 inline-block" />
                 </button>
               </div>
             )}
@@ -678,7 +678,7 @@ export function EventPage() {
                   setIsEditingAttendees(!isEditingAttendees)
                 }}
               >
-                {isEditingAttendees ? <SquareCheck className="w-5 h-5 inline-block" /> : <SquarePen className="w-5 h-5 inline-block" />}
+                {isEditingAttendees ? <PenOff className="w-5 h-5 inline-block" /> : <Pen className="w-5 h-5 inline-block" />}
               </button>
 
               {user && user.is_admin ? (

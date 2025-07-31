@@ -9,7 +9,7 @@ function AttendeesCard({ index, name, who_attended, attendance, editChecklist, s
       <div className="flex justify-center items-center bg-secondary mr-2 text-white p-2 rounded-[5px] w-[15vh] h-[4vh] font-semibold">
         <h3 className="flex">{who_attended}</h3>
       </div>
-      <Link to={`/beneficiary/${docID}`} className="text-start text-[15px] sm:text-[1em]">{name.length > 30 ? name.slice(0, 30) + "..." : name}</Link>
+      <Link to={`/beneficiary/${docID}`} className="text-start text-[15px] sm:text-[1em]">{name.length > 15 ? name.slice(0, 15) + "..." : name}</Link>
       <div className="flex items-center justify-end ml-auto">
         {isEditing && (
           <input
