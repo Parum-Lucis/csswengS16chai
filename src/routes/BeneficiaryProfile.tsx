@@ -520,7 +520,7 @@ export function BeneficiaryProfile() {
                                 className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                                 onClick={formState ? handleEdit : handleSave}
                                 disabled={formState === null}>
-                                {formState || formState === null ? "Edit" : "Save Changes"}
+                                {formState || formState === null ? "Edit" : "Save"}
                             </button>
                         </div>
                         <button

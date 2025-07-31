@@ -432,10 +432,9 @@ export function EventPage() {
       <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6">
         <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
           <form onSubmit={isEditing ? handleSave : (e) => e.preventDefault()}>
-            <h2 className="text-secondary text-2xl text-center font-bold font-sans">
-              {name ? truncate(name, 15) : "Event Name"}
-            </h2>
             <div className="flex flex-col gap-4 mt-6">
+            
+            { isEditing ? (
               <div className="flex flex-col flex-1">
                 <label
                   htmlFor="name"
@@ -454,6 +453,14 @@ export function EventPage() {
                   required
                 />
               </div>
+
+            ) : (
+            
+            <h2 className="text-secondary text-2xl text-center font-bold font-sans">
+              {name ? truncate(name, 15) : "Event Name"}
+            </h2>
+            )}
+
 
               <div className="flex flex-col flex-1">
                 <label
@@ -543,7 +550,7 @@ export function EventPage() {
                     setIsEditing(true);
                   } : undefined}
                 >
-                  {isEditing ? "Save Changes" : "Edit"}
+                  {isEditing ? "Save" : "Edit"}
                 </button>
                 {!isEditing && (
                   <button

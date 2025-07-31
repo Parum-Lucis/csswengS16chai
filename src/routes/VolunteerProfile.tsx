@@ -337,7 +337,7 @@ export function VolunteerProfile() {
                                 className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                                 onClick={isViewForm ? handleEdit : handleSave}
                                 disabled={isViewForm === null}>
-                                {isViewForm || isViewForm === null ? "Edit" : "Save Changes"}
+                                {isViewForm || isViewForm === null ? "Edit" : "Save"}
                             </button>
                         </div>
                         <button
