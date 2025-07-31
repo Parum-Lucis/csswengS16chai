@@ -8,7 +8,7 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
-import { Pencil } from 'lucide-react';
+import { Baby, Notebook, Pencil, Percent, SquareChartGantt, UserRound } from 'lucide-react';
 import type { Guardian } from "@models/guardianType";
 import type { AttendedEvents } from "@models/attendedEventsType";
 import { emailRegex } from "../util/emailRegex";
@@ -335,8 +335,8 @@ export function BeneficiaryProfile() {
                 <div className="relative mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
                     <div className="flex flex-col items-end mt-[-5rem]">
                         <SemiCircularProgress value={attendance.events > 0 ? (attendance.present / attendance.events) * 100 : 0} />
-                        <h2 className=" text-center text-secondary text-sm">Attendance <br className="block sm:hidden" />Rate</h2>
-                    </div>
+                        <div className="flex flex-row w-14 sm:w-30 justify-center"><SquareChartGantt className="text-secondary text-sm"/> <Percent className="text-secondary text-sm"/></div>
+                    </div>6
                     <div className="flex flex-row justify-center gap-2">
                         {formState === true && (
                             <h3 className="text-secondary text-2xl text-center font-bold font-sans">
