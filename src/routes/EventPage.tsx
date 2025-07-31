@@ -34,7 +34,7 @@ export function EventPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingAttendees, setIsEditingAttendees] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false)
-  const [showOtherDropdown, setShowOtherDropdown] = useState(false)
+  const [showOtherDropdown, setShowOtherDropdown] = useState(false)   
 
   // for sms & email modal
   const [isShowSMSModal, setIsShowSMSModal] = useState(false);
@@ -396,6 +396,10 @@ export function EventPage() {
     else toast.success("Nothing to update")
   }
 
+  function truncate(str: string, n: number) {
+    return str.length > n ? str.slice(0, n) + "..." : str;
+  }
+
   return (
     <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative pb-60">
       {showDeleteModal && (
@@ -427,7 +431,7 @@ export function EventPage() {
         <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
           <form onSubmit={isEditing ? handleSave : (e) => e.preventDefault()}>
             <h2 className="text-secondary text-2xl text-center font-bold font-sans">
-              {name ?? "Event Name"}
+              {name ? truncate(name, 30) : "Event Name"}
             </h2>
             <div className="flex flex-col gap-4 mt-6">
               <div className="flex flex-col flex-1">
@@ -549,6 +553,7 @@ export function EventPage() {
                   </button>
                 )}
               </div>
+              <div className="flex flex-col flex-1">
               {isEditing && (
                 <button
                   type="button"
@@ -558,6 +563,7 @@ export function EventPage() {
                   Delete
                 </button>
               )}
+              </div>
             </div>
           </form>
         </div>
@@ -599,7 +605,9 @@ export function EventPage() {
                           >
                             <div className="flex flex-col">
                               <span className="font-semibold text-md text-white">
-                                {notAtt.first_name + " " + notAtt.last_name}
+                               {(notAtt.first_name + " " + notAtt.last_name).length > 20
+                                  ? (notAtt.first_name + " " + notAtt.last_name).slice(0, 20) + "..."
+                                  : notAtt.first_name + " " + notAtt.last_name}
                               </span>
                               <span className="text-sm text-gray-200">
                                 {isNaN(notAtt.accredited_id) ? "Waitlisted" : `ID: ${notAtt.accredited_id}`}

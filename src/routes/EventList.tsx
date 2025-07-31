@@ -242,13 +242,13 @@ function EventCard(
         </svg>
       </div>
       <div className="grow min-w-0">
-        <div className="text-base font-bold">{name}</div>
+        <div className="text-base font-bold">{name.length > 25 ? name.slice(0, 25) + "..." : name}</div>
         <div className="text-sm truncate">
-          <span className="">{description}</span>
+          <span className=""> {description.length > 25 ? description.slice(0, 25) + "..." : description}</span>
         </div>
         <div className="h-1" />
         <div className="text-sm">Date: {formatDate(start_date.toDate(), "MMMM d, yyyy")}</div>
-        <div className="text-sm">Location: {location}</div>
+        <div className="text-sm">Location:  {location.length > 25 ? location.slice(0, 25) + "..." : location}</div>
       </div>
     </Link>
   )
