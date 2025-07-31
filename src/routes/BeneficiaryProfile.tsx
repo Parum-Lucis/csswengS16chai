@@ -333,9 +333,8 @@ export function BeneficiaryProfile() {
                         }
                     }} />
                 <div className="relative mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
-                    <div className="flex flex-col items-end mt-[-5rem]">
+                    <div className="flex flex-col items-end mr-[-0.5rem] mt-[-5rem]">
                         <SemiCircularProgress value={attendance.events > 0 ? (attendance.present / attendance.events) * 100 : 0} />
-                        <div className="flex flex-row w-14 sm:w-30 justify-center"><SquareChartGantt className="text-secondary text-sm w-4 h-4 sm:w-6 sm:h-6"/> <Percent className="text-secondary text-sm w-4 h-4 sm:w-6 sm:h-6"/></div>
                     </div>
                     <div className="flex flex-row justify-center gap-2">
                         {formState === true && (
@@ -588,9 +587,14 @@ interface SemiCircularProgressProps {
     value: number
 }
 const SemiCircularProgress = (props: SemiCircularProgressProps) => {
-    return (
-        <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
-            <span className="text-sm text-secondary">{props.value}%</span>
-        </div>
-    )
-}
+  return (
+    <div className="flex flex-col items-center z-10">
+      <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
+        <span className="text-sm text-secondary">{props.value}%</span>
+      </div>
+      <div className="mt-1 text-sm text-secondary font-semibold">
+        Attendance
+      </div>
+    </div>
+  );
+};
