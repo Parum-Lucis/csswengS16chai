@@ -8,8 +8,10 @@ import { createPortal } from 'react-dom';
 import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
-import { SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound, 
-         Baby, UserRound, MessageSquareMore, Mail, UserRoundCheck, SquarePen } from 'lucide-react';
+import {
+  SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound,
+  Baby, UserRound, MessageSquareMore, Mail, UserRoundCheck, SquarePen
+} from 'lucide-react';
 import { add } from "date-fns";
 import { SendSMSModal } from "../components/SendSMSModal";
 import { SendEmailModal } from "../components/SendEmailModal";
@@ -79,7 +81,7 @@ export function EventPage() {
       console.log((eventsSnap.data() as Event))
       setDocID(eventsSnap.id)
       setRunQuery(true)
-      if((eventsSnap.data() as Event).time_to_live)
+      if ((eventsSnap.data() as Event).time_to_live)
         toast.warn("Warning: This event will be deleted soon. Restore this event if you still need it.")
     }
     fetchEvent()
@@ -251,7 +253,7 @@ export function EventPage() {
   const handleAddAttendees = async () => {
     let upd = false
     const newAttendees: AttendedEvents[] = []
-    
+
     for (let i = 0; i < checklist.length; i++) {
       let type = ""
       switch (checklist[i]) {
@@ -278,7 +280,7 @@ export function EventPage() {
           beneficiaryID: notAttendeeList[i].docID,
           docID: addRef.id
         }
-        
+
         await setDoc(addRef, newAttendee);
         if (addRef) {
           newAttendees.push(newAttendee as AttendedEvents)
@@ -287,17 +289,17 @@ export function EventPage() {
         else toast.error("Submission failed.");
       }
     }
-    
+
     if (upd) {
       // Hot update the attendees list
       setAttendees(prev => [...prev, ...newAttendees].sort((a, b) => a.first_name.localeCompare(b.first_name)))
       setEditChecklist(prev => [...prev, ...new Array(newAttendees.length).fill(false)])
-      
+
       // Reset the add dropdown
       setShowAddDropdown(false)
       setChecklist([])
       setRunQuery(true)
-      
+
       toast.success("Success!");
     }
     else {
@@ -309,7 +311,7 @@ export function EventPage() {
   const handleRemoveAttendees = async () => {
     let refresh = false
     const indicesToRemove: number[] = []
-    
+
     console.log("checklist is" + editChecklist)
     for (let i = 0; i < editChecklist.length; i++) {
       if (editChecklist[i]) {
@@ -321,7 +323,7 @@ export function EventPage() {
         refresh = true
       }
     }
-    
+
     if (refresh) {
       // Hot update the attendees list by removing deleted items
       setAttendees(prev => prev.filter((_, index) => !indicesToRemove.includes(index)))
@@ -367,7 +369,7 @@ export function EventPage() {
   const handleUpdateAttendance = async () => {
     let refresh = false
     const updatedIndices: number[] = []
-    
+
     console.log("checklist is" + editChecklist)
     for (let i = 0; i < editChecklist.length; i++) {
       if (editChecklist[i]) {
@@ -381,11 +383,11 @@ export function EventPage() {
         refresh = true
       }
     }
-    
+
     if (refresh) {
       // Hot update the attendees list by toggling attendance
-      setAttendees(prev => prev.map((attendee, index) => 
-        updatedIndices.includes(index) 
+      setAttendees(prev => prev.map((attendee, index) =>
+        updatedIndices.includes(index)
           ? { ...attendee, attended: !attendee.attended }
           : attendee
       ))
@@ -668,48 +670,48 @@ export function EventPage() {
                   setIsEditingAttendees(!isEditingAttendees)
                 }}
               >
-                {isEditingAttendees ? <SquarePen className="w-5 h-5 inline-block"/> : <SquareCheck className="w-5 h-5 inline-block" />}
+                {isEditingAttendees ? <SquarePen className="w-5 h-5 inline-block" /> : <SquareCheck className="w-5 h-5 inline-block" />}
               </button>
 
               {user && user.is_admin ? (
-              <div className="relative">
-                <button
-                  type="button"
-                  className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                  onClick={() => {
-                    setShowOtherDropdown(!showOtherDropdown);
-                    setShowAddDropdown(false);
-                  }}
-                  data-dropdown-toggle="dropdownOther"
-                >
-                  <EllipsisVertical className="w-5 h-5" />
-                </button>
-
-                {showOtherDropdown && (
-                  <div
-                    id="dropdownOther"
-                    className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                    onClick={() => {
+                      setShowOtherDropdown(!showOtherDropdown);
+                      setShowAddDropdown(false);
+                    }}
+                    data-dropdown-toggle="dropdownOther"
                   >
-                    <ul className="py-1">
-                      <li className="font-extraboldsans text-gray-700 cursor-pointer hover:opacity-70">
-                        <button
-                          type="button"
-                          className="cursor-pointer px-4 py-2 w-full h-full text-left flex items-center"
-                          onClick={handleSendSMSButtonClick}
+                    <EllipsisVertical className="w-5 h-5" />
+                  </button>
+
+                  {showOtherDropdown && (
+                    <div
+                      id="dropdownOther"
+                      className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
+                    >
+                      <ul className="py-1">
+                        <li className="font-extraboldsans text-gray-700 cursor-pointer hover:opacity-70">
+                          <button
+                            type="button"
+                            className="cursor-pointer px-4 py-2 w-full h-full text-left flex items-center"
+                            onClick={handleSendSMSButtonClick}
+                          >
+                            <MessageSquareMore className="w-8 h-5 inline-block mr-2" /> Send SMS
+                          </button>
+                        </li>
+                        <li
+                          className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
+                          onClick={handleSendEmailButtonClick}
                         >
-                          <MessageSquareMore className="w-8 h-5 inline-block mr-2" /> Send SMS
-                        </button>
-                      </li>
-                      <li
-                        className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
-                        onClick={handleSendEmailButtonClick}
-                      >
-                        <Mail className="w-8 h-5 inline-block" /> Send Email
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
+                          <Mail className="w-8 h-5 inline-block" /> Send Email
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
               ) : null}
             </div>
           </div>
@@ -726,6 +728,7 @@ export function EventPage() {
                 isEditing={isEditingAttendees}
                 setEditChecklist={setEditChecklist}
                 editChecklist={editChecklist}
+                docID={att.docID}
               />
             )) : <div className="text-center text-white w-full max-w-2xl items-center mt-2 mr-2 font-sans bg-primary p-5 rounded-[5px] font-semibold mb-2"> "No data to show" </div>
           }
