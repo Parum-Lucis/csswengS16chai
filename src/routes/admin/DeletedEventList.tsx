@@ -172,7 +172,7 @@ function EventCard(
 
     return (
         <div
-            className="flex items-center bg-primary text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
+            className="flex items-center bg-[#45B29D] text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
         >
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 shrink-0">
                 <svg

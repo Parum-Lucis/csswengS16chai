@@ -1,7 +1,7 @@
 import type { Beneficiary } from "@models/beneficiaryType";
-import { startTransition, useEffect, useOptimistic, useState } from "react";
+import { startTransition, useEffect, useOptimistic, useState, useMemo } from "react";
 import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
-import { differenceInDays, differenceInYears } from "date-fns";
+import { compareDesc, differenceInDays, differenceInYears } from "date-fns";
 import { db, store } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { DeletedProfileList } from "./DeletedProfileList";
@@ -57,6 +57,60 @@ export function DeletedBeneficiaryList() {
             }
         })
     }
+
+    const modifiedList = useMemo<Beneficiary[]>(() => {
+            let temp = oProfiles;
+            if (filter === "waitlist") {
+            // waitlist: id = NaN (implementation) OR field doesnt exist for benef (incase)
+            temp = temp.filter(profile => profile.accredited_id === undefined || profile.accredited_id === null || isNaN(profile.accredited_id));
+            } else if (filter === "student") {
+            // student: id = an existing field & number!!
+            temp = temp.filter(profile => profile.accredited_id !== undefined && profile.accredited_id !== null && !isNaN(profile.accredited_id));
+            }
+    
+            // Sort profiles based on selected sort val
+            if (sort === "last") {
+                temp.sort((a, b) => a.last_name.localeCompare(b.last_name));
+            } else if (sort === "first") {
+                temp.sort((a, b) => a.first_name.localeCompare(b.first_name));
+            } else if (sort === "age") {
+                temp.sort((a, b) => compareDesc(a.birthdate.toDate(), b.birthdate.toDate()));
+            } else if (sort === "id") {
+                temp.sort((a, b) => {
+                // make waitlisted be at bottom of list for ASCENDING
+                const aIsWaitlisted = isNaN(a.accredited_id);
+                const bIsWaitlisted = isNaN(b.accredited_id);
+                if (aIsWaitlisted && bIsWaitlisted) return 0;
+                if (aIsWaitlisted) return 1;
+                if (bIsWaitlisted) return -1;
+                return a.accredited_id - b.accredited_id;
+            });
+            } else if (sort === "deletion") {
+                temp.sort((a, b) =>
+                    a.time_to_live !== null && a.time_to_live !== undefined && b.time_to_live !== null && b.time_to_live !== undefined ?
+                        b.time_to_live?.toMillis() - a.time_to_live?.toMillis() : -1)
+            }
+    
+            // Search filter (partial or exact matches on name and age)
+            if (search.trim() !== "") {
+            const searchLower = search.trim().toLowerCase();
+            const terms = searchLower.split(/[\s,]+/).filter(Boolean);
+
+            temp = temp.filter(profile => {
+                const values = [
+                profile.first_name.toLowerCase(),
+                profile.last_name.toLowerCase(),
+                // dont include birthdate, messes up results
+                isNaN(profile.accredited_id) ? "waitlisted" : profile.accredited_id.toString(),
+                // dont include age, messes up results when looking for id
+                ];
+                return terms.every(term =>
+                values.some(value => value.includes(term))
+                );
+            });
+            }
+        return temp;
+    }, [filter, sort, search, oProfiles])
 
     return (
         <div className="w-full max-w-md mx-auto mt-6 p-4">
