@@ -273,11 +273,11 @@ export function EventPage() {
           who_attended: type,
           event_name: event!.name,
           event_start: event!.start_date,
-          first_name: notAttendeeList[i].first_name,
-          last_name: notAttendeeList[i].last_name,
-          email: notAttendeeList[i].guardians[0].email,
-          contact_number: notAttendeeList[i].guardians[0].contact_number,
-          beneficiaryID: notAttendeeList[i].docID,
+          first_name: filteredBeneficiaries[i].first_name,
+          last_name: filteredBeneficiaries[i].last_name,
+          email: filteredBeneficiaries[i].guardians[0].email,
+          contact_number: filteredBeneficiaries[i].guardians[0].contact_number,
+          beneficiaryID: filteredBeneficiaries[i].docID,
           docID: addRef.id
         }
 
