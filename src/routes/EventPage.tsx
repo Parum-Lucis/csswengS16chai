@@ -55,28 +55,15 @@ export function EventPage() {
       }
       if (!attendeesList.empty) {
         const updAttendees: AttendedEvents[] = []
-        // const updBene: Beneficiary[] = []
         const updEdit: boolean[] = []
         attendeesList.forEach((att) => {
           updAttendees.push(att.data() as AttendedEvents)
-          // beneficiaryID.push((att.data() as AttendedEvents).beneficiaryID)
           updEdit.push(false)
           console.log(att.data())
           console.log((att.data() as AttendedEvents).beneficiaryID)
         })
         setAttendees(updAttendees.sort((a, b) => a.first_name.localeCompare(b.first_name)))
         setEditChecklist(updEdit)
-        // const beneficiaryQuery = query(
-        //   collection(db, "beneficiaries"),
-        //   where(documentId(), "in", beneficiaryID)
-        // )
-        // const beneficiaryRef = await getDocs(beneficiaryQuery)
-        // console.log(beneficiaryRef.size)
-        // beneficiaryRef.forEach((bene) => {
-        //   console.log("id is " + bene.id)
-        //   updBene.push({ ...(bene.data() as Beneficiary), docID: bene.id })
-        // })
-        // setBeneficiaryList(updBene.sort((a, b) => a.docID.localeCompare(b.docID)))
       }
       console.log((eventsSnap.data() as Event))
       setDocID(eventsSnap.id)
