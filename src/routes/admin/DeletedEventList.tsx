@@ -115,9 +115,10 @@ export function DeletedEventList() {
                     onChange={e => setFilter(e.target.value)}
                     className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
-                    <option value="">Filter By</option>
-                    <option value="admin">Admins</option>
-                    <option value="volunteer">Volunteers (Non-Admin)</option>
+                    <option className="bg-secondary text-white" value="">Filter By</option>
+                    <option className="bg-secondary text-white" value="ongoing">Ongoing</option>
+                    <option className="bg-secondary text-white" value="done">Done</option>
+                    <option className="bg-secondary text-white" value="pending">Pending</option>
                 </select>
 
                 <select
@@ -125,11 +126,10 @@ export function DeletedEventList() {
                     onChange={e => setSort(e.target.value)}
                     className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
-                    <option value="">Sort by</option>
-                    <option value="last">Last Name</option>
-                    <option value="first">First Name</option>
-                    <option value="age">Age</option>
-                    <option value="deletion">Deletion age</option>
+                    <option className="bg-secondary text-white" value="">Sort by</option>
+                    <option className="bg-secondary text-white" value="name">A - Z</option>
+                    <option className="bg-secondary text-white" value="latest">Latest Event</option>
+                    <option className="bg-secondary text-white" value="oldest">Oldest Event</option>
                 </select>
 
                 <input
