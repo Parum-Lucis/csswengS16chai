@@ -9,7 +9,6 @@ import { Timestamp } from "firebase/firestore";
 import { MemoryRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 
-// Mock toast
 jest.mock("react-toastify", () => ({
   toast: {
     success: jest.fn(),
@@ -17,7 +16,6 @@ jest.mock("react-toastify", () => ({
   },
 }));
 
-// Mock cloud functions
 jest.mock("../firebase/cloudFunctions", () => ({
   callNotifyGuardiansBySMS: jest.fn(() =>
     Promise.resolve({ data: { status: 200 } })
@@ -27,7 +25,6 @@ jest.mock("../firebase/cloudFunctions", () => ({
   ),
 }));
 
-// Show modal and force it to be visible
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = jest.fn(function () {
     this.open = true;
@@ -37,7 +34,6 @@ beforeAll(() => {
   });
 });
 
-// Global clipboard mock
 beforeEach(() => {
   Object.assign(navigator, {
     clipboard: {
