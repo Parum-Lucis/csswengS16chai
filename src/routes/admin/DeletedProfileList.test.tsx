@@ -43,7 +43,7 @@ describe("Deleted Profile List", () => {
     expect(screen.getByText("Fetching...")).toBeInTheDocument();
   });
 
-  it("displays 'No profiles to show.' when profiles list is empty", () => {
+  it("displays 'Nothing to show.' when profiles list is empty", () => {
     render(
       <DeletedProfileList
         profiles={[]}
@@ -53,7 +53,7 @@ describe("Deleted Profile List", () => {
       />
     );
 
-    expect(screen.getByText("No profiles to show.")).toBeInTheDocument();
+    expect(screen.getByText("Nothing to show.")).toBeInTheDocument();
   });
 
   it("renders ProfileCard for each profile and triggers handleRestore", () => {
