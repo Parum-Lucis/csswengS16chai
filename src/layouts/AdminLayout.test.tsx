@@ -72,9 +72,9 @@ describe('AdminLayout', () => {
     const { container } = render(<AdminLayout />);
 
     expect(container.firstChild).toBeNull();
-    expect(mockNavigate).toHaveBeenCalledWith('/view-profile');
+    expect(mockNavigate).toHaveBeenCalledWith('/me');
     expect(mockNavigate).toHaveBeenCalledTimes(1);
-    expect(mockToastWarn).toHaveBeenCalledWith('You are not authorized!');
+    expect(mockToastWarn).toHaveBeenCalledWith('You are not an admin!');
     expect(mockToastWarn).toHaveBeenCalledTimes(1);
   });
 
@@ -118,7 +118,7 @@ describe('AdminLayout', () => {
 
       render(<AdminLayout />);
 
-      expect(mockNavigate).toHaveBeenCalledWith('/view-profile');
+      expect(mockNavigate).toHaveBeenCalledWith('/me');
     });
 
     it('calls navigate with correct path for null users', () => {
@@ -141,7 +141,7 @@ describe('AdminLayout', () => {
 
       render(<AdminLayout />);
 
-      expect(mockToastWarn).toHaveBeenCalledWith('You are not authorized!');
+      expect(mockToastWarn).toHaveBeenCalledWith('You are not an admin!');
     });
 
     it('does not show toast for null or undefined users', () => {
