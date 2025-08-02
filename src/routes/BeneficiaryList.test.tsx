@@ -54,7 +54,7 @@ describe('Beneficiary List Page', () => {
         last_name: 'Student',
         sex: 'F',
         birthdate: { toDate: () => new Date('2012-06-01') },
-        accredited_id: null,
+        accredited_id: NaN,
       }),
     },
   ];
@@ -177,14 +177,10 @@ describe('Beneficiary List Page', () => {
     expect(await screen.findByText(/USER, Test/i)).toBeInTheDocument();
     expect(await screen.findByText(/STUDENT, Another/i)).toBeInTheDocument();
   
-    const searchInput = screen.getByPlaceholderText(/search/i);
-    fireEvent.change(searchInput, { target: { value: '15' } });
-  
-    // After searching, "Test User" should still be there, and "Another Student" should be gone.
-    await waitFor(() => {
-      expect(screen.getByText(/USER, Test/i)).toBeInTheDocument();
-      expect(screen.queryByText(/STUDENT, Another/i)).not.toBeInTheDocument();
-    });
+    fireEvent.change(screen.getByDisplayValue('Sort by'), { target: { value: 'age' } });
+    const namesInOrder = screen.getAllByText(/(Test|Another)/i).map((card) => card.textContent?.toLowerCase());
+    expect(namesInOrder[0]).toContain('another');
+    expect(namesInOrder[1]).toContain('test');
   });
 
   test('skips profiles with missing values', async () => {
@@ -206,7 +202,7 @@ describe('Beneficiary List Page', () => {
         data: () => ({
           sex: 'F',
           birthdate: { toDate: () => new Date('2012-06-01') },
-          accredited_id: null,
+          accredited_id: NaN,
         }),
       },
       {
@@ -216,7 +212,7 @@ describe('Beneficiary List Page', () => {
           last_name: 'User',
           sex: 'M',
           birthdate: { toDate: () => new Date('2011-01-01') },
-          accredited_id: null,
+          accredited_id: NaN,
         }),
       },
     ];
