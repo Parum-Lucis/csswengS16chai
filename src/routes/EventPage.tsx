@@ -10,12 +10,13 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
 import {
   SquarePlus, SquareMinus, Pen, EllipsisVertical, CirclePlus, UsersRound,
-  Baby, UserRound, MessageSquareMore, Mail, UserCheck , PenOff
+  Baby, UserRound, MessageSquareMore, Mail, UserCheck , PenOff, FileUp
 } from 'lucide-react';
 import { add } from "date-fns";
 import { SendSMSModal } from "../components/SendSMSModal";
 import { SendEmailModal } from "../components/SendEmailModal";
 import { UserContext } from "../util/userContext";
+import { callExportAttendees } from "../firebase/cloudFunctions";
 
 export function EventPage() {
   const user = useContext(UserContext); // only admin can send email/sms
@@ -41,6 +42,7 @@ export function EventPage() {
   // for sms & email modal
   const [isShowSMSModal, setIsShowSMSModal] = useState(false);
   const [isShowEmailModal, setIsShowEmailModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // use effect for fetch event & fetch attendees
   useEffect(() => {
@@ -389,6 +391,58 @@ export function EventPage() {
     return str.length > n ? str.slice(0, n) + "..." : str;
   }
 
+function handleExportAttendees() {
+    if (attendees.length == 0) {
+      toast.error("Attendees list is empty!")
+      return;
+    }
+    
+    if (exporting) return; // Prevent multiple exports
+    
+    const exportAttendees = async () => {
+      setExporting(true);
+      try {
+        const result = await callExportAttendees(params.docId as string);
+        const csvContent = result.data as string;
+        
+        // create date and time string for filename
+        const now = new Date();
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
+        const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+        
+        // format event date for filename
+        const eventDate = new Date((event?.start_date.seconds ?? 0) * 1000);
+        const eventDateStr = `${pad(eventDate.getMonth() + 1)}-${pad(eventDate.getDate())}-${eventDate.getFullYear()}`;
+        
+        // clean event name for filename (remove special characters)
+        const cleanEventName = (event?.name || 'event').replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-');
+        
+        const filename = `${cleanEventName}-${eventDateStr}-attendance-${dateStr}-${timeStr}.csv`;
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success("Attendees exported successfully!");
+      } catch (error) {
+        console.error("Export failed:", error);
+        toast.error("Failed to export attendees");
+      } finally {
+        setExporting(false);
+      }
+    };
+    
+    exportAttendees();
+    setShowOtherDropdown(false);
+  }
+
   return (
     <div className="w-full min-h-screen bg-secondary flex items-center justify-center px-4 sm:px-6 lg:px-8 relative pb-60">
       {showDeleteModal && (
@@ -710,6 +764,12 @@ export function EventPage() {
                           onClick={handleSendEmailButtonClick}
                         >
                           <Mail className="w-8 h-5 inline-block" /> Send Email
+                        </li>
+                         <li
+                          className={`font-extraboldsans px-4 py-2 text-gray-700 ${exporting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-70'}`}
+                          onClick={exporting ? undefined : handleExportAttendees}
+                        >
+                          <FileUp className="w-8 h-5 inline-block" /> {exporting ? "Exporting..." : "Export List"}
                         </li>
                       </ul>
                     </div>

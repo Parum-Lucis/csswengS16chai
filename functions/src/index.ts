@@ -250,7 +250,7 @@ export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 // CSV functions
 export { importBeneficiaries, exportBeneficiaries } from "./csv/beneficiaries";
 export { importVolunteers, exportVolunteers } from "./csv/volunteers";
-export { importEvents, exportEvents } from "./csv/events";
+export { importEvents, exportEvents, exportAttendees } from "./csv/events";
 
 export { sendEmailReminder } from "./event/sendEmail";
 export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"
