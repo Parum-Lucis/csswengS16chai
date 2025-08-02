@@ -324,7 +324,7 @@ describe("Volunteer Integration Tests", () => {
         fireEvent.change(screen.getByLabelText(/Address/i), {
           target: { value: "Updated Address" },
         });
-        fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+        fireEvent.click(screen.getByRole("button", { name: /save/i }));
     
         await waitFor(() => {
           expect(updateDoc).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({

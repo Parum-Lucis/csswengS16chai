@@ -155,7 +155,7 @@ describe("Volunteer Creation Page", () => {
 
     await waitFor(() => {
       expect(require("react-toastify").toast.error).toHaveBeenCalledWith(
-        "Please input a valid phone number."
+        "Please input an 11-digit contact number starting with \"09\"!"
       );
     });
   });
