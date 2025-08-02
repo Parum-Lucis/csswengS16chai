@@ -151,13 +151,13 @@ export const exportEvents = onCall<void>(async (req) => {
         headers.map(header => csvHelpers.escapeField(header)).join(","),
         ...docs.map(doc => {
             const event = doc as Event;
-            const startDateObj = event.start_date.toDate();
-            const endDateObj = event.end_date.toDate();
+            const startDateObj = new Date(event.start_date.toMillis() + 8 * 60 * 60 * 1000);
+            const endDateObj = new Date(event.end_date.toMillis() + 8 * 60 * 60 * 1000);
 
             return [
                 csvHelpers.escapeField(event.name || ""),
                 csvHelpers.escapeField(event.description || ""),
-                csvHelpers.escapeField(csvHelpers.formatDate(event.start_date)),
+                csvHelpers.escapeField(csvHelpers.formatDate(Timestamp.fromDate(startDateObj))),
                 csvHelpers.escapeField(csvHelpers.formatTime(startDateObj)),
                 csvHelpers.escapeField(csvHelpers.formatTime(endDateObj)),
                 csvHelpers.escapeField(event.location || "")
@@ -167,3 +167,94 @@ export const exportEvents = onCall<void>(async (req) => {
     const csvContent = csvRows.join("\r\n");
     return csvContent;
 });
+
+export const exportAttendees = onCall<string>(async (req) => {
+    logger.log("exportAttendees called");
+    if (!req.auth) return false;
+
+    const eventDocID = req.data;
+    if (!eventDocID) {
+        throw new HttpsError("invalid-argument", "Event ID is required.");
+    }
+
+    // fetch event information
+    const eventDoc = await firestore.collection("events").doc(eventDocID).get();
+    if (!eventDoc.exists) {
+        throw new HttpsError("not-found", "Event not found.");
+    }
+    const eventData = eventDoc.data() as Event;
+
+    // fetch all attendees for the specific event from the subcollection
+    const attendeesSnapshot = await firestore.collection("events").doc(eventDocID).collection("attendees").get();
+
+    if (attendeesSnapshot.empty) {
+        throw new HttpsError("not-found", "No attendees found for this event.");
+    }
+
+    const attendeeDocs = attendeesSnapshot.docs.map(doc => doc.data());
+
+    // fetch actual benefs from collection for child num
+    const beneficiaryIds = attendeeDocs.map(doc => doc.beneficiaryID);
+    const beneficiariesSnapshot = await firestore.collection("beneficiaries")
+        .where("__name__", "in", beneficiaryIds)
+        .get();
+
+    // create a map of beneficiaryID to accredited_id
+    const beneficiaryMap = new Map();
+    beneficiariesSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        beneficiaryMap.set(doc.id, data.accredited_id);
+    });
+
+    // define headers for attendees export
+    const headers = [
+        "Child Number (ID) ID", "First Name", "Last Name", "Email", "Contact Number", "Attended", "Who Attended"
+    ];
+
+    const csvRows = [
+        // Event information headers
+        [
+            csvHelpers.escapeField("Event Name"),
+            csvHelpers.escapeField("Description"),
+            csvHelpers.escapeField("Date"),
+            csvHelpers.escapeField("Start Time"),
+            csvHelpers.escapeField("End Time"),
+            csvHelpers.escapeField("Location"),
+            csvHelpers.escapeField("")
+        ].join(","),
+        
+        // Event information data
+        [
+            csvHelpers.escapeField(eventData.name),
+            csvHelpers.escapeField(eventData.description),
+            csvHelpers.escapeField(csvHelpers.formatDate(Timestamp.fromDate(new Date(eventData.start_date.toMillis() + 8 * 60 * 60 * 1000)))),
+            csvHelpers.escapeField(csvHelpers.formatTime(new Date(eventData.start_date.toMillis() + 8 * 60 * 60 * 1000))),
+            csvHelpers.escapeField(csvHelpers.formatTime(new Date(eventData.end_date.toMillis() + 8 * 60 * 60 * 1000))),
+            csvHelpers.escapeField(eventData.location),
+            csvHelpers.escapeField("")
+        ].join(","),
+        
+        // Empty row for separation
+        "",
+        
+        // Headers row
+        headers.map(header => csvHelpers.escapeField(header)).join(","),
+        
+        // Attendee data rows
+        ...attendeeDocs.map(doc => {
+            const accreditedId = beneficiaryMap.get(doc.beneficiaryID);
+            return [
+                csvHelpers.escapeField(accreditedId && !isNaN(accreditedId) ? accreditedId.toString() : ""),
+                csvHelpers.escapeField(doc.first_name || ""),
+                csvHelpers.escapeField(doc.last_name || ""),
+                csvHelpers.escapeField(doc.email || ""),
+                csvHelpers.escapeField(doc.contact_number || ""),
+                csvHelpers.escapeField(doc.attended ? "Yes" : "No"),
+                csvHelpers.escapeField(doc.who_attended || ""),
+            ].join(",");
+        })
+    ];
+    const csvContent = csvRows.join("\r\n");
+    return csvContent;
+});
+

@@ -120,7 +120,7 @@ export function SendEmailModal({ event, attendees, showModal, onClose }: { event
                                 <button onClick={handleCopy(emailAddresses)} className="hover:opacity-80 focus:opacity-50">
                                     <FilesIcon />
                                 </button>
-                                <details className="border-black border-2 flex-grow p-2">
+                                <details className="border-black border-2 flex-grow p-2 break-all">
                                     <summary>Email Addresses</summary>
                                     {emailAddresses}
                                 </details>
@@ -131,7 +131,7 @@ export function SendEmailModal({ event, attendees, showModal, onClose }: { event
                                 <button onClick={handleCopy(emailSubject)} className="hover:opacity-80 focus:opacity-50">
                                     <FilesIcon />
                                 </button>
-                                <details className="border-black border-2 flex-grow p-2">
+                                <details className="border-black border-2 flex-grow p-2 break-all">
                                     <summary>Email Subject</summary>
                                     {emailSubject}
                                 </details>
@@ -142,7 +142,7 @@ export function SendEmailModal({ event, attendees, showModal, onClose }: { event
                                 <button onClick={handleCopy(emailBody)} className="hover:opacity-80 focus:opacity-50">
                                     <FilesIcon />
                                 </button>
-                                <details className="border-black border-2 flex-grow p-2">
+                                <details className="border-black border-2 flex-grow p-2 break-all">
                                     <summary>Email Body</summary>
                                     {emailBody}
                                 </details>

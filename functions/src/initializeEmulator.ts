@@ -119,7 +119,8 @@ export const initializeEmulator = onCall(async () => {
         end_date: Timestamp.fromDate(new Date(2025, 4, 3, 10)),
         start_date: Timestamp.fromDate(new Date(2025, 4, 3, 11)),
         location: "Taguig",
-        name: "Hansel and Gretel"
+        name: "Hansel and Gretel",
+        time_to_live: null
     })
 
     bulk.flush();

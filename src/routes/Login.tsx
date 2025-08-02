@@ -9,12 +9,16 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { UserContext } from "../util/userContext";
+import { Eye, EyeOff, type LucideIcon } from "lucide-react";
 
 function Login() {
   const navigate = useNavigate();
   const user = useContext(UserContext);
+  const [Icon, setEye] = useState<LucideIcon>(EyeOff)
+  const [type, setType] = useState("password")
+  const [password, setPassword] = useState("")
 
   // if there is already a user logged in, just skip the login page.
   useEffect(() => {
@@ -23,12 +27,22 @@ function Login() {
     }
   }, [user, navigate]);
 
+  const handleToggle = () => {
+        if (type==='password'){
+            setEye(Eye);
+            setType('text')
+        } else {
+            setEye(EyeOff)
+            setType('password')
+        }
+    }
+
+
   const login = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formData = new FormData(e.target as HTMLFormElement);
     const username = formData.get("username") as string; // coerce them to strings cause form doesn't know what datatype these guys are.
-    const password = formData.get("pw") as string;
     const rememberMe = !!formData.get("cbox"); // !! to coerce to true/false, trust me bro
 
     if (!username || !password) {
@@ -89,12 +103,18 @@ function Login() {
           >
             Password
           </label>
-          <input
-            id="pw"
-            name="pw"
-            type="password"
-            className=" border-solid border-3 rounded-[5px] p-1.5"
-          />
+          <div className="w-full flex">
+            <input
+              id="pw"
+              name="pw"
+              type={type}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border-solid border-3 rounded-[5px] p-1.5"
+            />
+            <span className="flex justify-around items-center" onClick={handleToggle}>
+              <Icon className="absolute mr-10"/>
+            </span>
+          </div>
           <div className="flex justify-between items-center mt-2">
             <label className="font-sans text-sm">
               <input

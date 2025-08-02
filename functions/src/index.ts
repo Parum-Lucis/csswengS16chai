@@ -14,7 +14,7 @@ import { onCall } from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
 
 import { Volunteer } from "@models/volunteerType";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { DocumentData, getFirestore, QuerySnapshot, Timestamp } from "firebase-admin/firestore";
 import { generateRandomPassword } from "./utils/generatePassword";
 import { onSchedule } from "firebase-functions/scheduler";
 import { createTimestampFromNow } from "./utils/time";
@@ -112,7 +112,7 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
             disabled: true
         })
         await firestore.doc(`volunteers/${uid}`).update(
-            { time_to_live: createTimestampFromNow({ seconds: 30 }) }
+            { time_to_live: createTimestampFromNow({ days: 30 }) }
         )
         return true;
 
@@ -125,7 +125,8 @@ export const deleteVolunteerProfile = onCall<string>(async (req) => {
 export const updateAttendeesBeneficiary = onDocumentUpdated("beneficiaries/{docID}", async (event) => {
     const batch = firestore.batch()
     const attRef = firestore.collectionGroup("attendees").where("beneficiaryID", "==", event.data?.after.id);
-    (await attRef.get()).forEach((att) => {
+    const dataRef = await attRef.get();
+    dataRef.forEach((att) => {
         const data = event.data?.after.data() as Beneficiary;
         batch.update(att.ref, {
             "first_name": data.first_name,
@@ -140,7 +141,7 @@ export const updateAttendeesBeneficiary = onDocumentUpdated("beneficiaries/{docI
 
 export const updateAttendeesEvent = onDocumentUpdated("events/{docID}", async (event) => {
     const batch = firestore.batch()
-    const attRef = firestore.collectionGroup("attendees").where("docID", "==", event.data?.after.id);
+    const attRef = firestore.collection(`events/${event.data?.after.id}/attendees`);
     (await attRef.get()).forEach((att) => batch.update(att.ref, {
         "event_name": (event.data?.after.data() as Event).name,
         "event_start": (event.data?.after.data() as Event).start_date
@@ -149,11 +150,15 @@ export const updateAttendeesEvent = onDocumentUpdated("events/{docID}", async (e
     await batch.commit()
 })
 
+
+const isFulfilled = <T>(input: PromiseSettledResult<T>): input is PromiseFulfilledResult<T> =>
+    input.status === 'fulfilled'
 /*
  * firebase functions:shell
  * setInterval(() => cronCleaner(), 60000)
  */
-export const cronCleaner = onSchedule("every 1 minutes", async () => {
+// this will now run every hour instead of every minute
+export const cronCleaner = onSchedule("0 * * * *", async () => {
     try {
         logger.log("Cleanup running!")
         // Clean volunteers
@@ -175,6 +180,11 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
 
             logger.info("Successfully deleted a bunch of volunteers! Count: " + snapshot.size)
         }
+    } catch (e) {
+        logger.error(e)
+    }
+
+    try {
 
         // Clean beneficiaries
         const beneficiarySnapshot = await firestore.collection("beneficiaries")
@@ -192,7 +202,11 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
 
             logger.info("Successfully deleted beneficiaries! Count:" + beneficiarySnapshot.size)
         }
+    } catch (e) {
+        logger.error(e)
+    }
 
+    try {
         // clean events
         const eventSnapshot = await firestore.collection("events")
             .where("time_to_live", "<=", Timestamp.now())
@@ -201,15 +215,30 @@ export const cronCleaner = onSchedule("every 1 minutes", async () => {
         if (eventSnapshot.size === 0) {
             logger.log("No expired events.");
             return;
+        } else {
+            const bulk = firestore.bulkWriter();
+            const attendeesPromise: Promise<QuerySnapshot<DocumentData, DocumentData>>[] = [];
+            eventSnapshot.forEach(async doc => {
+                bulk.delete(doc.ref);
+                attendeesPromise.push(doc.ref.collection("attendees").get());
+            })
+            const attendees = await Promise.allSettled(attendeesPromise)
+            attendees.forEach(res => {
+                if (isFulfilled<QuerySnapshot>(res))
+                    res.value.forEach(attendee => bulk.delete(attendee.ref))
+            })
+
+            // eventSnapshot.forEach(async doc => {
+            //     logger.info(`Deleting event ${doc.id}`);
+            //     await firestore.doc(`events/${doc.id}`).delete();
+            //     logger.info(`Successfully deleted event ${doc.id}`);
+            // });
+
+            await bulk.flush()
+            await bulk.close()
+
+            logger.info("Successfully deleted events! Count: " + eventSnapshot.size);
         }
-
-        eventSnapshot.forEach(async doc => {
-            logger.info(`Deleting event ${doc.id}`);
-            await firestore.doc(`events/${doc.id}`).delete();
-            logger.info(`Successfully deleted event ${doc.id}`);
-        });
-
-        logger.info("Successfully deleted events! Count: " + eventSnapshot.size);
     } catch (error) {
         logger.error(error)
     }
@@ -221,7 +250,7 @@ export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 // CSV functions
 export { importBeneficiaries, exportBeneficiaries } from "./csv/beneficiaries";
 export { importVolunteers, exportVolunteers } from "./csv/volunteers";
-export { importEvents, exportEvents } from "./csv/events";
+export { importEvents, exportEvents, exportAttendees } from "./csv/events";
 
 export { sendEmailReminder } from "./event/sendEmail";
 export { notifyGuardiansBySMS } from "./event/notifyGuardiansBySMS"

@@ -1,46 +1,73 @@
 import CHAI from "../assets/CHAI.jpg";
 import { useNavigate, useSearchParams } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { auth } from "../firebase/firebaseConfig";
 import { verifyPasswordResetCode, applyActionCode, confirmPasswordReset } from "firebase/auth";
 import { toast } from "react-toastify";
 import { createPortal } from "react-dom";
+import { Eye, EyeOff, type LucideIcon } from "lucide-react";
 
 
-function UserManagement(){
+function UserManagement() {
     const navigate = useNavigate();
-    const [ searchParams, setSearchParams ] = useSearchParams()
+    const [searchParams] = useSearchParams()
     const [formState, setForm] = useState(1);
     const [showModal, setShowModal] = useState(false)
     const mode = searchParams.get("mode");
     const actionCode = searchParams.get("oobCode") || "";
-    const continueUrl = searchParams.get("continueUrl");
+    const [Icon1, setEye1] = useState<LucideIcon>(EyeOff)
+    const [Icon2, setEye2] = useState<LucideIcon>(EyeOff)
+    const [type1, setType1] = useState("password")
+    const [type2, setType2] = useState("password")
+    const [password, setPassword] = useState("")
+    const [rpassword, setRPassword] = useState("")
+    // const continueUrl = searchParams.get("continueUrl");
+
+    const handleToggle1 = () => {
+        if (type1==='password'){
+            setEye1(Eye);
+            setType1('text')
+        } else {
+            setEye1(EyeOff)
+            setType1('password')
+        }
+    }
+
+    const handleToggle2 = () => {
+        if (type2==='password'){
+            setEye2(Eye);
+            setType2('text')
+        } else {
+            setEye2(EyeOff)
+            setType2('password')
+        }
+    }
 
     useEffect(() => {
         if (!mode || !actionCode) {
-        console.log("Invalid email action link.");
-        return;
+            console.log("Invalid email action link.");
+            return;
         }
 
         switch (mode) {
             case "verifyEmail":
                 applyActionCode(auth, actionCode)
-                .then(() => {
-                    console.log("Email verified successfully!")
-                })
-                .catch(() => {
-                    console.log("Error verifying email.")
-                });
+                    .then(() => {
+                        console.log("Email verified successfully!")
+                    })
+                    .catch(() => {
+                        console.log("Error verifying email.")
+                    });
                 break;
 
             case "resetPassword":
                 verifyPasswordResetCode(auth, actionCode)
-                .then(() => {
-                    console.log("Code Verified")
-                })
-                .catch(() => {
-                    console.log("Invalid or expired reset code.")
-                });
+                    .then(() => {
+                        console.log("Code Verified")
+                    })
+                    .catch(() => {
+                        console.log("Invalid or expired reset code.")
+                    });
                 break;
 
             default:
@@ -50,40 +77,39 @@ function UserManagement(){
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (formState < 3){
-            if (formState === 1){
+        if (formState < 3) {
+            if (formState === 1) {
                 setForm(formState + 1)
                 return
             }
-            const formData = new FormData(e.target as HTMLFormElement);
-            const password = formData.get("nPassword") as string;
-            const rPassword = formData.get("rPassword") as string;
 
-            if (password !== rPassword){
+
+            if (password !== rpassword) {
                 toast.warning("Different passwords inputted")
                 return
             }
 
             confirmPasswordReset(auth, actionCode, password)
-            .then((resp) => {
-                // Password reset has been confirmed and new password updated.
-                toast.success("Password Change Successful")
-                // TODO: If a continue URL is available, display a button which on
-                // click redirects the user back to the app via continueUrl with
-                // additional state determined from that URL's parameters.
-                setShowModal(true)
-                document.body.style.overflow = 'hidden'
-            }).catch((error) => {
-                // Error occurred during confirmation. The code might have expired or the
-                // password is too weak.
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.log (errorCode);
-                console.log(errorMessage);
-            });
+                .then(() => {
+                    // Password reset has been confirmed and new password updated.
+                    toast.success("Password Change Successful")
+                    // TODO: If a continue URL is available, display a button which on
+                    // click redirects the user back to the app via continueUrl with
+                    // additional state determined from that URL's parameters.
+                    setShowModal(true)
+                    document.body.style.overflow = 'hidden'
+                }).catch((error) => {
+                    // Error occurred during confirmation. The code might have expired or the
+                    // password is too weak.
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    toast.error(errorMessage)
+                    console.log(errorCode);
+                    console.log(errorMessage);
+                });
             setForm(formState + 1)
         } else {
-            console.log("HIII")
+            console.log("test")
         }
     }
 
@@ -117,6 +143,9 @@ function UserManagement(){
             <h2 className="font-sans text-center font-bold text-[1.2rem] sm:text-[1.3rem]">
                 Forgot Password
             </h2>
+            <ol className="list-disc">
+                <li>Password must have at least 8 characters</li>
+            </ol>
             <div className="w-full max-w-md flex justify-center items-center mb-6 mt-4">
                 <form onSubmit={handleSubmit} className="transition-all duration-500 ease-in-out w-full flex flex-col gap-2 p-4 sm:p-6">
                     <div
@@ -125,40 +154,51 @@ function UserManagement(){
                         <label htmlFor="nPassword" className="font-sans font-semibold">
                             New Password
                         </label>
-                        <input
-                            id="nPassword"
-                            name="nPassword"
-                            type="password"
-                            className={`transition-all duration-500 border-solid border-3 rounded-[5px] p-1.5`}
-                        />
+                        <div className="flex w-full">
+                            <input
+                                id="nPassword"
+                                name="nPassword"
+                                type={type1}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className={`w-full transition-all duration-500 border-solid border-3 rounded-[5px] p-1.5`}
+                            />
+                            <span className="flex justify-around items-center" onClick={handleToggle1}>
+                                <Icon1 className="absolute mr-10"/>
+                            </span>
+                        </div>
                     </div>
                     <div
-                        className={`flex flex-col transition-all duration-500 ease-in-out ${
-                        formState >= 2
-                            ? "opacity-100 translate-x-0 h-[8vh]"
-                            : "opacity-0 -translate-x-5 pointer-events-none h-0"
-                        }`}
+                        className={`flex flex-col transition-all duration-500 ease-in-out ${formState >= 2
+                                ? "opacity-100 translate-x-0 h-[8vh]"
+                                : "opacity-0 -translate-x-5 pointer-events-none h-0"
+                            }`}
                     >
                         <label htmlFor="rPassword" className="font-sans font-semibold">
                             Confirm Password
                         </label>
-                        <input
-                            id="rPassword"
-                            name="rPassword"
-                            type="password"
-                            className="border-solid border-3 rounded-[5px] p-1.5"
-                        />
+                        <div className="w-full flex">
+                            <input
+                                id="rPassword"
+                                name="rPassword"
+                                type={type2}
+                                onChange={(e) => setRPassword(e.target.value)}
+                                className="w-full border-solid border-3 rounded-[5px] p-1.5"
+                            />
+                            <span className="flex justify-around items-center" onClick={handleToggle2}>
+                                <Icon2 className="absolute mr-10"/>
+                            </span>
+                        </div>
                     </div>
                     <button
                         type="submit"
-                        disabled = {formState === 3 ? true : false}
+                        disabled={formState === 3 ? true : false}
                         className="bg-primary text-white mt-2 p-1.5 rounded-[5px] w-full m-auto font-semibold cursor-pointer duration-200 transition-all
                         hover:opacity-50 focus:opacity-50"
                     >
                         {formState >= 2 ? "Change Password" : "Continue"}
                     </button>
                     <a
-                        onClick={() => {navigate("/")}}
+                        onClick={() => { navigate("/") }}
                         className="text-center border-2 border-white text-white mt-2 p-1.5 rounded-[5px] w-full m-auto font-semibold duration-200 transition-all cursor-pointer
                         hover:opacity-50 focus:opacity-50"
                     >
