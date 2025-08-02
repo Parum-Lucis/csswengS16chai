@@ -53,7 +53,9 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
     async function handleNotify() {
         setIsAttemptingSMS(true);
         try {
-            const res = await callNotifyGuardiansBySMS({ phoneNumbers, eventDetails });
+            if (!event.docID) throw Error("No event id?");
+
+            const res = await callNotifyGuardiansBySMS({ phoneNumbers, eventDetails, event });
 
             if (res.data.status === 200) {
                 toast.success(`Successfully sent notifcation to beneficiaries! -${cost} credits`)
