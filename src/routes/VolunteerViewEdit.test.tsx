@@ -122,7 +122,7 @@ describe('Update Volunteer Profile', () => {
       const emailInput = screen.getByLabelText(/email/i);
       fireEvent.change(emailInput, { target: { value: 'new.email@example.com' } });
 
-      fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
       await waitFor(() => {
         expect(updateDoc).toHaveBeenCalledWith(mockDocRef, {
@@ -183,7 +183,7 @@ describe('Update Volunteer Profile', () => {
         const addressInput = screen.getByLabelText(/address/i);
         fireEvent.change(addressInput, { target: { value: '' } });
 
-        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
         await waitFor(() => {
             expect(updateDoc).not.toHaveBeenCalled();
@@ -200,7 +200,7 @@ describe('Update Volunteer Profile', () => {
         const addressInput = screen.getByLabelText(/address/i);
         fireEvent.change(addressInput, { target: { value: '   ' } });
 
-        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
         await waitFor(() => {
             expect(updateDoc).not.toHaveBeenCalled();
@@ -213,7 +213,7 @@ describe('Update Volunteer Profile', () => {
         await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
         fireEvent.click(screen.getByRole('button', { name: /edit/i }));
         fireEvent.change(screen.getByLabelText(/email/i), { target: { value: '' } });
-        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
         await waitFor(() => {
             expect(updateDoc).not.toHaveBeenCalled();
             expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
@@ -228,7 +228,7 @@ describe('Update Volunteer Profile', () => {
 
         fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'invalid-email-format' } });
 
-        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
         await waitFor(() => {
             expect(updateDoc).not.toHaveBeenCalled();
@@ -241,7 +241,7 @@ describe('Update Volunteer Profile', () => {
         await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
         fireEvent.click(screen.getByRole('button', { name: /edit/i }));
         fireEvent.change(screen.getByLabelText(/contact no/i), { target: { value: '' } });
-        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
         await waitFor(() => {
             expect(updateDoc).not.toHaveBeenCalled();
             expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
@@ -260,7 +260,7 @@ describe('Update Volunteer Profile', () => {
     //     const sexInput = screen.getByLabelText(/sex/i);
     //     fireEvent.change(sexInput, { target: { value: 'X' } });
 
-    //     fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+    //     fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
     //     await waitFor(() => {
     //         expect(updateDoc).not.toHaveBeenCalled();
@@ -283,7 +283,7 @@ describe('Update Volunteer Profile', () => {
         const emailInput = screen.getByLabelText(/email/i);
         fireEvent.change(emailInput, { target: { value: 'another.new.email@example.com' } });
 
-        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
         await waitFor(() => {
           expect(updateDoc).toHaveBeenCalledWith(mockDocRef, {
@@ -368,7 +368,7 @@ describe('Update Volunteer Profile', () => {
           const addressInput = screen.getByLabelText(/address/i);
           fireEvent.change(addressInput, { target: { value: '' } });
 
-          fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+          fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
           await waitFor(() => {
               expect(updateDoc).not.toHaveBeenCalled();
@@ -385,7 +385,7 @@ describe('Update Volunteer Profile', () => {
           const addressInput = screen.getByLabelText(/address/i);
           fireEvent.change(addressInput, { target: { value: '   ' } });
 
-          fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+          fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
           await waitFor(() => {
               expect(updateDoc).not.toHaveBeenCalled();
@@ -398,7 +398,7 @@ describe('Update Volunteer Profile', () => {
           await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
           fireEvent.click(screen.getByRole('button', { name: /edit/i }));
           fireEvent.change(screen.getByLabelText(/email/i), { target: { value: '' } });
-          fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+          fireEvent.click(screen.getByRole('button', { name: /save/i }));
           await waitFor(() => {
               expect(updateDoc).not.toHaveBeenCalled();
               expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
@@ -413,7 +413,7 @@ describe('Update Volunteer Profile', () => {
 
           fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'another-invalid-email' } });
 
-          fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+          fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
           await waitFor(() => {
               expect(updateDoc).not.toHaveBeenCalled();
@@ -426,7 +426,7 @@ describe('Update Volunteer Profile', () => {
           await waitFor(() => { screen.getByRole('heading', { name: /Doe, John/i }) });
           fireEvent.click(screen.getByRole('button', { name: /edit/i }));
           fireEvent.change(screen.getByLabelText(/contact no/i), { target: { value: '' } });
-          fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+          fireEvent.click(screen.getByRole('button', { name: /save/i }));
           await waitFor(() => {
               expect(updateDoc).not.toHaveBeenCalled();
               expect(screen.getByText(/please fill up all fields/i)).toBeInTheDocument();
@@ -445,7 +445,7 @@ describe('Update Volunteer Profile', () => {
       //     const sexInput = screen.getByLabelText(/sex/i);
       //     fireEvent.change(sexInput, { target: { value: 'X' } });
 
-      //     fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+      //     fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
       //     await waitFor(() => {
       //         expect(updateDoc).not.toHaveBeenCalled();
