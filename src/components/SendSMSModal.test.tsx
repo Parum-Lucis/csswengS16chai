@@ -47,6 +47,7 @@ beforeEach(() => {
 });
 
 const mockEvent = {
+  docID: "event-123",
   name: "Health Seminar",
   description: "A seminar on public health.",
   start_date: Timestamp.fromDate(new Date("2025-10-20T10:00:00Z")),
@@ -113,7 +114,7 @@ describe("SendSmsModal", () => {
     await waitFor(() => {
       // The cost is calculated as Math.ceil((184 * 2) / 160) = 3
       expect(toast.success).toHaveBeenCalledWith(
-        "Successfully sent notifcation to beneficiaries! -3 credits"
+        "Successfully sent notification to beneficiaries! -3 credits"
       );
     });
   });

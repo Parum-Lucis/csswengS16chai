@@ -58,12 +58,12 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
             const res = await callNotifyGuardiansBySMS({ phoneNumbers, eventDetails, event });
 
             if (res.data.status === 200) {
-                toast.success(`Successfully sent notifcation to beneficiaries! -${cost} credits`)
+                toast.success(`Successfully sent notification to beneficiaries! -${cost} credits`)
             } else {
-                toast.error("Couldn't send notifcation. Try again. (possible credit lost!)");
+                toast.error("Couldn't send notification. Try again. (possible credit lost!)");
             }
         } catch (e) {
-            toast.error("Couldn't send notifcation. Try again. (possible credit lost!)");
+            toast.error("Couldn't send notification. Try again. (possible credit lost!)");
             console.error(e);
         }
 

@@ -24,6 +24,7 @@ jest.mock("react-toastify", () => ({
   toast: {
     success: jest.fn(),
     warning: jest.fn(),
+    error: jest.fn(),
   },
 }));
 
