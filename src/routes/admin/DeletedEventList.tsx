@@ -25,7 +25,7 @@ export function DeletedEventList() {
                 const res = await getDocs(q);
                 setEvents(res.docs.map(doc => doc.data()));
             } catch (error) {
-                toast.error("Couldn't load volunteers.");
+                toast.error("Couldn't load events.");
                 console.error(error);
             } finally {
                 setLoading(false);
@@ -146,7 +146,7 @@ export function DeletedEventList() {
                         // display loading while fetching from database.
                         <div className="text-center text-white py-8">Fetching...</div>
                     ) : modifiedList.length === 0 ? (
-                        <div className="text-center text-white py-8">No profiles to show.</div>
+                        <div className="text-center text-white py-8">Nothing to show.</div>
                     ) : (
                         // non-empty profiles
                         modifiedList.map((profile, index) => (
