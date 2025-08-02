@@ -12,6 +12,8 @@ import { getDocs, Timestamp } from 'firebase/firestore';
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
   getDocs: jest.fn(),
+  query: jest.fn((collectionRef) => collectionRef),
+  where: jest.fn(),
   Timestamp: {
     fromDate: (date: Date) => ({
       toDate: () => date,
