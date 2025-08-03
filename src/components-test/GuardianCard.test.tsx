@@ -3,7 +3,7 @@
  */
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
-import GuardianCard from './GuardianCard';
+import GuardianCard from '../components/GuardianCard';
 import type { Guardian } from '@models/guardianType';
 
 describe('GuardianCard Component', () => {

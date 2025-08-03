@@ -6,8 +6,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { UserContext } from '../util/userContext';
-import { VolunteerProfile } from './VolunteerProfile';
-import { YourProfile } from './YourProfile';
+import { VolunteerProfile } from '../routes/VolunteerProfile';
+import { YourProfile } from '../routes/YourProfile';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { callDeleteVolunteerProfile } from '../firebase/cloudFunctions';
 

@@ -71,6 +71,7 @@ jest.mock('date-fns-tz', () => ({
   }),
 }));
 
+/* requires fixing */
 describe('sendEmailReminder', () => {
   const originalEnv = process.env;
 

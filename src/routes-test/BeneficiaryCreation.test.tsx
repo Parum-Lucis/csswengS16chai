@@ -3,7 +3,7 @@
  */
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { BeneficiaryProfileCreation } from './ProfileCreation';
+import { BeneficiaryProfileCreation } from '../routes/ProfileCreation';
 import { BrowserRouter } from 'react-router-dom';
 import { addDoc } from 'firebase/firestore';
 import { ToastContainer } from 'react-toastify';

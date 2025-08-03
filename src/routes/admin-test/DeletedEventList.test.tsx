@@ -6,7 +6,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { ToastContainer, toast } from 'react-toastify';
 import { collection, doc, getDocs, query, updateDoc, where, Timestamp } from 'firebase/firestore';
 import { addDays, subDays, addHours } from 'date-fns';
-import { DeletedEventList } from './DeletedEventList';
+import { DeletedEventList } from '../admin/DeletedEventList';
 import { eventConverter } from '../../util/converters';
 
 jest.mock('../../util/converters', () => ({

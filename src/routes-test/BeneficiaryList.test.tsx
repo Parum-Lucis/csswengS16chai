@@ -5,7 +5,7 @@ import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { useNavigate } from 'react-router';
-import { BeneficiaryList } from './ProfileList';
+import { BeneficiaryList } from '../routes/ProfileList';
 import { UserContext } from '../util/userContext';
 import { collection, getDocs } from 'firebase/firestore';
 import { toast } from 'react-toastify';

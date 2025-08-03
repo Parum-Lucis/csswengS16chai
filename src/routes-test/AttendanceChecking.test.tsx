@@ -11,7 +11,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { UserContext } from "../util/userContext";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, Timestamp } from "firebase/firestore";
-import { EventPage } from "./EventPage";
+import { EventPage } from "../routes/EventPage";
 import type { User } from "firebase/auth";
 
 jest.mock("firebase/firestore", () => ({

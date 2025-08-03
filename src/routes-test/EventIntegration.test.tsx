@@ -8,10 +8,10 @@ import { ToastContainer } from "react-toastify";
 import { UserContext } from '../util/userContext';
 import type { User } from "firebase/auth";
 import { add } from "date-fns";
-import { EventCreation } from "./EventCreation";
-import EventList from "./EventList";
-import { EventPage } from "./EventPage";
-import { Calendar } from "./Calendar";
+import { EventCreation } from "../routes/EventCreation";
+import EventList from "../routes/EventList";
+import { EventPage } from "../routes/EventPage";
+import { Calendar } from "../routes/Calendar";
 
 if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
   HTMLDialogElement.prototype.showModal = function() {

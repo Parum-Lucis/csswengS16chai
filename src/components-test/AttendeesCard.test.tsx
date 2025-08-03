@@ -3,7 +3,7 @@
  */
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import AttendeesCard from "./AttendeesCard";
+import AttendeesCard from "../components/AttendeesCard";
 import { MemoryRouter } from "react-router-dom";
 
 describe("AttendeesCard", () => {

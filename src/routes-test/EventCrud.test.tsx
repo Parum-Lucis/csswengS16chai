@@ -7,9 +7,9 @@ import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { UserContext } from "../util/userContext";
 import { getDocs, getDoc, addDoc, updateDoc, Timestamp } from "firebase/firestore";
-import { EventCreation } from "./EventCreation";
-import { EventList } from "./EventList";
-import { EventPage } from "./EventPage";
+import { EventCreation } from "../routes/EventCreation";
+import { EventList } from "../routes/EventList";
+import { EventPage } from "../routes/EventPage";
 import { add } from "date-fns";
 // import { db } from "../firebase/firebaseConfig";
 

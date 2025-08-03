@@ -30,7 +30,7 @@ jest.mock("./DeletedProfileList", () => ({
 
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { DeletedVolunteerList } from "./DeletedVolunteerList";
+import { DeletedVolunteerList } from "../admin/DeletedVolunteerList";
 import * as cloudFunctions from "../../firebase/cloudFunctions";
 import { getDocs, collection, query, where } from "firebase/firestore";
 import { toast } from "react-toastify";

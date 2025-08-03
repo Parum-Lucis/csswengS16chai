@@ -3,7 +3,7 @@
  */
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { DeletedBeneficiaryList } from "./DeletedBeneficiaryList";
+import { DeletedBeneficiaryList } from "../admin/DeletedBeneficiaryList";
 import { getDocs, collection, query, where, doc, updateDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 

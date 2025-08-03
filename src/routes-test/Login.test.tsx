@@ -3,7 +3,7 @@
  */
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Login from './Login';
+import Login from '../routes/Login';
 import { BrowserRouter } from 'react-router-dom';
 import { signInWithEmailAndPassword, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';

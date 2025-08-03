@@ -3,7 +3,7 @@
  */
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { SendSMSModal } from "../components/SendSMSModal";
-import { SMSCreditView } from "./SMSCreditView";
+import { SMSCreditView } from "../routes/SMSCreditView";
 import { toast } from "react-toastify";
 import { Timestamp } from "firebase/firestore";
 import { MemoryRouter } from "react-router-dom";
@@ -85,6 +85,7 @@ const renderSMSModal = () =>
     </MemoryRouter>
   );
 
+/* requires fixing */
 describe("SendSMSModal", () => {
   it("calls notify function and shows success toast", async () => {
     renderSMSModal();

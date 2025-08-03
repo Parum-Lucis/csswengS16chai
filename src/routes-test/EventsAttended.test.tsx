@@ -4,7 +4,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react'; // Import 'within'
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { BeneficiaryProfile } from './BeneficiaryProfile';
+import { BeneficiaryProfile } from '../routes/BeneficiaryProfile';
 import { Timestamp } from 'firebase/firestore';
 import '@testing-library/jest-dom';
 

@@ -4,7 +4,7 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { Timestamp } from "firebase/firestore";
-import EventCard from "./EventCard";
+import EventCard from "../components/EventCard";
 import type { AttendedEvents } from "@models/attendedEventsType";
 import { MemoryRouter } from "react-router-dom";
 

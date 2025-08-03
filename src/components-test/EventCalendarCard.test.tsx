@@ -4,7 +4,7 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import EventCard from "./EventCalendarCard"; 
+import EventCard from "../components/EventCalendarCard"; 
 
 describe("EventCalendarCard", () => {
   const baseProps = {
