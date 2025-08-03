@@ -223,10 +223,8 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
                     }
                 </div>
                 <div className="flex flex-col text-sm">
-                    <span className="font-bold text-base font-[Montserrat]">
-                        {`${last_name}, ${first_name}`.length > 15
-                            ? `${last_name}, ${first_name}`.slice(0, 15) + "..."
-                            : `${last_name}, ${first_name}`}
+                    <span className="block truncate w-35 sm:w-50 font-bold text-base font-[Montserrat]">
+                        {`${last_name}, ${first_name}`}
                     </span>
                     <span>Age: {differenceInYears(new Date(), birthdate.toDate())}</span>
                     <span>Sex: {sex}</span>

@@ -184,24 +184,18 @@ function EventCard(
                 </svg>
             </div>
             <div className="grow min-w-0">
-                <div className="text-base font-bold">
-                    {`${name}, ${name}`.length > 10
-                            ? `${name}, ${name}`.slice(0, 10) + "..."
-                            : `${name}, ${name}`}
+                <div className="block truncate w-35 sm:w-50 text-base font-bold">
+                    {`${name}`}
                 </div>
                 <div className="text-sm truncate">
-                    <span className="">
-                        {`${description}, ${description}`.length > 10
-                            ? `${description}, ${description}`.slice(0, 10) + "..."
-                            : `${description}, ${description}`}
+                    <span className="block truncate w-35 sm:w-50">
+                        {`${description}`}
                     </span>
                 </div>
                 <div className="h-1" />
                 <div className="text-sm">Date: {formatDate(start_date.toDate(), "MMMM d, yyyy")}</div>
-                <div className="text-sm">Location: 
-                         {`${location}, ${location}`.length > 10
-                            ? `${location}, ${location}`.slice(0, 10) + "..."
-                            : `${location}, ${location}`}
+                <div className="block truncate w-35 sm:w-50 text-sm">Location: 
+                         {`${location}`}
                 </div>
                 <span>Days Left: <span className="text-red-500 font-bold">{time_to_live ? differenceInDays(time_to_live.toDate(), new Date()) : "?"}</span></span>
             </div>

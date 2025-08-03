@@ -204,10 +204,8 @@ export function VolunteerProfile() {
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
                     <div className="flex flex-col items-center">
                         {isViewForm ? (
-                            <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                                {`${volunteer?.last_name}, ${volunteer?.first_name}`.length > 15
-                                    ? `${volunteer?.last_name}, ${volunteer?.first_name}`.slice(0, 15) + "..."
-                                    : `${volunteer?.last_name}, ${volunteer?.first_name}`}
+                            <h3 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans">
+                                {`${volunteer?.last_name}, ${volunteer?.first_name}`}
                                 
                                 <br />
 

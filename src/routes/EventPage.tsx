@@ -387,10 +387,6 @@ export function EventPage() {
     else toast.success("Nothing to update")
   }
 
-  function truncate(str: string, n: number) {
-    return str.length > n ? str.slice(0, n) + "..." : str;
-  }
-
 function handleExportAttendees() {
     if (attendees.length == 0) {
       toast.error("Attendees list is empty!")
@@ -497,8 +493,8 @@ function handleExportAttendees() {
 
             ) : (
             
-            <h2 className="text-secondary text-2xl text-center font-bold font-sans">
-              {name ? truncate(name, 15) : "Event Name"}
+            <h2 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans">
+              {name}
             </h2>
             )}
 
@@ -655,10 +651,8 @@ function handleExportAttendees() {
                             className="flex items-center justify-between px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer"
                           >
                             <div className="flex flex-col">
-                              <span className="font-semibold text-md text-white">
-                               {(notAtt.first_name + " " + notAtt.last_name).length > 20
-                                  ? (notAtt.first_name + " " + notAtt.last_name).slice(0, 20) + "..."
-                                  : notAtt.first_name + " " + notAtt.last_name}
+                              <span className="block truncate w-40 sm:w-50 font-semibold text-md text-white">
+                               {notAtt.first_name + " " + notAtt.last_name}
                               </span>
                               <span className="text-sm text-gray-200">
                                 {isNaN(notAtt.accredited_id) ? "Waitlisted" : `ID: ${notAtt.accredited_id}`}

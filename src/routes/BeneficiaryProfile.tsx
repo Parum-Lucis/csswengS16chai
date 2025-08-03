@@ -338,10 +338,8 @@ export function BeneficiaryProfile() {
                     </div>
                     <div className="flex flex-row justify-center gap-2">
                         {formState === true && (
-                            <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                                {`${beneficiary?.last_name}, ${beneficiary?.first_name}`.length > 15
-                                    ? `${beneficiary?.last_name}, ${beneficiary?.first_name}`.slice(0, 15) + "..."
-                                    : `${beneficiary?.last_name}, ${beneficiary?.first_name}`}
+                            <h3 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans">
+                                {`${beneficiary?.last_name}, ${beneficiary?.first_name}`}
                             </h3>
                         )}
                         {(formState === false) && (

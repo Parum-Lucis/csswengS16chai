@@ -31,10 +31,10 @@ function EventCard({attEvent}: {attEvent: AttendedEvents}) {
           </svg>
         </div>
         <div className="grow min-w-0">
-          <div className="text-base font-bold">{attEvent.event_name.length > 20 ? attEvent.event_name.slice(0, 20) + "..." : attEvent.event_name}</div>
+          <div className="block truncate w-50 sm:w-60 text-base font-bold">{attEvent.event_name}</div>
           <div>
             <div className="text-sm">Date: {formatDate(new Date((attEvent.event_start.seconds ?? 0)*1000), "MM/dd/yy")}<br />Time: {formatDate(new Date((attEvent.event_start.seconds ?? 0)*1000), "h:mm aa")}</div>
-            <div className="text-sm">Attendee: {attEvent.who_attended}</div>
+            <div className="block truncate w-40 sm:w-50 text-sm">Attendee: {attEvent.who_attended}</div>
             <div className="text-sm">Attendance: {attendance}</div>
           </div>
       </div>

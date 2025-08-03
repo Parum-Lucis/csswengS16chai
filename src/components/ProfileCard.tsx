@@ -62,8 +62,8 @@ function ProfileCard({ profile: {
         }
       </div>
       <div className="flex flex-col text-sm relative flex-1">
-        <span className="font-bold text-base font-sans">
-           {fullName.length > 20 ? fullName.slice(0, 20) + "..." : fullName}
+        <span className="block truncate w-50 sm:w-60 font-bold text-base font-sans">
+          {fullName}
         </span>
         <span>Age: {differenceInYears(new Date(), birthdate.toDate())}</span>
         <span>Sex: {sex}</span>
