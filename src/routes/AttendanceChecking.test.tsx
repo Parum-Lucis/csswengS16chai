@@ -1,6 +1,10 @@
 /**
  * @jest-environment jsdom
  */
+HTMLDialogElement.prototype.show = jest.fn();
+HTMLDialogElement.prototype.showModal = jest.fn();
+HTMLDialogElement.prototype.close = jest.fn();
+
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -23,14 +27,10 @@ jest.mock("firebase/firestore", () => ({
   getDoc: jest.fn(),
   setDoc: jest.fn(),
   deleteDoc: jest.fn(),
-  Timestamp: {
-    fromDate: (date: Date) => ({
-      seconds: Math.floor(date.getTime() / 1000),
-      nanoseconds: (date.getTime() % 1000) * 1e6,
-      toDate: () => date,
-    }),
-  },
+  query: jest.fn((collectionRef) => collectionRef),
+  where: jest.fn(),
 }));
+
 
 jest.mock("../firebase/firebaseConfig", () => ({
   db: {},
@@ -55,23 +55,8 @@ jest.mock("react-toastify", () => ({
 const mockUser: User & { is_admin: boolean } = {
     uid: "test-user-id",
     email: "test@example.com",
-    emailVerified: true,
     is_admin: false,
-    isAnonymous: false,
-    metadata: {} as any, // cast to any to avoid providing all metadata fields
-    providerData: [],
-    refreshToken: "test-refresh-token",
-    tenantId: null,
-    delete: jest.fn(),
-    getIdToken: jest.fn(),
-    getIdTokenResult: jest.fn(),
-    reload: jest.fn(),
-    toJSON: jest.fn(),
-    displayName: "Test User",
-    phoneNumber: null,
-    photoURL: null,
-    providerId: "password",
-};
+}as any;
 
 const mockEvent = {
   name: "Community Cleanup",
@@ -86,8 +71,18 @@ const mockAttendees = [
 ];
 
 const mockBeneficiaries = [
-  { docID: 'bene-1', first_name: 'John', last_name: 'Doe' },
-  { docID: 'bene-2', first_name: 'Jane', last_name: 'Smith' },
+  { 
+    docID: 'bene-1', 
+    first_name: 'John', 
+    last_name: 'Doe',
+    guardians: [{ email: 'john.guardian@example.com', contact_number: '1234567890' }] 
+  },
+  { 
+    docID: 'bene-2', 
+    first_name: 'Jane', 
+    last_name: 'Smith',
+    guardians: [{ email: 'jane.guardian@example.com', contact_number: '0987654321' }]
+  },
 ];
 
 const renderEventPage = () => {
@@ -103,54 +98,60 @@ const renderEventPage = () => {
   );
 };
 
+
 describe("Attendance Checking", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+    beforeEach(() => {
+        jest.clearAllMocks();
 
-    (getDoc as jest.Mock).mockResolvedValue({
-      exists: () => true,
-      data: () => mockEvent,
-      id: 'test-event-id',
-    });
+        (getDoc as jest.Mock).mockResolvedValue({
+            exists: () => true,
+            data: () => mockEvent,
+            id: 'test-event-id',
+        });
 
-    (getDocs as jest.Mock).mockImplementation((query: any) => {
-      const path = query.path;
-      if (path === "events/test-event-id/attendees") {
-        const docs = mockAttendees.map(att => ({ data: () => att, id: att.docID }));
-        return Promise.resolve({
-          empty: docs.length === 0,
-          docs: docs,
-          forEach: (callback: (doc: any) => void) => docs.forEach(callback),
+        (getDocs as jest.Mock).mockImplementation((query: any) => {
+            const path = query.path;
+            if (path.includes("attendees")) {
+                const docs = (path === "events/test-event-id/attendees_all") 
+                    ? mockBeneficiaries.map(bene => ({ data: () => bene, id: bene.docID }))
+                    : mockAttendees.map(att => ({ data: () => att, id: att.docID }));
+
+                return Promise.resolve({
+                    empty: docs.length === 0,
+                    docs: docs,
+                    forEach: (callback: (doc: any) => void) => docs.forEach(callback),
+                });
+            }
+            if (path === "beneficiaries") {
+                const docs = mockBeneficiaries.map(bene => ({ data: () => bene, id: bene.docID }));
+                return Promise.resolve({
+                    empty: docs.length === 0,
+                    docs: docs,
+                    forEach: (callback: (doc: any) => void) => docs.forEach(callback),
+                });
+            }
+            return Promise.resolve({ empty: true, docs: [], forEach: () => {} });
         });
-      }
-      if (path === "beneficiaries") {
-        const docs = mockBeneficiaries.map(bene => ({ data: () => bene, id: bene.docID }));
-        return Promise.resolve({
-          empty: docs.length === 0,
-          docs: docs,
-          forEach: (callback: (doc: any) => void) => docs.forEach(callback),
-        });
-      }
-      return Promise.resolve({ empty: true, docs: [], forEach: () => {} });
     });
-  });
 
   test("adds a new attendee to the event", async () => {
     renderEventPage();
 
     await waitFor(() => {
-      expect(screen.getByText("Community Cleanup")).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Community Cleanup/i })).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole("button", { name: /edit attendees list/i }));
 
-    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add attendee/i }));
 
     await waitFor(() => {
-      // Jane Smith is not an attendee yet
       expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByLabelText(/jane smith/i));
-    fireEvent.click(screen.getByRole("button", { name: /update list/i }));
+    fireEvent.click(screen.getByRole("button", { name: /select jane smith/i }));
+    
+    const updateListButton = screen.getByRole("button", { name: /update list/i });
+    fireEvent.click(updateListButton);
 
     await waitFor(() => {
       expect(setDoc).toHaveBeenCalled();
@@ -164,11 +165,12 @@ describe("Attendance Checking", () => {
     await waitFor(() => {
         expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole("button", { name: /edit attendees list/i }));
 
     const checkboxes = await screen.findAllByRole('checkbox');
-    fireEvent.click(checkboxes[0]); // Click the first checkbox for removal
+    fireEvent.click(checkboxes[0]); 
 
-    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    fireEvent.click(screen.getByRole("button", { name: /remove selected attendees/i }));
 
     await waitFor(() => {
         expect(deleteDoc).toHaveBeenCalled();
@@ -177,30 +179,25 @@ describe("Attendance Checking", () => {
   });
 
   test("shows a message when no beneficiaries are available to add", async () => {
-    // mock so all beneficiaries are already attendees
-    (getDocs as jest.Mock).mockImplementation((query: any) => {
-        const path = query.path;
-        if (path === "events/test-event-id/attendees") {
-          const docs = mockBeneficiaries.map(b => ({ data: () => ({...b, beneficiaryID: b.docID}), id: b.docID }));
-          return Promise.resolve({
-            empty: docs.length === 0,
-            docs: docs,
-            forEach: (callback: (doc: any) => void) => docs.forEach(callback),
-          });
-        }
-        if (path === "beneficiaries") {
+     (getDocs as jest.Mock).mockImplementation((query: any) => {
+      const path = query.path;
+      if (path === "events/test-event-id/attendees") {
+          const docs = mockBeneficiaries.map(att => ({ data: () => att, id: att.docID }));
+          return Promise.resolve({ docs: docs, forEach: (cb: any) => docs.forEach(cb) });
+      }
+      if (path === "beneficiaries") {
           const docs = mockBeneficiaries.map(bene => ({ data: () => bene, id: bene.docID }));
-          return Promise.resolve({
-            empty: docs.length === 0,
-            docs: docs,
-            forEach: (callback: (doc: any) => void) => docs.forEach(callback),
-          });
-        }
-        return Promise.resolve({ empty: true, docs: [], forEach: () => {} });
-      });
+          return Promise.resolve({ docs: docs, forEach: (cb: any) => docs.forEach(cb) });
+      }
+      return Promise.resolve({ empty: true, docs: [], forEach: () => {} });
+    });
 
     renderEventPage();
-    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    
+    await screen.findByRole('heading', { name: /Community Cleanup/i });
+
+    fireEvent.click(screen.getByRole("button", { name: /edit attendees list/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add attendee/i }));
 
     await waitFor(() => {
       expect(screen.getByText("No beneficiaries to show")).toBeInTheDocument();
@@ -210,18 +207,21 @@ describe("Attendance Checking", () => {
   test("shows a message when trying to add/remove with no selections", async () => {
     renderEventPage();
     await waitFor(() => {
-      expect(screen.getByText("Community Cleanup")).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Community Cleanup/i })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    fireEvent.click(screen.getByRole("button", { name: /edit attendees list/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add attendee/i }));
+    
     await waitFor(() => {
-        fireEvent.click(screen.getByRole("button", { name: /update list/i }));
+        const updateListButton = screen.getByRole("button", { name: /update list/i });
+        fireEvent.click(updateListButton);
     });
     await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith("Nothing to update");
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    fireEvent.click(screen.getByRole("button", { name: /remove selected attendees/i }));
     await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith("Nothing to update");
     });

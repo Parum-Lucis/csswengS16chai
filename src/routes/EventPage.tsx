@@ -621,6 +621,7 @@ function handleExportAttendees() {
             {isEditingAttendees && (
               <div className="flex flex-row gap-3 items-center">
                 <button
+                  aria-label="Add attendee"
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                   onClick={() => {
                     setShowAddDropdown(!showAddDropdown)
@@ -659,6 +660,8 @@ function handleExportAttendees() {
                               </span>
                             </div>
                             <div
+                              role="button"
+                              aria-label={`Select ${notAtt.first_name} ${notAtt.last_name}`}
                               className="cursor-pointer mr-3"
                               onClick={() => {
                                 const updChecklist = [...checklist];
@@ -697,6 +700,7 @@ function handleExportAttendees() {
                 )}
 
                 <button
+                  aria-label="Remove selected attendees"
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                   type="button"
                   onClick={handleRemoveAttendees}
@@ -705,6 +709,7 @@ function handleExportAttendees() {
                 </button>
 
                 <button
+                  aria-label="Update attendance"
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                   type="button"
                   onClick={handleUpdateAttendance}
@@ -716,6 +721,7 @@ function handleExportAttendees() {
 
             <div className="ml-auto flex flex-row items-center gap-4">
               <button
+                aria-label="Edit attendees list"
                 className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                 onClick={() => {
                   setIsEditingAttendees(!isEditingAttendees)
