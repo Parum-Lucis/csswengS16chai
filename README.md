@@ -79,6 +79,19 @@ cd csswengS16chai
 npm install
 npm run dev
 ```
+
+2. **Add `.env` in functions folder**
+
+each of these fields are very sensitive so keep them safe!
+```
+IPROG_API_TOKEN=`get this from the Iprog website.`
+EMAIL=`email that will be used for email notification`
+APP_PASSWORD=`special password for email`
+```
+3. **Running locally**
+
+Please see [Emulator guide](/emulator%20guide.md) to run the project locally.
+
 ---
 
 ### 🚀 Deployment
@@ -97,10 +110,22 @@ Follow these steps to deploy the CHAI-MET web application to Firebase:
 
 #### 1. Install Firebase CLI
 
+[follow the guide here](https://firebase.google.com/docs/cli/) to download the CLI.
+
+#### 2. initialize firebase
 ```bash
 firebase login
-firebase init
+```
+
+### 3. build project
+```
 npm run build
+cd functions
+npm run build
+```
+
+### 4. deploy!
+```
 firebase deploy
 ```
 
