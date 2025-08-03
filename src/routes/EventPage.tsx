@@ -493,7 +493,7 @@ function handleExportAttendees() {
 
             ) : (
             
-            <h2 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans">
+            <h2 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans mx-auto">
               {name}
             </h2>
             )}
