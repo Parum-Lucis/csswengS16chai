@@ -199,7 +199,10 @@ function EventCard(
                 </div>
                 <span>Days Left: <span className="text-red-500 font-bold">{time_to_live ? differenceInDays(time_to_live.toDate(), new Date()) : "?"}</span></span>
             </div>
-            <button onClick={() => onRestore(event)} className="cursor-pointer h-full">
+            <button 
+                aria-label={`Restore ${name}`}
+                onClick={() => onRestore(event)}
+                className="cursor-pointer h-full">
                 <svg xmlns="http://www.w3.org/2000/svg"
                     width="48"
                     height="48"

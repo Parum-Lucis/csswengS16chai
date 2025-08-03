@@ -232,7 +232,7 @@ describe("Event Integration Tests", () => {
 
     await screen.findByDisplayValue("Annual medical mission for the community.");
     
-    fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
     fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Updated Description" } });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
@@ -245,6 +245,8 @@ describe("Event Integration Tests", () => {
   });
 
   test("deletes an event", async() => {
+    jest.useFakeTimers();
+    
     const MOCK_DATE = new Date();
     jest.setSystemTime(MOCK_DATE);
 

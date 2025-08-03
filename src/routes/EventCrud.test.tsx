@@ -28,7 +28,6 @@ if (typeof HTMLDialogElement.prototype.close !== 'function') {
 jest.mock("firebase/firestore", () => {
     const originalModule = jest.requireActual("firebase/firestore");
 
-    // A type-safe mock Timestamp class
     class MockTimestamp {
         seconds: number;
         nanoseconds: number;
@@ -75,12 +74,12 @@ jest.mock("firebase/firestore", () => {
         addDoc: jest.fn(),
         updateDoc: jest.fn(),
         deleteDoc: jest.fn(),
-        Timestamp: MockTimestamp, // Use the type-safe mock class
+        Timestamp: MockTimestamp,
     };
 });
 
 jest.mock("../firebase/firebaseConfig", () => ({
-  db: {}, // Mock db object
+  db: {},
   auth: {},
 }));
 
@@ -220,7 +219,6 @@ describe("Event Creation", () => {
     });
 
     test("disables submit button after submission to prevent multiple submissions", async () => {
-      // Mock addDoc to return a promise that never resolves
       const neverResolvingPromise = new Promise(() => {});
       (addDoc as jest.Mock).mockReturnValue(neverResolvingPromise);
 
@@ -363,7 +361,7 @@ describe("Edit Event", () => {
             expect(screen.getByDisplayValue("Test Description")).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
         fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Updated Description" } });     
         fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
@@ -385,7 +383,7 @@ describe("Edit Event", () => {
           expect(screen.getByLabelText(/Description:/i)).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
         fireEvent.change(screen.getByLabelText(/Description:/i), { target: { value: "  " } });
         fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
@@ -407,7 +405,7 @@ describe("Edit Event", () => {
           expect(screen.getByLabelText(/Start:/i)).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
         fireEvent.change(screen.getByLabelText(/Start:/i), { target: { value: "2025-12-25T12:00:00" } });
         fireEvent.change(screen.getByLabelText(/End:/i), { target: { value: "2025-12-25T10:00:00" } });
         fireEvent.click(screen.getByRole("button", { name: /save/i }));
