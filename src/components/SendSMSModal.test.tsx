@@ -11,7 +11,8 @@ import { UserContext } from "../util/userContext";
 import { User } from "firebase/auth";
 import { type UserStateType } from "../util/userContext";
 import { format, add } from "date-fns";
-import { callNotifyGuardiansBySMS } from "../firebase/cloudFunctions";
+import { callNotifyGuardiansBySMS, callGetSMSCredits } from "../firebase/cloudFunctions";
+import { SMSCreditView } from "../routes/SMSCreditView";
 
 jest.mock("react-toastify", () => ({
   toast: {
@@ -22,6 +23,9 @@ jest.mock("react-toastify", () => ({
 
 jest.mock("../firebase/cloudFunctions", () => ({
   callNotifyGuardiansBySMS: jest.fn(),
+  callGetSMSCredits: jest.fn(() =>
+    Promise.resolve({ data: { success: true, credits: 42 } })
+  ),
 }));
 
 const mockedCallNotifyGuardiansBySMS = callNotifyGuardiansBySMS as unknown as jest.Mock;
@@ -119,6 +123,16 @@ describe("SendSmsModal", () => {
     });
   });
 
+  it("renders a valid manual 'sms:' link for messaging apps", () => {
+    renderSmsModal();
+    const smsLink = screen.getByRole("link", { name: /send/i, hidden: true });
+    const href = smsLink.getAttribute("href");
+
+    expect(href).toContain("sms:");
+    expect(href).toContain("+639171234567,+639209876543;?&");
+    expect(href).toContain(encodeURI("This is a reminder to attend the event titled Health Seminar."));
+  });
+
   it("displays the correct phone numbers", () => {
     renderSmsModal();
     const phoneNumbersDetails = screen
@@ -129,38 +143,58 @@ describe("SendSmsModal", () => {
     );
   });
 
-  it("copies SMS body to clipboard when copy button is clicked", async () => {
+  it("copies just the phone numbers to the clipboard", async () => {
     renderSmsModal();
-    const bodyDetails = screen.getByText("Event Details").closest("details");
-    const copyButton = bodyDetails?.parentElement?.querySelector("button");
+    const phoneNumbersDetails = screen.getByText("Phone numbers").closest("details");
+    const copyButton = phoneNumbersDetails?.parentElement?.querySelector("button");
 
-    if (copyButton) {
-      fireEvent.click(copyButton);
-    }
-
-    const eventTitle = `This is a reminder to attend the event titled ${mockEvent.name}.`;
-    const eventTime = `It will happen between ${format(
-      add(mockEvent.start_date.toDate(), { hours: -8 }),
-      "h:mm bb"
-    )} and ${format(
-      add(mockEvent.end_date.toDate(), { hours: -8 }),
-      "h:mm bb"
-    )} on ${format(
-      add(mockEvent.start_date.toDate(), { hours: -8 }),
-      "MMMM d, yyyy"
-    )}.`;
-    const eventBlurb = `About the event: ${mockEvent.description}`;
-    const expectedSmsBody = [eventTitle, eventTime, eventBlurb]
-      .reduce((prev, curr) => prev + "\n\n" + curr, "")
-      .replace(/^\n\n/, "");
+    expect(copyButton).toBeInTheDocument();
+    fireEvent.click(copyButton!);
 
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        expectedSmsBody
+        "+639171234567,+639209876543"
       );
       expect(toast.success).toHaveBeenCalledWith(
         "successfully copied to clipboard!"
       );
+    });
+  });
+
+  it("copies just the message body to the clipboard", async () => {
+    renderSmsModal();
+    const bodyDetails = screen.getByText("Event Details").closest("details");
+    const copyButton = bodyDetails?.parentElement?.querySelector("button");
+
+    expect(copyButton).toBeInTheDocument();
+    fireEvent.click(copyButton!);
+
+    // dont edit the spacing it ruins the test idk why
+    const expectedBody = `This is a reminder to attend the event titled Health Seminar.
+
+It will happen between 10:00 AM and 11:00 AM on October 20, 2025.
+
+About the event: A seminar on public health.`;
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedBody);
+      expect(toast.success).toHaveBeenCalledWith(
+        "successfully copied to clipboard!"
+      );
+    });
+  });
+
+  it("renders SMS credits correctly", async () => {
+    render(
+      <MemoryRouter>
+        <SMSCreditView />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/credits left/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("42")).toBeInTheDocument();
     });
   });
 });
