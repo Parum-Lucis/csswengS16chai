@@ -7,41 +7,79 @@ import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { UserContext } from "../util/userContext";
 import { getDocs, getDoc, addDoc, updateDoc, Timestamp } from "firebase/firestore";
-import { EventCreation } from "./EventCreation";
-import { EventList } from "./EventList";
-import { EventPage } from "./EventPage";
+import { EventCreation } from "../routes/EventCreation";
+import { EventList } from "../routes/EventList";
+import { EventPage } from "../routes/EventPage";
 import { add } from "date-fns";
 // import { db } from "../firebase/firebaseConfig";
 
-const createMockTimestamp = (date: Date) => {
-  const time = date.getTime();
-  return {
-    seconds: Math.floor(time / 1000),
-    nanoseconds: (time % 1000) * 1e6,
-    toDate: () => new Date(time),
-    valueOf: () => time,
+if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+  HTMLDialogElement.prototype.showModal = function() {
+    this.setAttribute('open', '');
   };
-};
+}
 
-jest.mock("firebase/firestore", () => ({
-  ...jest.requireActual("firebase/firestore"),
-  collection: jest.fn().mockReturnValue({
-    withConverter: jest.fn().mockReturnThis(),
-  }),
-  getDocs: jest.fn(),
-  doc: jest.fn(),
-  getDoc: jest.fn(),
-  addDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  deleteDoc: jest.fn(),
-  Timestamp: {
-    fromDate: (date: Date) => createMockTimestamp(date),
-    fromMillis: (milliseconds: number) => createMockTimestamp(new Date(milliseconds)),
-  },
-}));
+if (typeof HTMLDialogElement.prototype.close !== 'function') {
+  HTMLDialogElement.prototype.close = function() {
+    this.removeAttribute('open');
+  };
+}
+
+jest.mock("firebase/firestore", () => {
+    const originalModule = jest.requireActual("firebase/firestore");
+
+    class MockTimestamp {
+        seconds: number;
+        nanoseconds: number;
+
+        constructor(seconds: number, nanoseconds: number = 0) {
+            this.seconds = seconds;
+            this.nanoseconds = nanoseconds;
+        }
+
+        toDate(): Date {
+            return new Date(this.seconds * 1000 + this.nanoseconds / 1e6);
+        }
+
+        toMillis(): number {
+            return this.toDate().getTime();
+        }
+
+        valueOf(): number {
+            return this.toDate().getTime();
+        }
+
+        static fromDate(date: Date): MockTimestamp {
+            const seconds = Math.floor(date.getTime() / 1000);
+            const nanoseconds = (date.getTime() % 1000) * 1e6;
+            return new MockTimestamp(seconds, nanoseconds);
+        }
+
+        static fromMillis(milliseconds: number): MockTimestamp {
+            const date = new Date(milliseconds);
+            return MockTimestamp.fromDate(date);
+        }
+    }
+
+    return {
+        ...originalModule,
+        collection: jest.fn().mockReturnValue({
+            withConverter: jest.fn().mockReturnThis(),
+        }),
+        query: jest.fn((collectionRef, ..._constraints) => collectionRef),
+        where: jest.fn(),
+        getDocs: jest.fn(),
+        doc: jest.fn(),
+        getDoc: jest.fn(),
+        addDoc: jest.fn(),
+        updateDoc: jest.fn(),
+        deleteDoc: jest.fn(),
+        Timestamp: MockTimestamp,
+    };
+});
 
 jest.mock("../firebase/firebaseConfig", () => ({
-  db: {}, // Mock db object
+  db: {},
   auth: {},
 }));
 
@@ -181,7 +219,6 @@ describe("Event Creation", () => {
     });
 
     test("disables submit button after submission to prevent multiple submissions", async () => {
-      // Mock addDoc to return a promise that never resolves
       const neverResolvingPromise = new Promise(() => {});
       (addDoc as jest.Mock).mockReturnValue(neverResolvingPromise);
 
@@ -321,11 +358,12 @@ describe("Edit Event", () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByText("Test Event")).toBeInTheDocument();
+            expect(screen.getByDisplayValue("Test Description")).toBeInTheDocument();
         });
 
-        fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Updated Description" } });
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
+        fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Updated Description" } });     
+        fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
         await waitFor(() => {
             expect(updateDoc).toHaveBeenCalled();
@@ -345,8 +383,9 @@ describe("Edit Event", () => {
           expect(screen.getByLabelText(/Description:/i)).toBeInTheDocument();
         });
 
+        fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
         fireEvent.change(screen.getByLabelText(/Description:/i), { target: { value: "  " } });
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+        fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
         await waitFor(() => {
           expect(toast.error).toHaveBeenCalledWith("Please fill up all fields!");
@@ -366,14 +405,11 @@ describe("Edit Event", () => {
           expect(screen.getByLabelText(/Start:/i)).toBeInTheDocument();
         });
 
-        // edit
+        fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
         fireEvent.change(screen.getByLabelText(/Start:/i), { target: { value: "2025-12-25T12:00:00" } });
         fireEvent.change(screen.getByLabelText(/End:/i), { target: { value: "2025-12-25T10:00:00" } });
+        fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
-        // confirm
-        fireEvent.click(screen.getByRole("button", { name: /edit/i }));
-
-        // what should happen
         await waitFor(() => {
           expect(toast.error).toHaveBeenCalledWith("Start date cannot be greater than end date!");
         });

@@ -5,7 +5,7 @@ import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { useNavigate } from 'react-router';
-import { VolunteerList } from './ProfileList';
+import { VolunteerList } from '../routes/ProfileList';
 import { UserContext } from '../util/userContext';
 import { getDocs } from 'firebase/firestore';
 

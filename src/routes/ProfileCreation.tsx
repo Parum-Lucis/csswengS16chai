@@ -65,7 +65,7 @@ export function VolunteerProfileCreation() {
 
       if (data.contact_number.length != 11 ||
         formData.get("cNum")?.slice(0, 2) != "09") {
-        toast.error("Please input a valid phone number.");
+        toast.error('Please input an 11-digit contact number starting with "09"!');
         if (submitBtn) submitBtn.disabled = false;
         return
       }
@@ -285,8 +285,7 @@ export function BeneficiaryProfileCreation() {
           err = true;
         }
       }
-      /* end of change */
-
+      
       if (!err) {
 
         let test = false
@@ -309,7 +308,7 @@ export function BeneficiaryProfileCreation() {
             return
           }
           else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
-            toast.error("Please input a proper contact number for Guardian " + (i + 1));
+            toast.error('Please input an 11-digit contact number starting with "09" for Guardian ' + (i + 1));
             test = true
             if (submitBtn) submitBtn.disabled = false;
             return

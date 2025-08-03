@@ -53,15 +53,17 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
     async function handleNotify() {
         setIsAttemptingSMS(true);
         try {
-            const res = await callNotifyGuardiansBySMS({ phoneNumbers, eventDetails });
+            if (!event.docID) throw Error("No event id?");
+
+            const res = await callNotifyGuardiansBySMS({ phoneNumbers, eventDetails, event });
 
             if (res.data.status === 200) {
-                toast.success(`Successfully sent notifcation to beneficiaries! -${cost} credits`)
+                toast.success(`Successfully sent notification to beneficiaries! -${cost} credits`)
             } else {
-                toast.error("Couldn't send notifcation. Try again. (possible credit lost!)");
+                toast.error("Couldn't send notification. Try again. (possible credit lost!)");
             }
         } catch (e) {
-            toast.error("Couldn't send notifcation. Try again. (possible credit lost!)");
+            toast.error("Couldn't send notification. Try again. (possible credit lost!)");
             console.error(e);
         }
 
@@ -132,7 +134,7 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
                                 <button onClick={handleCopy(phoneNumbers)} className="hover:opacity-80 focus:opacity-50">
                                     <FilesIcon />
                                 </button>
-                                <details className="border-black border-2 flex-grow p-2">
+                                <details className="border-black border-2 flex-grow p-2 break-all">
                                     <summary>Phone numbers</summary>
                                     {phoneNumbers}
                                 </details>
@@ -143,7 +145,7 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
                                 <button onClick={handleCopy(eventDetails)} className="hover:opacity-80 focus:opacity-50">
                                     <FilesIcon />
                                 </button>
-                                <details className="border-black border-2 flex-grow p-2">
+                                <details className="border-black border-2 flex-grow p-2 break-all">
                                     <summary>Event Details</summary>
                                     {eventDetails}
                                 </details>

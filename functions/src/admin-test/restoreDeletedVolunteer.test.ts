@@ -1,7 +1,7 @@
-const mockSetCustomUserClaims = jest.fn();
+const mockUpdateUser = jest.fn();
 jest.mock("firebase-admin/auth", () => ({
   getAuth: () => ({
-    setCustomUserClaims: mockSetCustomUserClaims,
+    updateUser: mockUpdateUser,
   }),
 }));
 
@@ -30,9 +30,9 @@ jest.mock("firebase-functions/https", () => ({
   }),
 }));
 
-const TARGET_UID = "volunteerToPromoteUid";
+const TARGET_UID = "deletedVolunteerUid";
 
-import "./promoteVolunteerToAdmin";
+import "../admin/restoreDeletedVolunteer";
 
 const callFunction = (data: string, auth?: any) => {
   const req = { data, auth };
@@ -41,40 +41,40 @@ const callFunction = (data: string, auth?: any) => {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockSetCustomUserClaims.mockResolvedValue(undefined);
+  mockUpdateUser.mockResolvedValue(undefined);
   mockDocUpdate.mockResolvedValue(undefined);
 });
 
-describe("Promote Volunteer To Admin", () => {
+describe("Restore Deleted Volunteer", () => {
   test("returns false when no auth present", async () => {
     const result = await callFunction(TARGET_UID, undefined);
     expect(result).toBe(false);
-    expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
+    expect(mockUpdateUser).not.toHaveBeenCalled();
     expect(mockDocUpdate).not.toHaveBeenCalled();
   });
 
   test("returns false when caller not admin", async () => {
     const result = await callFunction(TARGET_UID, { token: { is_admin: false } });
     expect(result).toBe(false);
-    expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
+    expect(mockUpdateUser).not.toHaveBeenCalled();
     expect(mockDocUpdate).not.toHaveBeenCalled();
   });
 
-  test("promotes volunteer when caller is admin", async () => {
+  test("restores deleted volunteer when caller is admin", async () => {
     const result = await callFunction(TARGET_UID, { token: { is_admin: true } });
     expect(result).toBe(true);
-    expect(mockSetCustomUserClaims).toHaveBeenCalledWith(TARGET_UID, { is_admin: true });
+    expect(mockUpdateUser).toHaveBeenCalledWith(TARGET_UID, { disabled: false });
     expect(mockDoc).toHaveBeenCalledTimes(1);
     expect(mockDoc).toHaveBeenCalledWith(`volunteers/${TARGET_UID}`);
-    expect(mockDocUpdate).toHaveBeenCalledWith({ is_admin: true, role: "Admin" });
+    expect(mockDocUpdate).toHaveBeenCalledWith({ time_to_live: null });
   });
 
-  test("returns false and logs error when setCustomUserClaims rejects", async () => {
-    mockSetCustomUserClaims.mockRejectedValueOnce(new Error("setCustomUserClaims failed"));
+  test("returns false and logs error when updateUser rejects", async () => {
+    mockUpdateUser.mockRejectedValueOnce(new Error("updateUser failed"));
     const result = await callFunction(TARGET_UID, { token: { is_admin: true } });
     expect(result).toBe(false);
     expect(mockLoggerError).toHaveBeenCalledWith(expect.any(Error));
-    expect(mockLoggerError.mock.calls[0][0].message).toBe("setCustomUserClaims failed");
+    expect(mockLoggerError.mock.calls[0][0].message).toBe("updateUser failed");
   });
 
   test("returns false and logs error when Firestore update rejects", async () => {
@@ -86,7 +86,7 @@ describe("Promote Volunteer To Admin", () => {
   });
 
   test("returns false for invalid UID", async () => {
-    mockSetCustomUserClaims.mockRejectedValueOnce(new Error("Invalid UID"));
+    mockUpdateUser.mockRejectedValueOnce(new Error("Invalid UID"));
     const result = await callFunction("invalidUid", { token: { is_admin: true } });
     expect(result).toBe(false);
     expect(mockLoggerError).toHaveBeenCalledWith(expect.any(Error));
@@ -98,7 +98,7 @@ describe("Promote Volunteer To Admin", () => {
     const r2 = await callFunction(TARGET_UID, { token: { is_admin: true } });
     expect(r1).toBe(true);
     expect(r2).toBe(true);
-    expect(mockSetCustomUserClaims).toHaveBeenCalledTimes(2);
+    expect(mockUpdateUser).toHaveBeenCalledTimes(2);
     expect(mockDocUpdate).toHaveBeenCalledTimes(2);
   });
 });

@@ -37,6 +37,10 @@ function ProfileCard({ profile: {
     fetchPictureBlob();
   }, [pfpPath]);
 
+  const fullName = sort === "first"
+    ? `${first_name.toUpperCase()} ${last_name}`
+    : `${last_name.toUpperCase()}, ${first_name}`;
+
   return (
     <Link
       to={docID}
@@ -58,10 +62,8 @@ function ProfileCard({ profile: {
         }
       </div>
       <div className="flex flex-col text-sm relative flex-1">
-        <span className="font-bold text-base font-sans">
-          {sort === "first"
-            ? `${first_name.toUpperCase()} ${last_name}`
-            : `${last_name.toUpperCase()}, ${first_name}`}
+        <span className="block truncate w-50 sm:w-60 font-bold text-base font-sans">
+          {fullName}
         </span>
         <span>Age: {differenceInYears(new Date(), birthdate.toDate())}</span>
         <span>Sex: {sex}</span>

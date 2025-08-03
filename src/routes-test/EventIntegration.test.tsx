@@ -7,19 +7,30 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { UserContext } from '../util/userContext';
 import type { User } from "firebase/auth";
-import { add } from "date-fns"; 
-import { EventCreation } from "./EventCreation";
-import EventList from "./EventList";
-import { EventPage } from "./EventPage";
-import { Calendar } from "./Calendar";
+import { add } from "date-fns";
+import { EventCreation } from "../routes/EventCreation";
+import EventList from "../routes/EventList";
+import { EventPage } from "../routes/EventPage";
+import { Calendar } from "../routes/Calendar";
+
+if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+  HTMLDialogElement.prototype.showModal = function() {
+    this.setAttribute('open', '');
+  };
+}
+if (typeof HTMLDialogElement.prototype.close !== 'function') {
+  HTMLDialogElement.prototype.close = function() {
+    this.removeAttribute('open');
+  };
+}
 
 interface MockEventData {
   name: string;
   description: string;
-  start_date: { toDate: () => Date };
-  end_date: { toDate: () => Date };
+  start_date: { toDate: () => Date; toMillis: () => number };
+  end_date: { toDate: () => Date; toMillis: () => number };
   location: string;
-  time_to_live?: { toDate: () => Date }; 
+  time_to_live?: { toDate: () => Date };
 }
 
 interface MockAttendeeData {
@@ -30,94 +41,86 @@ interface MockAttendeeData {
     who_attended: string;
 }
 
-let eventDocs = [
-  {
-    id: "1",
-    data: (): MockEventData => ({
-      name: "Medical Mission",
-      description: "Annual medical mission for the community.",
-      start_date: { toDate: () => new Date("2025-12-25T09:00:00Z") },
-      end_date: { toDate: () => new Date("2025-12-25T17:00:00Z") },
-      location: "Community Center",
-    }),
-  },
-  {
-    id: "2",
-    data: (): MockEventData => ({
-      name: "Christmas Party",
-      description: "Annual Christmas party for the kids.",
-      start_date: { toDate: () => new Date("2025-12-20T13:00:00Z") },
-      end_date: { toDate: () => new Date("2025-12-20T17:00:00Z") },
-      location: "CHAI Youth Center",
-    }),
-  },
-];
-
-let attendeeDocs = [
-    { id: 'att1', data: (): MockAttendeeData => ({ beneficiaryID: 'b1', first_name: 'John', last_name: 'Doe', attended: true, who_attended: "Beneficiary" }) },
-    { id: 'att2', data: (): MockAttendeeData => ({ beneficiaryID: 'b2', first_name: 'Jane', last_name: 'Smith', attended: false, who_attended: "None" }) },
-];
-
+let eventDocs: Array<{ id: string; data: () => MockEventData; }> = [];
+let attendeeDocs: Array<{ id: string; data: () => MockAttendeeData; }> = [];
 
 jest.mock("firebase/firestore", () => {
-  const originalModule = jest.requireActual("firebase/firestore");
-  return {
-    ...originalModule,
-    Timestamp: {
-      fromDate: (date: Date) => ({
-        toDate: () => date,
-      }),
-    },
-    collection: jest.fn((db, path, ...segments) => {
-      const collectionRef = {
-        path: [path, ...segments].join('/'),
-        withConverter: jest.fn(function(this, converter) {
-          return this;
+    const originalModule = jest.requireActual("firebase/firestore");
+
+    // A type-safe mock Timestamp class that mimics the real one
+    class MockTimestamp {
+        private date: Date;
+        seconds: number;
+        nanoseconds: number;
+
+        constructor(seconds: number, nanoseconds: number = 0) {
+            this.seconds = seconds;
+            this.nanoseconds = nanoseconds;
+            this.date = new Date(seconds * 1000 + nanoseconds / 1e6);
+        }
+        toDate(): Date { return this.date; }
+        toMillis(): number { return this.date.getTime(); }
+        static fromDate(date: Date): MockTimestamp {
+            const seconds = Math.floor(date.getTime() / 1000);
+            const nanoseconds = (date.getTime() % 1000) * 1e6;
+            return new MockTimestamp(seconds, nanoseconds);
+        }
+    }
+
+    // This is the complete mock object for all firestore functions
+    return {
+        ...originalModule,
+        Timestamp: MockTimestamp,
+        collection: jest.fn((_db, path, ...segments) => ({
+            path: [path, ...segments].join('/'),
+            withConverter: function() { return this; },
+        })),
+        doc: jest.fn((_db, path, id) => ({ path: `${path}/${id}`, id })),
+        addDoc: jest.fn(async (collectionRef, data) => {
+            const newId = `new-id-${Date.now()}`;
+            const newEvent = {
+                id: newId,
+                data: () => ({ ...data, docID: newId }),
+            };
+            if (collectionRef.path === "events") {
+                eventDocs.push(newEvent as any);
+            }
+            return Promise.resolve({ id: newId });
         }),
-      };
-      return collectionRef;
-    }),
-    doc: jest.fn((db, path, id) => ({ path: `${path}/${id}`, id })),
-    addDoc: jest.fn(async (collectionRef, data) => {
-        const newId = `new-id-${Date.now()}`;
-        const newEvent = {
-            id: newId,
-            data: () => data,
-        };
-        eventDocs.push(newEvent as any);
-        return Promise.resolve({ id: newId });
-    }),
-    getDocs: jest.fn(async (query) => {
-        if (query.path.includes("attendees")) {
+        getDocs: jest.fn(async (query) => {
+            const dataSet = query.path.includes("attendees") ? attendeeDocs : eventDocs;
             return {
-                docs: attendeeDocs,
-                empty: attendeeDocs.length === 0,
-                forEach: (callback: any) => attendeeDocs.forEach(callback),
+                docs: dataSet,
+                empty: dataSet.length === 0,
+                forEach: (callback: (doc: any) => void) => dataSet.forEach(callback),
             };
-        }
-        return {
-            docs: eventDocs,
-            empty: eventDocs.length === 0,
-            forEach: (callback: any) => eventDocs.forEach(callback),
-        };
-    }),
-    getDoc: jest.fn(async (docRef) => {
-        const doc = eventDocs.find(d => d.id === docRef.id);
-        if (doc) {
+        }),
+        getDoc: jest.fn(async (docRef) => {
+            const doc = eventDocs.find(d => d.id === docRef.id);
+            if (doc) {
+                return {
+                    exists: (): boolean => true,
+                    id: doc.id,
+                    data: doc.data,
+                };
+            }
             return {
-                exists: (): boolean => true,
-                id: doc.id,
-                data: doc.data,
+                exists: (): boolean => false,
+                data: (): undefined => undefined,
             };
-        }
-        return {
-            exists: (): boolean => false,
-            data: (): undefined => undefined
-        };
-    }),
-    updateDoc: jest.fn(() => Promise.resolve()),
-    deleteDoc: jest.fn(() => Promise.resolve()),
-  };
+        }),
+        updateDoc: jest.fn(async (docRef, data) => {
+            const eventIndex = eventDocs.findIndex(d => d.id === docRef.id);
+            if (eventIndex > -1) {
+                const currentData = eventDocs[eventIndex].data();
+                eventDocs[eventIndex] = { ...eventDocs[eventIndex], data: () => ({ ...currentData, ...data }) };
+            }
+            return Promise.resolve();
+        }),
+        query: jest.fn((collectionRef, ..._constraints) => collectionRef),
+        where: jest.fn(),
+        deleteDoc: jest.fn(() => Promise.resolve()),
+    };
 });
 
 jest.mock("../firebase/firebaseConfig", () => ({
@@ -140,26 +143,18 @@ const mockUser = {
 
 
 describe("Event Integration Tests", () => {
-  const MOCK_DATE = new Date();
-  const { addDoc, updateDoc, getDocs, deleteDoc } = require("firebase/firestore");
+  const { addDoc, updateDoc, getDocs } = require("firebase/firestore");
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(MOCK_DATE);
-
-    addDoc.mockClear();
-    updateDoc.mockClear();
-    (getDocs as jest.Mock).mockClear();
-    deleteDoc.mockClear();
-    mockedNavigate.mockClear();
+    jest.clearAllMocks();
     eventDocs = [
         {
           id: "1",
           data: (): MockEventData => ({
             name: "Medical Mission",
             description: "Annual medical mission for the community.",
-            start_date: { toDate: () => new Date("2025-12-25T09:00:00Z") },
-            end_date: { toDate: () => new Date("2025-12-25T17:00:00Z") },
+            start_date: { toDate: () => new Date("2025-12-25T09:00:00Z"), toMillis: () => new Date("2025-12-25T09:00:00Z").getTime() },
+            end_date: { toDate: () => new Date("2025-12-25T17:00:00Z"), toMillis: () => new Date("2025-12-25T17:00:00Z").getTime() },
             location: "Community Center",
           }),
         },
@@ -168,11 +163,15 @@ describe("Event Integration Tests", () => {
           data: (): MockEventData => ({
             name: "Christmas Party",
             description: "Annual Christmas party for the kids.",
-            start_date: { toDate: () => new Date("2025-12-20T13:00:00Z") },
-            end_date: { toDate: () => new Date("2025-12-20T17:00:00Z") },
+            start_date: { toDate: () => new Date("2025-12-20T13:00:00Z"), toMillis: () => new Date("2025-12-20T13:00:00Z").getTime() },
+            end_date: { toDate: () => new Date("2025-12-20T17:00:00Z"), toMillis: () => new Date("2025-12-20T17:00:00Z").getTime() },
             location: "CHAI Youth Center",
           }),
         },
+    ];
+    attendeeDocs = [
+        { id: 'att1', data: (): MockAttendeeData => ({ beneficiaryID: 'b1', first_name: 'John', last_name: 'Doe', attended: true, who_attended: "Beneficiary" }) },
+        { id: 'att2', data: (): MockAttendeeData => ({ beneficiaryID: 'b2', first_name: 'Jane', last_name: 'Smith', attended: false, who_attended: "None" }) },
     ];
   });
 
@@ -186,6 +185,7 @@ describe("Event Integration Tests", () => {
         <MemoryRouter initialEntries={["/create-event"]}>
           <Routes>
             <Route path="/create-event" element={<EventCreation />} />
+            <Route path="/admin" element={<EventList />} />
           </Routes>
           <ToastContainer />
         </MemoryRouter>
@@ -209,14 +209,13 @@ describe("Event Integration Tests", () => {
     render(
       <UserContext.Provider value={mockUser}>
         <MemoryRouter initialEntries={["/admin"]}>
-          <Routes>
-            <Route path="/admin" element={<EventList />} />
-          </Routes>
+            <EventList />
         </MemoryRouter>
       </UserContext.Provider>
     );
 
     expect(await screen.findByText("New Year's Gala")).toBeInTheDocument();
+    expect(screen.getByText("Medical Mission")).toBeInTheDocument();
   });
 
   test("updates an event's details", async () => {
@@ -232,8 +231,10 @@ describe("Event Integration Tests", () => {
     );
 
     await screen.findByDisplayValue("Annual medical mission for the community.");
+    
+    fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
     fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Updated Description" } });
-    fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
     await waitFor(() => {
       expect(updateDoc).toHaveBeenCalledWith(
@@ -244,6 +245,11 @@ describe("Event Integration Tests", () => {
   });
 
   test("deletes an event", async() => {
+    jest.useFakeTimers();
+    
+    const MOCK_DATE = new Date();
+    jest.setSystemTime(MOCK_DATE);
+
     render(
         <UserContext.Provider value={mockUser}>
           <MemoryRouter initialEntries={["/event/1"]}>
@@ -264,7 +270,6 @@ describe("Event Integration Tests", () => {
 
     await waitFor(() => {
         expect(updateDoc).toHaveBeenCalled();
-
         const mockUpdateDocCall = (updateDoc as jest.Mock).mock.calls[0];
         const updatePayload = mockUpdateDocCall[1];
         
@@ -278,27 +283,22 @@ describe("Event Integration Tests", () => {
   });
 
   test("calendar displays events", async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2025-12-01T10:00:00Z"));
+
     render(
       <UserContext.Provider value={mockUser}>
         <MemoryRouter initialEntries={["/calendar"]}>
-          <Routes>
-            <Route path="/calendar" element={<Calendar />} />
-          </Routes>
+            <Calendar />
         </MemoryRouter>
       </UserContext.Provider>
     );
     
-    await waitFor(() => screen.getByText(/july 2025/i));
+    await screen.findByText(/December 2025/i); 
     
-    for (let i = 0; i < 5; i++) {
-        fireEvent.click(screen.getByLabelText("Go to next month"));
-    }
-
-    await screen.findByText("December 2025");
-
     fireEvent.click(screen.getByText("25"));
     expect(await screen.findByText("Medical Mission")).toBeInTheDocument();
-
+    
     fireEvent.click(screen.getByText("20"));
     expect(await screen.findByText("Christmas Party")).toBeInTheDocument();
   });

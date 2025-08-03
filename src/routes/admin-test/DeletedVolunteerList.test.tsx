@@ -8,7 +8,7 @@ jest.mock("../../firebase/firebaseConfig", () => ({
 jest.mock("./DeletedProfileList", () => ({
   DeletedProfileList: ({ profiles, loading, handleRestore, ProfileCard }: any) => {
     if (loading) return <div>Loading profiles...</div>;
-    if (profiles.length === 0) return <div>No profiles to show</div>;
+    if (profiles.length === 0) return <div>Nothing to show</div>;
 
     return (
       <div>
@@ -30,7 +30,7 @@ jest.mock("./DeletedProfileList", () => ({
 
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { DeletedVolunteerList } from "./DeletedVolunteerList";
+import { DeletedVolunteerList } from "../admin/DeletedVolunteerList";
 import * as cloudFunctions from "../../firebase/cloudFunctions";
 import { getDocs, collection, query, where } from "firebase/firestore";
 import { toast } from "react-toastify";
@@ -92,7 +92,7 @@ describe("Deleted Volunteer List", () => {
     (getDocs as jest.Mock).mockImplementation(() => new Promise(() => {}));
     render(<DeletedVolunteerList />);
     
-    expect(screen.getByRole("heading", { name: /profile list/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /deleted list/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue("Filter By")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Sort by")).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
@@ -101,7 +101,7 @@ describe("Deleted Volunteer List", () => {
   test("shows loading state", () => {
     (getDocs as jest.Mock).mockImplementation(() => new Promise(() => {}));
     render(<DeletedVolunteerList />);
-    expect(screen.getByText(/Profile List/i)).toBeInTheDocument();
+    expect(screen.getByText(/deleted List/i)).toBeInTheDocument();
     expect(screen.getByText(/Loading profiles.../i)).toBeInTheDocument();
   });
 
@@ -109,7 +109,7 @@ describe("Deleted Volunteer List", () => {
     (getDocs as jest.Mock).mockResolvedValueOnce({ docs: [] });
     render(<DeletedVolunteerList />);
     await waitFor(() =>
-      expect(screen.getByText(/No profiles to show/i)).toBeInTheDocument()
+      expect(screen.getByText(/Nothing to show/i)).toBeInTheDocument()
     );
   });
 

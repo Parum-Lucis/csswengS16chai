@@ -3,7 +3,7 @@
  */
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { BeneficiaryProfileCreation } from './ProfileCreation';
+import { BeneficiaryProfileCreation } from '../routes/ProfileCreation';
 import { BrowserRouter } from 'react-router-dom';
 import { addDoc } from 'firebase/firestore';
 import { ToastContainer } from 'react-toastify';
@@ -240,7 +240,7 @@ describe('Beneficiary Creation', () => {
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Please input a proper contact number for Guardian 1/i)).toBeInTheDocument();
+      expect(screen.getByText(/Please input an 11-digit contact number starting with "09" for Guardian 1/i)).toBeInTheDocument();
     });
   });
 

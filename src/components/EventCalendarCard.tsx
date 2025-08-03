@@ -10,8 +10,7 @@ function EventCard({ uid, date, event, time }: { date: string; event: string; ti
         <h4>{time.padStart(2, '0')}</h4>
       </div>
       <div className="grow bg-primary h-full flex items-center">
-
-        <h3 className="flex p-2">{event}</h3>
+        <h3 className="block truncate w-50 sm:w-100 p-2">{event}</h3>
       </div>
     </Link>
   );

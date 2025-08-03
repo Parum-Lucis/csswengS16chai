@@ -1,7 +1,7 @@
 import type { Beneficiary } from "@models/beneficiaryType";
-import { startTransition, useEffect, useOptimistic, useState } from "react";
+import { startTransition, useEffect, useOptimistic, useState, useMemo } from "react";
 import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
-import { differenceInDays, differenceInYears } from "date-fns";
+import { compareDesc, differenceInDays, differenceInYears } from "date-fns";
 import { db, store } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { DeletedProfileList } from "./DeletedProfileList";
@@ -58,30 +58,97 @@ export function DeletedBeneficiaryList() {
         })
     }
 
+    const modifiedList = useMemo<Beneficiary[]>(() => {
+        let temp = oProfiles;
+        if (filter === "waitlist") {
+            // waitlist: id = NaN (implementation) OR field doesnt exist for benef (incase)
+            temp = temp.filter(profile => profile.accredited_id === undefined || profile.accredited_id === null || isNaN(profile.accredited_id));
+        } else if (filter === "student") {
+            // student: id = an existing field & number!!
+            temp = temp.filter(profile => profile.accredited_id !== undefined && profile.accredited_id !== null && !isNaN(profile.accredited_id));
+        }
+
+        // Sort profiles based on selected sort val
+        if (sort === "last") {
+            temp.sort((a, b) => a.last_name.localeCompare(b.last_name));
+        } else if (sort === "first") {
+            temp.sort((a, b) => a.first_name.localeCompare(b.first_name));
+        } else if (sort === "age") {
+            temp.sort((a, b) => compareDesc(a.birthdate.toDate(), b.birthdate.toDate()));
+        } else if (sort === "id") {
+            temp.sort((a, b) => {
+                // make waitlisted be at bottom of list for ASCENDING
+                const aIsWaitlisted = isNaN(a.accredited_id);
+                const bIsWaitlisted = isNaN(b.accredited_id);
+                if (aIsWaitlisted && bIsWaitlisted) return 0;
+                if (aIsWaitlisted) return 1;
+                if (bIsWaitlisted) return -1;
+                return a.accredited_id - b.accredited_id;
+            });
+        } else if (sort === "deletion") {
+            temp.sort((a, b) =>
+                a.time_to_live !== null && a.time_to_live !== undefined && b.time_to_live !== null && b.time_to_live !== undefined ?
+                    b.time_to_live?.toMillis() - a.time_to_live?.toMillis() : -1)
+        }
+
+        // Search filter (partial or exact matches on name and age)
+        if (search.trim() !== "") {
+            const searchLower = search.trim().toLowerCase();
+            const terms = searchLower.split(/[\s,]+/).filter(Boolean);
+
+            temp = temp.filter(profile => {
+                const values = [
+                    profile.first_name.toLowerCase(),
+                    profile.last_name.toLowerCase(),
+                    // dont include birthdate, messes up results
+                    isNaN(profile.accredited_id) ? "waitlisted" : profile.accredited_id.toString(),
+                    // dont include age, messes up results when looking for id
+                ];
+                return terms.every(term =>
+                    values.some(value => value.includes(term))
+                );
+            });
+        }
+        return temp;
+    }, [filter, sort, search, oProfiles])
+
     return (
         <div className="w-full max-w-md mx-auto mt-6 p-4">
-            <h1 className="text-center text-6xl font-bold text-[#254151] mb-4 font-[Montserrat]">Profile List</h1>
+            <h1 className="text-center text-5xl font-bold text-primary mb-4 font-sans">Deleted List</h1>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <select
                     value={filter}
                     onChange={e => setFilter(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
-                    <option value="">Filter By</option>
-                    <option value="admin">Admins</option>
-                    <option value="volunteer">Volunteers (Non-Admin)</option>
+                    <option className="bg-secondary text-white" value="">Filter By</option>
+                    <option className="bg-secondary text-white" value="student">
+                        Students
+                    </option>
+                    <option className="bg-secondary text-white" value="waitlist">
+                        Waitlisted
+                    </option>
                 </select>
 
                 <select
                     value={sort}
                     onChange={e => setSort(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
-                    <option value="">Sort by</option>
-                    <option value="last">Last Name</option>
-                    <option value="first">First Name</option>
-                    <option value="age">Age</option>
+                    <option className="bg-secondary text-white" value="">Sort by</option>
+                    <option className="bg-secondary text-white" value="last">
+                        Last Name
+                    </option>
+                    <option className="bg-secondary text-white" value="first">
+                        First Name
+                    </option>
+                    <option className="bg-secondary text-white" value="id">
+                        Child ID
+                    </option>
+                    <option className="bg-secondary text-white" value="age">
+                        Age
+                    </option>
                 </select>
 
                 <input
@@ -89,12 +156,12 @@ export function DeletedBeneficiaryList() {
                     placeholder="Search"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-5/10"
                 />
             </div>
             <DeletedProfileList<Beneficiary>
 
-                profiles={oProfiles}
+                profiles={modifiedList}
                 ProfileCard={DeletedBeneficiaryCard}
                 handleRestore={handleRestore}
                 loading={isFetching}
@@ -136,7 +203,7 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
     return (
 
         <div
-            className="flex items-center justify-between bg-[#45B29D] text-white rounded-xl p-4 shadow-md transition"
+            className="flex items-center justify-between bg-tertiary text-white rounded-xl p-4 transition"
         >
             <div className="flex-grow flex items-center">
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 overflow-hidden">
@@ -144,7 +211,7 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
                         isLoading || !picURL ?
 
                             <svg
-                                className="w-6 h-6 text-[#45B29D]"
+                                className="w-6 h-6 text-tertiary"
                                 fill="currentColor"
                                 viewBox="0 0 24 24"
                             >
@@ -156,8 +223,8 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
                     }
                 </div>
                 <div className="flex flex-col text-sm">
-                    <span className="font-bold text-base font-[Montserrat]">
-                        {`${last_name.toUpperCase()}, ${first_name}`}
+                    <span className="block truncate w-35 sm:w-50 font-bold text-base font-[Montserrat]">
+                        {`${last_name}, ${first_name}`}
                     </span>
                     <span>Age: {differenceInYears(new Date(), birthdate.toDate())}</span>
                     <span>Sex: {sex}</span>

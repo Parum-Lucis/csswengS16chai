@@ -47,7 +47,7 @@ export function VolunteerProfile() {
         fetchBeneficiary()
     }, [params.docId])
     const navigate = useNavigate();
-    const { sex, contact_number: contact, email, address } = volunteer || {}
+    const { first_name, last_name, sex, contact_number: contact, email, address } = volunteer || {}
     const birthdate = new Date((volunteer?.birthdate.seconds ?? 0) * 1000)
 
     useEffect(() => {
@@ -94,8 +94,13 @@ export function VolunteerProfile() {
     const handleSave =
         async () => {
             setIsViewForm(!isViewForm)
-            if (!(sex!.toString().trim()) || !(contact!.toString().trim()) || !(email!.toString().trim()) || !(address!.toString().trim())) {
+            if (!(first_name!.toString().trim()) || !(last_name!.toString().trim()) || !(sex!.toString().trim()) || !(contact!.toString().trim()) || !(email!.toString().trim()) || !(address!.toString().trim())) {
                 toast.error("Please fill up all fields!")
+                return
+            }
+
+            if (contact!.length != 11 || contact!.slice(0, 2) != "09") {
+                toast.error('Please input an 11-digit contact number starting with "09"!');
                 return
             }
 
@@ -197,9 +202,46 @@ export function VolunteerProfile() {
                 )}
 
                 <div className="mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
-                    <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                        {volunteer?.last_name}, {volunteer?.first_name} {volunteer?.is_admin ? "(Admin)" : ""}
-                    </h3>
+                    <div className="flex flex-col items-center">
+                        {isViewForm ? (
+                            <h3 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans">
+                                {`${volunteer?.last_name}, ${volunteer?.first_name}`}
+                                
+                                <br />
+
+                                {`${volunteer?.is_admin ? "(Admin)" : ""}`}
+                            </h3>
+                        ) : (
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex flex-col">
+                                    <label htmlFor="fName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                        First Name
+                                    </label>
+                                    <input
+                                        id="fName"
+                                        name="fName"
+                                        type="text"
+                                        className="input-text w-full"
+                                        onChange={(e) => setVolunteer({ ...volunteer as Volunteer, first_name: e.target.value })}
+                                        value={first_name}
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <label htmlFor="lName" className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                        Last Name
+                                    </label>
+                                    <input
+                                        id="lName"
+                                        name="lName"
+                                        type="text"
+                                        className="input-text w-full"
+                                        onChange={(e) => setVolunteer({ ...volunteer as Volunteer, last_name: e.target.value })}
+                                        value={last_name}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
                     <div className="flex flex-col gap-4 mt-6">
                         <ProfilePictureInput readOnly={isViewForm} pfpFile={volunteer?.pfpFile ?? null}
                             onPfpChange={(e) => {
@@ -297,7 +339,7 @@ export function VolunteerProfile() {
                                 className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                                 onClick={isViewForm ? handleEdit : handleSave}
                                 disabled={isViewForm === null}>
-                                {isViewForm || isViewForm === null ? "Edit" : "Save Changes"}
+                                {isViewForm || isViewForm === null ? "Edit" : "Save"}
                             </button>
                         </div>
                         <button

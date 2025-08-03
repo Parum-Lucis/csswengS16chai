@@ -3,7 +3,7 @@
  */
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
-import ProfileCard from './ProfileCard';
+import ProfileCard from '../components/ProfileCard';
 import { MemoryRouter } from 'react-router-dom';
 import type { Volunteer } from '../../models/volunteerType';
 import { Timestamp } from "firebase/firestore";

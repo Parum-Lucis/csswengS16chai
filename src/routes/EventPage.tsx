@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate, useParams } from "react-router";
 import { collection, doc, getDoc, getDocs, Timestamp, updateDoc, deleteDoc, setDoc, query, where } from "firebase/firestore"
@@ -8,12 +8,18 @@ import { createPortal } from 'react-dom';
 import type { AttendedEvents } from "@models/attendedEventsType";
 import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
-import { SquarePlus, SquareMinus, SquareCheck, EllipsisVertical, CirclePlus, UsersRound, Baby, UserRound, MessageSquareMore, Mail } from 'lucide-react';
+import {
+  SquarePlus, SquareMinus, Pen, EllipsisVertical, CirclePlus, UsersRound,
+  Baby, UserRound, MessageSquareMore, Mail, UserCheck , PenOff, FileUp
+} from 'lucide-react';
 import { add } from "date-fns";
 import { SendSMSModal } from "../components/SendSMSModal";
 import { SendEmailModal } from "../components/SendEmailModal";
+import { UserContext } from "../util/userContext";
+import { callExportAttendees } from "../firebase/cloudFunctions";
 
 export function EventPage() {
+  const user = useContext(UserContext); // only admin can send email/sms
   const params = useParams()
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null)
@@ -31,11 +37,12 @@ export function EventPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingAttendees, setIsEditingAttendees] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false)
-  const [showOtherDropdown, setShowOtherDropdown] = useState(false)
+  const [showOtherDropdown, setShowOtherDropdown] = useState(false)   
 
   // for sms & email modal
   const [isShowSMSModal, setIsShowSMSModal] = useState(false);
   const [isShowEmailModal, setIsShowEmailModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // use effect for fetch event & fetch attendees
   useEffect(() => {
@@ -50,32 +57,21 @@ export function EventPage() {
       }
       if (!attendeesList.empty) {
         const updAttendees: AttendedEvents[] = []
-        // const updBene: Beneficiary[] = []
         const updEdit: boolean[] = []
         attendeesList.forEach((att) => {
           updAttendees.push(att.data() as AttendedEvents)
-          // beneficiaryID.push((att.data() as AttendedEvents).beneficiaryID)
           updEdit.push(false)
           console.log(att.data())
           console.log((att.data() as AttendedEvents).beneficiaryID)
         })
         setAttendees(updAttendees.sort((a, b) => a.first_name.localeCompare(b.first_name)))
         setEditChecklist(updEdit)
-        // const beneficiaryQuery = query(
-        //   collection(db, "beneficiaries"),
-        //   where(documentId(), "in", beneficiaryID)
-        // )
-        // const beneficiaryRef = await getDocs(beneficiaryQuery)
-        // console.log(beneficiaryRef.size)
-        // beneficiaryRef.forEach((bene) => {
-        //   console.log("id is " + bene.id)
-        //   updBene.push({ ...(bene.data() as Beneficiary), docID: bene.id })
-        // })
-        // setBeneficiaryList(updBene.sort((a, b) => a.docID.localeCompare(b.docID)))
       }
       console.log((eventsSnap.data() as Event))
       setDocID(eventsSnap.id)
       setRunQuery(true)
+      if ((eventsSnap.data() as Event).time_to_live)
+        toast.warn("Warning: This event will be deleted soon. Restore this event if you still need it.")
     }
     fetchEvent()
   }, [setEvent, setAttendees, params.docId])
@@ -246,7 +242,7 @@ export function EventPage() {
   const handleAddAttendees = async () => {
     let upd = false
     const newAttendees: AttendedEvents[] = []
-    
+
     for (let i = 0; i < checklist.length; i++) {
       let type = ""
       switch (checklist[i]) {
@@ -266,14 +262,14 @@ export function EventPage() {
           who_attended: type,
           event_name: event!.name,
           event_start: event!.start_date,
-          first_name: notAttendeeList[i].first_name,
-          last_name: notAttendeeList[i].last_name,
-          email: notAttendeeList[i].guardians[0].email,
-          contact_number: notAttendeeList[i].guardians[0].contact_number,
-          beneficiaryID: notAttendeeList[i].docID,
+          first_name: filteredBeneficiaries[i].first_name,
+          last_name: filteredBeneficiaries[i].last_name,
+          email: filteredBeneficiaries[i].guardians[0].email,
+          contact_number: filteredBeneficiaries[i].guardians[0].contact_number,
+          beneficiaryID: filteredBeneficiaries[i].docID,
           docID: addRef.id
         }
-        
+
         await setDoc(addRef, newAttendee);
         if (addRef) {
           newAttendees.push(newAttendee as AttendedEvents)
@@ -282,17 +278,17 @@ export function EventPage() {
         else toast.error("Submission failed.");
       }
     }
-    
+
     if (upd) {
       // Hot update the attendees list
       setAttendees(prev => [...prev, ...newAttendees].sort((a, b) => a.first_name.localeCompare(b.first_name)))
       setEditChecklist(prev => [...prev, ...new Array(newAttendees.length).fill(false)])
-      
+
       // Reset the add dropdown
       setShowAddDropdown(false)
       setChecklist([])
       setRunQuery(true)
-      
+
       toast.success("Success!");
     }
     else {
@@ -304,7 +300,7 @@ export function EventPage() {
   const handleRemoveAttendees = async () => {
     let refresh = false
     const indicesToRemove: number[] = []
-    
+
     console.log("checklist is" + editChecklist)
     for (let i = 0; i < editChecklist.length; i++) {
       if (editChecklist[i]) {
@@ -316,7 +312,7 @@ export function EventPage() {
         refresh = true
       }
     }
-    
+
     if (refresh) {
       // Hot update the attendees list by removing deleted items
       setAttendees(prev => prev.filter((_, index) => !indicesToRemove.includes(index)))
@@ -362,7 +358,7 @@ export function EventPage() {
   const handleUpdateAttendance = async () => {
     let refresh = false
     const updatedIndices: number[] = []
-    
+
     console.log("checklist is" + editChecklist)
     for (let i = 0; i < editChecklist.length; i++) {
       if (editChecklist[i]) {
@@ -376,11 +372,11 @@ export function EventPage() {
         refresh = true
       }
     }
-    
+
     if (refresh) {
       // Hot update the attendees list by toggling attendance
-      setAttendees(prev => prev.map((attendee, index) => 
-        updatedIndices.includes(index) 
+      setAttendees(prev => prev.map((attendee, index) =>
+        updatedIndices.includes(index)
           ? { ...attendee, attended: !attendee.attended }
           : attendee
       ))
@@ -389,6 +385,58 @@ export function EventPage() {
       toast.success("Success!");
     }
     else toast.success("Nothing to update")
+  }
+
+function handleExportAttendees() {
+    if (attendees.length == 0) {
+      toast.error("Attendees list is empty!")
+      return;
+    }
+    
+    if (exporting) return; // Prevent multiple exports
+    
+    const exportAttendees = async () => {
+      setExporting(true);
+      try {
+        const result = await callExportAttendees(params.docId as string);
+        const csvContent = result.data as string;
+        
+        // create date and time string for filename
+        const now = new Date();
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
+        const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+        
+        // format event date for filename
+        const eventDate = new Date((event?.start_date.seconds ?? 0) * 1000);
+        const eventDateStr = `${pad(eventDate.getMonth() + 1)}-${pad(eventDate.getDate())}-${eventDate.getFullYear()}`;
+        
+        // clean event name for filename (remove special characters)
+        const cleanEventName = (event?.name || 'event').replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-');
+        
+        const filename = `${cleanEventName}-${eventDateStr}-attendance-${dateStr}-${timeStr}.csv`;
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success("Attendees exported successfully!");
+      } catch (error) {
+        console.error("Export failed:", error);
+        toast.error("Failed to export attendees");
+      } finally {
+        setExporting(false);
+      }
+    };
+    
+    exportAttendees();
+    setShowOtherDropdown(false);
   }
 
   return (
@@ -421,10 +469,9 @@ export function EventPage() {
       <div className="relative w-full max-w-4xl rounded-md flex flex-col items-center pt-8 pb-10 px-4 sm:px-6">
         <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
           <form onSubmit={isEditing ? handleSave : (e) => e.preventDefault()}>
-            <h2 className="text-secondary text-2xl text-center font-bold font-sans">
-              {name ?? "Event Name"}
-            </h2>
             <div className="flex flex-col gap-4 mt-6">
+            
+            { isEditing ? (
               <div className="flex flex-col flex-1">
                 <label
                   htmlFor="name"
@@ -443,6 +490,14 @@ export function EventPage() {
                   required
                 />
               </div>
+
+            ) : (
+            
+            <h2 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans">
+              {name}
+            </h2>
+            )}
+
 
               <div className="flex flex-col flex-1">
                 <label
@@ -524,6 +579,7 @@ export function EventPage() {
                     Discard
                   </button>
                 )}
+              
                 <button
                   type={isEditing ? "submit" : "button"}
                   className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
@@ -532,8 +588,9 @@ export function EventPage() {
                     setIsEditing(true);
                   } : undefined}
                 >
-                  {isEditing ? "Save Changes" : "Edit"}
+                  {isEditing ? "Save" : "Edit"}
                 </button>
+                </div>
                 {!isEditing && (
                   <button
                     type="button"
@@ -543,7 +600,7 @@ export function EventPage() {
                     Delete
                   </button>
                 )}
-              </div>
+              <div className="flex flex-col flex-1">
               {isEditing && (
                 <button
                   type="button"
@@ -553,16 +610,18 @@ export function EventPage() {
                   Delete
                 </button>
               )}
+              </div>
             </div>
           </form>
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between w-full max-w-2xl mt-4 sm:gap-4">
           <h2 className="text-primary text-2xl font-bold font-sans text-center sm:text-left mt-5">List of Attendees:</h2>
-          <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditingAttendees ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/4'}`}>
+          <div className={`mt-3 flex flex-row items-center gap-4 border border-primary h-[40px] rounded-md px-4 relative ${isEditingAttendees ? 'w-full sm:w-1/2' : 'w-auto ml-auto sm:w-1/5'}`}>
             {isEditingAttendees && (
               <div className="flex flex-row gap-3 items-center">
                 <button
+                  aria-label="Add attendee"
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                   onClick={() => {
                     setShowAddDropdown(!showAddDropdown)
@@ -593,14 +652,16 @@ export function EventPage() {
                             className="flex items-center justify-between px-4 py-3 bg-primary text-white rounded-md hover:bg-onhover transition cursor-pointer"
                           >
                             <div className="flex flex-col">
-                              <span className="font-semibold text-md text-white">
-                                {notAtt.first_name + " " + notAtt.last_name}
+                              <span className="block truncate w-40 sm:w-50 font-semibold text-md text-white">
+                               {notAtt.first_name + " " + notAtt.last_name}
                               </span>
                               <span className="text-sm text-gray-200">
                                 {isNaN(notAtt.accredited_id) ? "Waitlisted" : `ID: ${notAtt.accredited_id}`}
                               </span>
                             </div>
                             <div
+                              role="button"
+                              aria-label={`Select ${notAtt.first_name} ${notAtt.last_name}`}
                               className="cursor-pointer mr-3"
                               onClick={() => {
                                 const updChecklist = [...checklist];
@@ -639,6 +700,7 @@ export function EventPage() {
                 )}
 
                 <button
+                  aria-label="Remove selected attendees"
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                   type="button"
                   onClick={handleRemoveAttendees}
@@ -647,63 +709,73 @@ export function EventPage() {
                 </button>
 
                 <button
+                  aria-label="Update attendance"
                   className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                   type="button"
                   onClick={handleUpdateAttendance}
                 >
-                  <SquareCheck className="w-5 h-5 inline-block" />
+                  <UserCheck className="w-5 h-5 inline-block" />
                 </button>
               </div>
             )}
 
             <div className="ml-auto flex flex-row items-center gap-4">
               <button
+                aria-label="Edit attendees list"
                 className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
                 onClick={() => {
                   setIsEditingAttendees(!isEditingAttendees)
                 }}
               >
-                {isEditingAttendees ? "Done" : "Edit"}
+                {isEditingAttendees ? <PenOff className="w-5 h-5 inline-block" /> : <Pen className="w-5 h-5 inline-block" />}
               </button>
 
-              <div className="relative">
-                <button
-                  type="button"
-                  className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
-                  onClick={() => {
-                    setShowOtherDropdown(!showOtherDropdown);
-                    setShowAddDropdown(false);
-                  }}
-                  data-dropdown-toggle="dropdownOther"
-                >
-                  <EllipsisVertical className="w-5 h-5" />
-                </button>
-
-                {showOtherDropdown && (
-                  <div
-                    id="dropdownOther"
-                    className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
+              {user && user.is_admin ? (
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="text-white font-sans font-bold rounded-md px-3 py-2 cursor-pointer hover:opacity-90 transition"
+                    onClick={() => {
+                      setShowOtherDropdown(!showOtherDropdown);
+                      setShowAddDropdown(false);
+                    }}
+                    data-dropdown-toggle="dropdownOther"
                   >
-                    <ul className="py-1">
-                      <li className="font-extraboldsans text-gray-700 cursor-pointer hover:opacity-70">
-                        <button
-                          type="button"
-                          className="cursor-pointer px-4 py-2 w-full h-full text-left flex items-center"
-                          onClick={handleSendSMSButtonClick}
+                    <EllipsisVertical className="w-5 h-5" />
+                  </button>
+
+                  {showOtherDropdown && (
+                    <div
+                      id="dropdownOther"
+                      className="absolute right-0 w-48 bg-white rounded-md shadow-lg z-10 mt-2"
+                    >
+                      <ul className="py-1">
+                        <li className="font-extraboldsans text-gray-700 cursor-pointer hover:opacity-70">
+                          <button
+                            type="button"
+                            className="cursor-pointer px-4 py-2 w-full h-full text-left flex items-center"
+                            onClick={handleSendSMSButtonClick}
+                          >
+                            <MessageSquareMore className="w-8 h-5 inline-block mr-2" /> Send SMS
+                          </button>
+                        </li>
+                        <li
+                          className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
+                          onClick={handleSendEmailButtonClick}
                         >
-                          <MessageSquareMore className="w-8 h-5 inline-block mr-2" /> Send SMS
-                        </button>
-                      </li>
-                      <li
-                        className="font-extraboldsans px-4 py-2 text-gray-700 cursor-pointer"
-                        onClick={handleSendEmailButtonClick}
-                      >
-                        <Mail className="w-8 h-5 inline-block" /> Send Email
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
+                          <Mail className="w-8 h-5 inline-block" /> Send Email
+                        </li>
+                         <li
+                          className={`font-extraboldsans px-4 py-2 text-gray-700 ${exporting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-70'}`}
+                          onClick={exporting ? undefined : handleExportAttendees}
+                        >
+                          <FileUp className="w-8 h-5 inline-block" /> {exporting ? "Exporting..." : "Export List"}
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -719,6 +791,7 @@ export function EventPage() {
                 isEditing={isEditingAttendees}
                 setEditChecklist={setEditChecklist}
                 editChecklist={editChecklist}
+                docID={att.beneficiaryID}
               />
             )) : <div className="text-center text-white w-full max-w-2xl items-center mt-2 mr-2 font-sans bg-primary p-5 rounded-[5px] font-semibold mb-2"> "No data to show" </div>
           }

@@ -25,7 +25,7 @@ export function DeletedEventList() {
                 const res = await getDocs(q);
                 setEvents(res.docs.map(doc => doc.data()));
             } catch (error) {
-                toast.error("Couldn't load volunteers.");
+                toast.error("Couldn't load events.");
                 console.error(error);
             } finally {
                 setLoading(false);
@@ -107,29 +107,29 @@ export function DeletedEventList() {
 
     return (
         <div className="w-full max-w-md mx-auto mt-6 p-4">
-            <h1 className="text-center text-6xl font-bold text-[#254151] mb-4 font-[Montserrat]">Profile List</h1>
+            <h1 className="text-center text-5xl font-bold text-primary mb-4 font-[Montserrat]">Deleted List</h1>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <select
                     value={filter}
                     onChange={e => setFilter(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
-                    <option value="">Filter By</option>
-                    <option value="admin">Admins</option>
-                    <option value="volunteer">Volunteers (Non-Admin)</option>
+                    <option className="bg-secondary text-white" value="">Filter By</option>
+                    <option className="bg-secondary text-white" value="ongoing">Ongoing</option>
+                    <option className="bg-secondary text-white" value="done">Done</option>
+                    <option className="bg-secondary text-white" value="pending">Pending</option>
                 </select>
 
                 <select
                     value={sort}
                     onChange={e => setSort(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full sm:w-3/10"
                 >
-                    <option value="">Sort by</option>
-                    <option value="last">Last Name</option>
-                    <option value="first">First Name</option>
-                    <option value="age">Age</option>
-                    <option value="deletion">Deletion age</option>
+                    <option className="bg-secondary text-white" value="">Sort by</option>
+                    <option className="bg-secondary text-white" value="name">A - Z</option>
+                    <option className="bg-secondary text-white" value="latest">Latest Event</option>
+                    <option className="bg-secondary text-white" value="oldest">Oldest Event</option>
                 </select>
 
                 <input
@@ -137,16 +137,16 @@ export function DeletedEventList() {
                     placeholder="Search"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="p-2 rounded-md border border-gray-300 text-sm"
+                    className="p-2 rounded-md border border-gray-300 text-sm w-full sm:w-5/10"
                 />
             </div>
-            <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
+            <div className="bg-primary p-4 rounded-xl shadow-lg">
                 <div className="flex flex-col gap-4">
                     {loading ? (
                         // display loading while fetching from database.
                         <div className="text-center text-white py-8">Fetching...</div>
                     ) : modifiedList.length === 0 ? (
-                        <div className="text-center text-white py-8">No profiles to show.</div>
+                        <div className="text-center text-white py-8">Nothing to show.</div>
                     ) : (
                         // non-empty profiles
                         modifiedList.map((profile, index) => (
@@ -172,7 +172,7 @@ function EventCard(
 
     return (
         <div
-            className="flex items-center bg-primary text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
+            className="flex items-center bg-tertiary text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
         >
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 shrink-0">
                 <svg
@@ -184,16 +184,25 @@ function EventCard(
                 </svg>
             </div>
             <div className="grow min-w-0">
-                <div className="text-base font-bold">{name}</div>
+                <div className="block truncate w-35 sm:w-50 text-base font-bold">
+                    {`${name}`}
+                </div>
                 <div className="text-sm truncate">
-                    <span className="">{description}</span>
+                    <span className="block truncate w-35 sm:w-50">
+                        {`${description}`}
+                    </span>
                 </div>
                 <div className="h-1" />
                 <div className="text-sm">Date: {formatDate(start_date.toDate(), "MMMM d, yyyy")}</div>
-                <div className="text-sm">Location: {location}</div>
+                <div className="block truncate w-35 sm:w-50 text-sm">Location: 
+                         {`${location}`}
+                </div>
                 <span>Days Left: <span className="text-red-500 font-bold">{time_to_live ? differenceInDays(time_to_live.toDate(), new Date()) : "?"}</span></span>
             </div>
-            <button onClick={() => onRestore(event)} className="cursor-pointer h-full">
+            <button 
+                aria-label={`Restore ${name}`}
+                onClick={() => onRestore(event)}
+                className="cursor-pointer h-full">
                 <svg xmlns="http://www.w3.org/2000/svg"
                     width="48"
                     height="48"

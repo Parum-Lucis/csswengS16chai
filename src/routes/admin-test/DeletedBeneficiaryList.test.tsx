@@ -3,7 +3,7 @@
  */
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { DeletedBeneficiaryList } from "./DeletedBeneficiaryList";
+import { DeletedBeneficiaryList } from "../admin/DeletedBeneficiaryList";
 import { getDocs, collection, query, where, doc, updateDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 
@@ -34,6 +34,7 @@ const mockBeneficiaries = [
     last_name: "Smith",
     birthdate: { toDate: () => new Date(2010, 1, 1) },
     sex: "F",
+    accredited_id: 123,
     time_to_live: {
       toDate: () => new Date(Date.now() + 86400000),
       toMillis: () => Date.now() + 86400000,
@@ -45,6 +46,7 @@ const mockBeneficiaries = [
     last_name: "Johnson",
     birthdate: { toDate: () => new Date(2005, 5, 5) },
     sex: "M",
+    accredited_id: NaN,
     time_to_live: {
       toDate: () => new Date(Date.now() + 172800000),
       toMillis: () => Date.now() + 172800000,
@@ -66,7 +68,7 @@ describe("Deleted Beneficiary List", () => {
     (getDocs as jest.Mock).mockResolvedValueOnce({ docs: [] });
     render(<DeletedBeneficiaryList />);
 
-    expect(screen.getByRole("heading", { name: /profile list/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /deleted list/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue("Filter By")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Sort by")).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
@@ -83,7 +85,7 @@ describe("Deleted Beneficiary List", () => {
     render(<DeletedBeneficiaryList />);
 
     await waitFor(() =>
-      expect(screen.getByText(/no profiles to show/i)).toBeInTheDocument()
+      expect(screen.getByText(/Nothing to show/i)).toBeInTheDocument()
     );
   });
 
@@ -120,7 +122,7 @@ describe("Deleted Beneficiary List", () => {
 
     expect(searchInput).toHaveValue("Alice");
 
-    expect(screen.getByText(/JOHNSON, Bob/i)).toBeInTheDocument();
+    expect(screen.queryByText(/JOHNSON, Bob/i)).not.toBeInTheDocument()
     expect(screen.getByText(/SMITH, Alice/i)).toBeInTheDocument(); 
   });
 

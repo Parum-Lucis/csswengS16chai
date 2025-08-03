@@ -10,13 +10,13 @@ export function DeletedProfileList<T extends { docID: string }>({
 }) {
 
     return (
-        <div className="bg-[#0F4C5C] p-4 rounded-xl shadow-lg">
+        <div className="bg-primary p-4 rounded-xl shadow-lg">
             <div className="flex flex-col gap-4">
                 {loading ? (
                     // display loading while fetching from database.
                     <div className="text-center text-white py-8">Fetching...</div>
                 ) : profiles.length === 0 ? (
-                    <div className="text-center text-white py-8">No profiles to show.</div>
+                    <div className="text-center text-white py-8">Nothing to show.</div>
                 ) : (
                     // non-empty profiles
                     profiles.map((profile, index) => (

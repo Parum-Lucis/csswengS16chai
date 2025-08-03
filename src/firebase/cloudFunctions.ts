@@ -15,6 +15,7 @@ export const callImportEvents = httpsCallable<string, { imported: number; skippe
 export const callImportVolunteers = httpsCallable<string, { imported: number; skipped: number }>(func, 'importVolunteers');
 export const callExportBeneficiaries = httpsCallable<void, string>(func, 'exportBeneficiaries');
 export const callExportEvents = httpsCallable<void, string>(func, 'exportEvents');
+export const callExportAttendees = httpsCallable<string, string>(func, 'exportAttendees');
 export const callExportVolunteers = httpsCallable<void, string>(func, 'exportVolunteers');
 export const callPromoteVolunteerToAdmin = httpsCallable<string, boolean>(func, 'promoteVolunteerToAdmin');
 export const callRestoreDeletedVolunteer = httpsCallable<string, boolean>(func, "restoreDeletedVolunteer");

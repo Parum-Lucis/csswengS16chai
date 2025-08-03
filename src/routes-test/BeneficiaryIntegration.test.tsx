@@ -64,22 +64,29 @@ let beneficiaryDocs = getInitialBeneficiaryDocs();
 
 jest.mock("firebase/firestore", () => {
     const originalModule = jest.requireActual("firebase/firestore");
-    const mockCollectionRef = {
-        id: 'beneficiaries',
-        path: 'beneficiaries',
-        withConverter: jest.fn().mockReturnThis(),
-    };
+    const mockCollectionRef = { _type: 'beneficiariesCollection' };
+    const mockCollectionGroupRef = { _type: 'attendeesCollectionGroup' };
 
     return {
         ...originalModule,
         collection: jest.fn(() => mockCollectionRef),
-        getDocs: jest.fn(() => Promise.resolve({ docs: beneficiaryDocs })),
+        collectionGroup: jest.fn(() => mockCollectionGroupRef),
+        getDocs: jest.fn((q) => {
+            if (q._ref === mockCollectionRef) {
+                return Promise.resolve({
+                    docs: beneficiaryDocs,
+                    forEach: (callback: (doc: any) => void) => beneficiaryDocs.forEach(callback),
+                });
+            }
+            return Promise.resolve({
+                docs: [],
+                forEach: (callback: (doc: any) => void) => [].forEach(callback),
+            });
+        }),
         getDoc: jest.fn((docRef) => {
             const id = docRef.id;
             const doc = beneficiaryDocs.find(b => b.id === id);
-            if (doc) {
-                return Promise.resolve(doc);
-            }
+            if (doc) { return Promise.resolve(doc); }
             return Promise.resolve({ exists: () => false });
         }),
         doc: jest.fn((db, path, id) => ({
@@ -87,27 +94,33 @@ jest.mock("firebase/firestore", () => {
             path: `${path}/${id}`,
             withConverter: jest.fn().mockReturnThis(),
         })),
-        query: jest.fn(() => ({
+        query: jest.fn((ref) => ({
+            _ref: ref,
             withConverter: jest.fn().mockReturnThis(),
         })),
         where: jest.fn(),
-        addDoc: jest.fn((...args) => {
+        addDoc: jest.fn((collectionRef, newData) => {
             const newId = `new-${Math.random()}`;
-            const newData = args[1];
-            beneficiaryDocs.push({ id: newId, exists: () => true, data: () => newData });
+            beneficiaryDocs.push({ id: newId, exists: () => true, data: () => ({...newData, docID: newId}) });
             return Promise.resolve({ id: newId });
         }),
-        updateDoc: jest.fn(() => Promise.resolve()),
+        updateDoc: jest.fn((docRef, data) => {
+            const docIndex = beneficiaryDocs.findIndex(doc => doc.id === docRef.id);
+            if (docIndex > -1) {
+                const existingData = beneficiaryDocs[docIndex].data();
+                beneficiaryDocs[docIndex] = {
+                    ...beneficiaryDocs[docIndex],
+                    data: () => ({ ...existingData, ...data }),
+                };
+            }
+            return Promise.resolve();
+        }),
     };
 });
 
 jest.mock("../firebase/firebaseConfig", () => ({
   auth: {},
-  db: {
-    INTERNAL: {
-        _freezeSettings: () => {},
-    }
-  },
+  db: {},
 }));
 
 
@@ -225,7 +238,7 @@ describe("Admin Beneficiary Management", () => {
         await screen.findByDisplayValue("123 Rizal Ave");
         fireEvent.click(screen.getByRole("button", { name: /edit/i }));
         fireEvent.change(screen.getByLabelText(/Address:/i), { target: { value: "Updated Address" } });
-        fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+        fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
         await waitFor(() => {
           expect(updateDoc).toHaveBeenCalledWith(
@@ -364,7 +377,7 @@ describe("Volunteer Beneficiary Management", () => {
         await screen.findByDisplayValue("123 Rizal Ave");
         fireEvent.click(screen.getByRole("button", { name: /edit/i }));
         fireEvent.change(screen.getByLabelText(/Address:/i), { target: { value: "Volunteer Updated Address" } });
-        fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+        fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
         await waitFor(() => {
           expect(updateDoc).toHaveBeenCalledWith(

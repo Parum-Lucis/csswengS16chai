@@ -9,7 +9,7 @@ jest.mock("../firebase/firebaseConfig", () => ({
 }));
 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import UserManagement from "./UserManagement";
+import UserManagement from "../components/UserManagement";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { applyActionCode, verifyPasswordResetCode, confirmPasswordReset } from "firebase/auth";
 import { toast } from "react-toastify";
@@ -24,6 +24,7 @@ jest.mock("react-toastify", () => ({
   toast: {
     success: jest.fn(),
     warning: jest.fn(),
+    error: jest.fn(),
   },
 }));
 

@@ -8,17 +8,16 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import GuardianCard from "../components/GuardianCard";
 import { toast } from "react-toastify";
 import { createPortal } from 'react-dom';
-import { Pencil } from 'lucide-react';
+// import { Baby, Notebook, Pencil, Percent, SquareChartGantt, UserRound } from 'lucide-react';
 import type { Guardian } from "@models/guardianType";
 import type { AttendedEvents } from "@models/attendedEventsType";
 import { emailRegex } from "../util/emailRegex";
 import { add, compareAsc } from "date-fns";
-import type { Event } from "@models/eventType";
+// import type { Event } from "@models/eventType";
 import { ProfilePictureInput } from "../components/ProfilePicture";
 import { beneficiaryConverter } from "../util/converters";
 import { deleteObject, getBlob, ref, uploadBytes } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
-
 
 export function BeneficiaryProfile() {
     const params = useParams()
@@ -61,7 +60,7 @@ export function BeneficiaryProfile() {
             const attRef = await getDocs(query(collectionGroup(db, "attendees"), where("beneficiaryID", "==", beneficiariesSnap.id)))
             attRef.forEach((att) => {
                 const attData = att.data() as AttendedEvents
-                attList.push({ ...attData, docID: att.id });
+                attList.push({ ...attData, docID: att.ref.parent.parent!.id }); // docID is eventID here
                 // ignore if null/undefined (means event hasn't happened)
                 if (attData.event_start.toMillis() < (Date.now() - ((new Date()).getTimezoneOffset() * 60000))) {
                     if (attData.attended ?? false)
@@ -104,17 +103,19 @@ export function BeneficiaryProfile() {
 
         // Sort profiles based on attendance status
         if (status === "present") {
-            filteredAtt = filteredAtt.filter(e => e.attended);
+            filteredAtt = filteredAtt.filter(e => e.attended && Date.now() > e.event_start.toMillis());
         } else if (status === "absent") {
-            filteredAtt = filteredAtt.filter(e => !(e.attended))
+            filteredAtt = filteredAtt.filter(e => !(e.attended) && Date.now() > e.event_start.toMillis())
+        } else if (status === "upcoming") {
+            filteredAtt = filteredAtt.filter(e => Date.now() < e.event_start.toMillis())
         }
 
         // Sort profiles based on event
         if (sort === "name") {
             filteredAtt.sort((a, b) => a.event_name.localeCompare(b.event_name));
-        } else if (sort === "latest") {
-            filteredAtt.sort((a, b) => compareAsc(a.event_start.toDate(), b.event_start.toDate()))
         } else if (sort === "oldest") {
+            filteredAtt.sort((a, b) => compareAsc(a.event_start.toDate(), b.event_start.toDate()))
+        } else if (sort === "latest") {
             filteredAtt.sort((a, b) => compareAsc(b.event_start.toDate(), a.event_start.toDate()))
         }
 
@@ -216,12 +217,12 @@ export function BeneficiaryProfile() {
             const updateRef = doc(db, "beneficiaries", docID!)
             console.log(beneficiary)
 
-            const emailRegEx = new RegExp(
-                /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-            ); // from https://emailregex.com/
+            // const emailRegEx = new RegExp(
+            //     /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+            // ); // from https://emailregex.com/
             let test = false
             guardians.forEach((guardian, i) => {
-                Object.values(guardian).forEach((val, _) => {
+                Object.values(guardian).forEach((val) => {
                     if (!(val.toString().trim())) {
                         toast.error("Please fill up all fields for Guardian " + (i + 1));
                         test = true
@@ -230,14 +231,14 @@ export function BeneficiaryProfile() {
                 })
                 if (test)
                     return
-                else if (!emailRegEx.test(guardian.email)) {
+                else if (!emailRegex.test(guardian.email)) {
                     console.log(guardian.email)
                     toast.error("Please input a proper email for Guardian " + (i + 1));
                     test = true
                     return
                 }
                 else if (guardian.contact_number.length != 11 || guardian.contact_number.slice(0, 2) != "09") {
-                    toast.error("Please input a proper contact number for Guardian " + (i + 1));
+                    toast.error('Please input an 11-digit contact number starting with "09" for Guardian ' + (i + 1));
                     test = true
                     return
                 }
@@ -283,9 +284,9 @@ export function BeneficiaryProfile() {
                 setOriginalBeneficiary({ ...beneficiary as Beneficiary, grade_level: gradeLevel, guardians: guardians })
                 setForm(true);
                 toast.success("Account update success!")
-            } catch (e: any) {
+            } catch (e) {
                 toast.error("Something went wrong!");
-                console.log(e.message);
+                console.log(e);
             }
         }
 
@@ -332,14 +333,13 @@ export function BeneficiaryProfile() {
                         }
                     }} />
                 <div className="relative mt-30 w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8 pt-25">
-                    <div className="flex flex-col items-end mt-[-5rem]">
+                    <div className="flex flex-col items-end mr-[-0.5rem] mt-[-5rem]">
                         <SemiCircularProgress value={attendance.events > 0 ? (attendance.present / attendance.events) * 100 : 0} />
-                        <h2 className=" text-center text-secondary text-sm">Attendance <br className="block sm:hidden" />Rate</h2>
                     </div>
                     <div className="flex flex-row justify-center gap-2">
                         {formState === true && (
-                            <h3 className="text-secondary text-2xl text-center font-bold font-sans">
-                                {beneficiary?.last_name}, {beneficiary?.first_name}
+                            <h3 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans">
+                                {`${beneficiary?.last_name}, ${beneficiary?.first_name}`}
                             </h3>
                         )}
                         {(formState === false) && (
@@ -517,7 +517,7 @@ export function BeneficiaryProfile() {
                                 className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
                                 onClick={formState ? handleEdit : handleSave}
                                 disabled={formState === null}>
-                                {formState || formState === null ? "Edit" : "Save Changes"}
+                                {formState || formState === null ? "Edit" : "Save"}
                             </button>
                         </div>
                         <button
@@ -531,7 +531,7 @@ export function BeneficiaryProfile() {
                 </div>
                 <div className="w-full max-w-2xl mt-8">
                     <h3 className="text-primary text-2xl text-center font-bold font-[Montserrat] mb-4">
-                        Attended Events
+                        Event Record
                     </h3>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                         <select
@@ -550,6 +550,7 @@ export function BeneficiaryProfile() {
                             <option className="bg-secondary text-white" value="">Attendance Status</option>
                             <option className="bg-secondary text-white" value="present">Present</option>
                             <option className="bg-secondary text-white" value="absent">Absent</option>
+                            <option className="bg-secondary text-white" value="upcoming">Upcoming Events</option>
                         </select>
                         <select
                             className="appearance-none p-2 rounded-md border border-gray-300 text-sm w-full"
@@ -572,7 +573,7 @@ export function BeneficiaryProfile() {
                         {modifiedList.map((att, index) => (
                             <EventCard key={index} attEvent={att} />
                         ))}
-                        <span>{modifiedList.length === 0 ? "No Events Attended!" : ""}</span>
+                        <span>{modifiedList.length === 0 ? "No Events Recorded!" : ""}</span>
                     </div>
                 </div>
             </div>
@@ -585,8 +586,14 @@ interface SemiCircularProgressProps {
 }
 const SemiCircularProgress = (props: SemiCircularProgressProps) => {
     return (
-        <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
-            <span className="text-sm text-secondary">{props.value}%</span>
+        <div className="flex flex-col items-center z-10">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <div role="semicircularprogressbar" style={{ ['--value' as any]: props.value }}>
+                <span className="text-sm text-secondary">{props.value}%</span>
+            </div>
+            <div className="mt-1 text-sm text-center text-secondary font-semibold">
+                Attendance <br></br> Rate
+            </div>
         </div>
-    )
-}
+    );
+};

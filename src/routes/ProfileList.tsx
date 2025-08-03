@@ -4,9 +4,9 @@ import ProfileCard from "../components/ProfileCard";
 import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import { compareAsc, compareDesc, differenceInYears } from "date-fns";
+import { compareDesc, differenceInYears } from "date-fns";
 import { toast } from "react-toastify";
-import { EllipsisVertical} from 'lucide-react';
+import { EllipsisVertical } from 'lucide-react';
 import { callExportBeneficiaries, callExportVolunteers } from '../firebase/cloudFunctions';
 import { PlusCircle } from "lucide-react";
 import type { Beneficiary } from "@models/beneficiaryType";
@@ -233,13 +233,14 @@ export function BeneficiaryList() {
             <button
               type="submit"
               className="font-sans font-semibold text-white bg-primary rounded-md h-[37px] w-full shadow-lg cursor-pointer hover:opacity-90 transition flex items-center justify-center"
-              onClick={() => {setShowDropdown(!showDropdown);
+              onClick={() => {
+                setShowDropdown(!showDropdown);
               }}
               data-dropdown-toggle="dropdownSearch"
             >
-              <EllipsisVertical className="w-5 h-5"/>
+              <EllipsisVertical className="w-5 h-5" />
             </button>
-            
+
             {showDropdown && (
               <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg z-10" id="dropdownSearch">
                 <ul className="py-1">

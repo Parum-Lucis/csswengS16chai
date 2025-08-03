@@ -3,7 +3,7 @@
  */
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { ProfilePictureInput } from "./ProfilePicture";
+import { ProfilePictureInput } from "../components/ProfilePicture";
 
 Object.defineProperty(window.URL, 'createObjectURL', {
   writable: true,
