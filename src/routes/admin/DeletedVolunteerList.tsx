@@ -137,6 +137,7 @@ export function DeletedVolunteerList() {
             </div>
             <DeletedProfileList<Volunteer>
                 ProfileCard={DeletedVolunteerCard}
+                handleDelete={() => { }}
                 handleRestore={handleRestore}
                 loading={loading}
                 profiles={modifiedList}
