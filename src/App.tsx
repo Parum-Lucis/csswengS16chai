@@ -21,7 +21,6 @@ import { AuthLayout } from "./layouts/AuthLayout.tsx";
 import Temp from "./components/Temp.tsx";
 import { SMSCreditView } from "./routes/SMSCreditView.tsx";
 import UserManagement from "./components/UserManagement.tsx";
-import { Initializer } from "./routes/Initialize.tsx";
 import { DeletedEventList } from "./routes/admin/DeletedEventList.tsx";
 
 
