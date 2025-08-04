@@ -244,7 +244,6 @@ export const cronCleaner = onSchedule("0 * * * *", async () => {
     }
 })
 
-export { initializeEmulator } from "./initializeEmulator";
 export { promoteVolunteerToAdmin } from "./admin/promoteVolunteerToAdmin";
 export { restoreDeletedVolunteer } from "./admin/restoreDeletedVolunteer"
 // CSV functions
