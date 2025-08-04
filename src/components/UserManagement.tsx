@@ -1,6 +1,6 @@
 import CHAI from "../assets/CHAI.jpg";
 import { useNavigate, useSearchParams } from "react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "../firebase/firebaseConfig";
 import { verifyPasswordResetCode, applyActionCode, confirmPasswordReset } from "firebase/auth";
 import { toast } from "react-toastify";
@@ -24,7 +24,7 @@ function UserManagement() {
     // const continueUrl = searchParams.get("continueUrl");
 
     const handleToggle1 = () => {
-        if (type1==='password'){
+        if (type1 === 'password') {
             setEye1(Eye);
             setType1('text')
         } else {
@@ -34,7 +34,7 @@ function UserManagement() {
     }
 
     const handleToggle2 = () => {
-        if (type2==='password'){
+        if (type2 === 'password') {
             setEye2(Eye);
             setType2('text')
         } else {
@@ -163,14 +163,14 @@ function UserManagement() {
                                 className={`w-full transition-all duration-500 border-solid border-3 rounded-[5px] p-1.5`}
                             />
                             <span className="flex justify-around items-center" onClick={handleToggle1}>
-                                <Icon1 className="absolute mr-10"/>
+                                <Icon1 className="absolute mr-10" />
                             </span>
                         </div>
                     </div>
                     <div
                         className={`flex flex-col transition-all duration-500 ease-in-out ${formState >= 2
-                                ? "opacity-100 translate-x-0 h-[8vh]"
-                                : "opacity-0 -translate-x-5 pointer-events-none h-0"
+                            ? "opacity-100 translate-x-0 h-[8vh]"
+                            : "opacity-0 -translate-x-5 pointer-events-none h-0"
                             }`}
                     >
                         <label htmlFor="rPassword" className="font-sans font-semibold">
@@ -185,7 +185,7 @@ function UserManagement() {
                                 className="w-full border-solid border-3 rounded-[5px] p-1.5"
                             />
                             <span className="flex justify-around items-center" onClick={handleToggle2}>
-                                <Icon2 className="absolute mr-10"/>
+                                <Icon2 className="absolute mr-10" />
                             </span>
                         </div>
                     </div>
