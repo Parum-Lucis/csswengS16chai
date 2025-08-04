@@ -52,7 +52,6 @@ function App() {
         <Route index element={<Login />} />
         <Route path="/forget-password" element={<ForgetMeNot />} />
         <Route path="/user-mgmt" element={<UserManagement />} />
-        <Route path="/init" element={<Initializer />} />
 
         <Route element={<AuthLayout />}>
 
