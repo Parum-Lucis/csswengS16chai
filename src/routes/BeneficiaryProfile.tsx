@@ -464,6 +464,21 @@ export function BeneficiaryProfile() {
                                 onChange={(e) => setBeneficiary({ ...beneficiary as Beneficiary, address: e.target.value })}
                                 value={address} />
                         </div>
+                        <div className="flex flex-col">
+                            <label
+                                htmlFor="cluster"
+                                className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                                Cluster:
+                            </label>
+                            <input
+                                type="text"
+                                id="cluster"
+                                className="w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+                                readOnly={formState ?? true}
+                                onChange={(e) => setBeneficiary({ ...beneficiary as Beneficiary, cluster: e.target.value })}
+                                value={beneficiary?.cluster} />
+                        </div>
+
                         {formState === false && (
                             <div className="flex flex-row justify-end gap-1">
                                 <button

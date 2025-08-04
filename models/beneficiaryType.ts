@@ -15,5 +15,6 @@ export interface Beneficiary {
   guardians: Guardian[];
   pfpPath?: string;
   pfpFile?: File | null;
-  time_to_live?: Timestamp | null; 
+  cluster: string;
+  time_to_live?: Timestamp | null;
 }

@@ -28,7 +28,7 @@ export function VolunteerProfileCreation() {
     const formData = new FormData(e.target as HTMLFormElement);
 
     const submitBtn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
-    if (submitBtn) submitBtn.disabled = true; 
+    if (submitBtn) submitBtn.disabled = true;
 
     try {
       const data: Volunteer = {
@@ -56,7 +56,7 @@ export function VolunteerProfileCreation() {
         if (submitBtn) submitBtn.disabled = false;
         return;
       }
-      
+
       if (!emailRegex.test(data.email)) {
         toast.error("Please input a proper email.");
         if (submitBtn) submitBtn.disabled = false;
@@ -100,10 +100,11 @@ export function VolunteerProfileCreation() {
           toast.error("Couldn't create profile");
           if (submitBtn) submitBtn.disabled = false;
           return;
-        } 
-      } 
-    } catch (error) {
+        }
+      }
+    } catch (e) {
       toast.error("An error occurred while creating the profile.");
+      console.error(e)
       if (submitBtn) submitBtn.disabled = false;
     }
 
@@ -285,7 +286,7 @@ export function BeneficiaryProfileCreation() {
           err = true;
         }
       }
-      
+
       if (!err) {
 
         let test = false
@@ -342,6 +343,7 @@ export function BeneficiaryProfileCreation() {
             guardians: guardians,
             sex: formData.get("SexDropdown") as string, /* this was missing pala? */
             pfpPath: (formData.get("pfp") as File).size > 0 ? pfpFilePath : null,
+            cluster: formData.get("cluster") as string,
             time_to_live: null,
           });
 
@@ -358,6 +360,7 @@ export function BeneficiaryProfileCreation() {
       }
     } catch (error) {
       toast.error("An error occurred while creating the profile.");
+      console.error(error);
       if (submitBtn) submitBtn.disabled = false;
     }
   };
@@ -466,30 +469,30 @@ export function BeneficiaryProfileCreation() {
             </div>
             <div>
               <label
-                    htmlFor="gradelevel"
-                    className="text-white font-sans font-semibold">
-                    Grade Level:
-                </label>
-                <select
-                    id="gradelevel"
-                    name="gradelevel"
-                    className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
-                >
-                    <option className="bg-secondary text-white" value="N">Nursery</option>
-                    <option className="bg-secondary text-white" value="K">Kindergarten</option>
-                    <option className="bg-secondary text-white" value="1">1</option>
-                    <option className="bg-secondary text-white" value="2">2</option>
-                    <option className="bg-secondary text-white" value="3">3</option>
-                    <option className="bg-secondary text-white" value="4">4</option>
-                    <option className="bg-secondary text-white" value="5">5</option>
-                    <option className="bg-secondary text-white" value="6">6</option>
-                    <option className="bg-secondary text-white" value="7">7</option>
-                    <option className="bg-secondary text-white" value="8">8</option>
-                    <option className="bg-secondary text-white" value="9">9</option>
-                    <option className="bg-secondary text-white" value="10">10</option>
-                    <option className="bg-secondary text-white" value="11">11</option>
-                    <option className="bg-secondary text-white" value="12">12</option>
-                </select>
+                htmlFor="gradelevel"
+                className="text-white font-sans font-semibold">
+                Grade Level:
+              </label>
+              <select
+                id="gradelevel"
+                name="gradelevel"
+                className="appearance-none w-full text-white border border-secondary bg-tertiary rounded px-3 py-2 font-sans"
+              >
+                <option className="bg-secondary text-white" value="N">Nursery</option>
+                <option className="bg-secondary text-white" value="K">Kindergarten</option>
+                <option className="bg-secondary text-white" value="1">1</option>
+                <option className="bg-secondary text-white" value="2">2</option>
+                <option className="bg-secondary text-white" value="3">3</option>
+                <option className="bg-secondary text-white" value="4">4</option>
+                <option className="bg-secondary text-white" value="5">5</option>
+                <option className="bg-secondary text-white" value="6">6</option>
+                <option className="bg-secondary text-white" value="7">7</option>
+                <option className="bg-secondary text-white" value="8">8</option>
+                <option className="bg-secondary text-white" value="9">9</option>
+                <option className="bg-secondary text-white" value="10">10</option>
+                <option className="bg-secondary text-white" value="11">11</option>
+                <option className="bg-secondary text-white" value="12">12</option>
+              </select>
             </div>
             <div>
               <label htmlFor="address" className="text-white font-sans font-semibold">
@@ -498,6 +501,17 @@ export function BeneficiaryProfileCreation() {
               <input
                 id="address"
                 name="address"
+                type="text"
+                className="input-text w-full"
+              />
+            </div>
+            <div>
+              <label htmlFor="cluster" className="text-white font-sans font-semibold">
+                Cluster
+              </label>
+              <input
+                id="cluster"
+                name="cluster"
                 type="text"
                 className="input-text w-full"
               />

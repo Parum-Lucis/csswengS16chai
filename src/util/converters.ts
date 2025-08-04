@@ -16,6 +16,7 @@ export const beneficiaryConverter: FirestoreDataConverter<Beneficiary> = {
         return {
             ...data,
             docID: snap.id,
+            cluster: data.cluster ?? "",
             time_to_live: data.time_to_live ?? null
         };
     }
