@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getMobileOperatingSystem } from "../util/getMobileOperatingSystem";
 import type { Event } from "@models/eventType";
-import { add, format } from "date-fns";
+import { format } from "date-fns";
 import { callNotifyGuardiansBySMS } from "../firebase/cloudFunctions";
 
 // currying magic.
@@ -34,7 +34,7 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
 
         // reused Jericho's template, but I refused to install another package and hacked the system
         const eventTitle = `This is a reminder to attend the event titled ${event.name}.`
-        const eventTime = `It will happen between ${format(add(event.start_date.toDate(), { hours: -8 }), "h:mm bb")} and ${format(add(event.end_date.toDate(), { hours: -8 }), "h:mm bb")} on ${format(add(event.start_date.toDate(), { hours: -8 }), "MMMM d, yyyy")}.`
+        const eventTime = `It will happen between ${format(event.start_date.toDate(), "h:mm bb")} and ${format(event.end_date.toDate(), "h:mm bb")} on ${format(event.start_date.toDate(), "MMMM d, yyyy")}.`
         const eventBlurb = `About the event: ${event.description}`
         const eventDetails = [eventTitle, eventTime, eventBlurb].reduce((prev, curr) => prev + "\n\n" + curr, "").replace(/^\n\n/, "");
 
