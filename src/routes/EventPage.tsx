@@ -10,7 +10,7 @@ import type { Beneficiary } from "@models/beneficiaryType";
 import AttendeesCard from "../components/AttendeesCard";
 import {
   SquarePlus, SquareMinus, Pen, EllipsisVertical, CirclePlus, UsersRound,
-  Baby, UserRound, MessageSquareMore, Mail, UserCheck , PenOff, FileUp
+  Baby, UserRound, MessageSquareMore, Mail, UserCheck, PenOff, FileUp
 } from 'lucide-react';
 import { add } from "date-fns";
 import { SendSMSModal } from "../components/SendSMSModal";
@@ -37,7 +37,7 @@ export function EventPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingAttendees, setIsEditingAttendees] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false)
-  const [showOtherDropdown, setShowOtherDropdown] = useState(false)   
+  const [showOtherDropdown, setShowOtherDropdown] = useState(false)
 
   // for sms & email modal
   const [isShowSMSModal, setIsShowSMSModal] = useState(false);
@@ -387,35 +387,35 @@ export function EventPage() {
     else toast.success("Nothing to update")
   }
 
-function handleExportAttendees() {
+  function handleExportAttendees() {
     if (attendees.length == 0) {
       toast.error("Attendees list is empty!")
       return;
     }
-    
+
     if (exporting) return; // Prevent multiple exports
-    
+
     const exportAttendees = async () => {
       setExporting(true);
       try {
         const result = await callExportAttendees(params.docId as string);
         const csvContent = result.data as string;
-        
+
         // create date and time string for filename
         const now = new Date();
         const pad = (n: number) => n.toString().padStart(2, "0");
         const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
         const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
-        
+
         // format event date for filename
         const eventDate = new Date((event?.start_date.seconds ?? 0) * 1000);
         const eventDateStr = `${pad(eventDate.getMonth() + 1)}-${pad(eventDate.getDate())}-${eventDate.getFullYear()}`;
-        
+
         // clean event name for filename (remove special characters)
         const cleanEventName = (event?.name || 'event').replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-');
-        
+
         const filename = `${cleanEventName}-${eventDateStr}-attendance-${dateStr}-${timeStr}.csv`;
-        
+
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
@@ -425,7 +425,7 @@ function handleExportAttendees() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         toast.success("Attendees exported successfully!");
       } catch (error) {
         console.error("Export failed:", error);
@@ -434,7 +434,7 @@ function handleExportAttendees() {
         setExporting(false);
       }
     };
-    
+
     exportAttendees();
     setShowOtherDropdown(false);
   }
@@ -470,33 +470,33 @@ function handleExportAttendees() {
         <div className="w-full max-w-2xl bg-primary rounded-md px-4 sm:px-6 py-8">
           <form onSubmit={isEditing ? handleSave : (e) => e.preventDefault()}>
             <div className="flex flex-col gap-4 mt-6">
-            
-            { isEditing ? (
-              <div className="flex flex-col flex-1">
-                <label
-                  htmlFor="name"
-                  className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
-                  Name:
-                </label>
 
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  className="input-text w-full"
-                  value={name}
-                  onChange={e => setEvent(prev => ({ ...prev as Event, name: e.target.value }))}
-                  disabled={!isEditing}
-                  required
-                />
-              </div>
+              {isEditing ? (
+                <div className="flex flex-col flex-1">
+                  <label
+                    htmlFor="name"
+                    className="mb-1 bg-secondary text-white px-2 py-1 rounded font-semibold font-sans">
+                    Name:
+                  </label>
 
-            ) : (
-            
-            <h2 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans">
-              {name}
-            </h2>
-            )}
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    className="input-text w-full"
+                    value={name}
+                    onChange={e => setEvent(prev => ({ ...prev as Event, name: e.target.value }))}
+                    disabled={!isEditing}
+                    required
+                  />
+                </div>
+
+              ) : (
+
+                <h2 className="block truncate w-55 sm:w-60 text-secondary text-2xl text-center font-bold font-sans mx-auto">
+                  {name}
+                </h2>
+              )}
 
 
               <div className="flex flex-col flex-1">
@@ -579,7 +579,7 @@ function handleExportAttendees() {
                     Discard
                   </button>
                 )}
-              
+
                 <button
                   type={isEditing ? "submit" : "button"}
                   className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
@@ -590,18 +590,8 @@ function handleExportAttendees() {
                 >
                   {isEditing ? "Save" : "Edit"}
                 </button>
-                </div>
-                {!isEditing && (
-                  <button
-                    type="button"
-                    className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
-                    onClick={handleDelete}
-                  >
-                    Delete
-                  </button>
-                )}
-              <div className="flex flex-col flex-1">
-              {isEditing && (
+              </div>
+              {!isEditing && (
                 <button
                   type="button"
                   className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
@@ -610,6 +600,16 @@ function handleExportAttendees() {
                   Delete
                 </button>
               )}
+              <div className="flex flex-col flex-1">
+                {isEditing && (
+                  <button
+                    type="button"
+                    className="mt-2 w-full bg-secondary text-white px-4 py-2 rounded font-semibold font-sans cursor-pointer"
+                    onClick={handleDelete}
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           </form>
@@ -653,7 +653,7 @@ function handleExportAttendees() {
                           >
                             <div className="flex flex-col">
                               <span className="block truncate w-40 sm:w-50 font-semibold text-md text-white">
-                               {notAtt.first_name + " " + notAtt.last_name}
+                                {notAtt.first_name + " " + notAtt.last_name}
                               </span>
                               <span className="text-sm text-gray-200">
                                 {isNaN(notAtt.accredited_id) ? "Waitlisted" : `ID: ${notAtt.accredited_id}`}
@@ -765,7 +765,7 @@ function handleExportAttendees() {
                         >
                           <Mail className="w-8 h-5 inline-block" /> Send Email
                         </li>
-                         <li
+                        <li
                           className={`font-extraboldsans px-4 py-2 text-gray-700 ${exporting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-70'}`}
                           onClick={exporting ? undefined : handleExportAttendees}
                         >
