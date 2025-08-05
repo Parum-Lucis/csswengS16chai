@@ -115,6 +115,9 @@ export const importBeneficiaries = onCall<string>(async (req) => {
 
         // validate guardians' number & email. 
         for (const [i, g] of b.guardians.entries()) {
+            if (g.contact_number && g.contact_number.startsWith("9") && g.contact_number.length === 10) {
+                g.contact_number = "0" + g.contact_number;
+            }
             const invalidContact = g.contact_number && !isValidContact(g.contact_number);
             const invalidEmail = g.email && !emailRegEx.test(g.email);
             if (invalidContact) {
