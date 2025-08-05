@@ -169,14 +169,12 @@ describe("SendSmsModal", () => {
     expect(copyButton).toBeInTheDocument();
     fireEvent.click(copyButton!);
 
-    // dont edit the spacing it ruins the test idk why
-    const expectedBody = `This is a reminder to attend the event titled Health Seminar.
+    const eventTitle = `This is a reminder to attend the event titled ${mockEvent.name}.`;
+    const eventTime = `It will happen between ${format(mockEvent.start_date.toDate(), "h:mm bb")} and ${format(mockEvent.end_date.toDate(), "h:mm bb")} on ${format(mockEvent.start_date.toDate(), "MMMM d, yyyy")}.`;
+    const eventBlurb = `About the event: ${mockEvent.description}`;
+    const expectedBody = [eventTitle, eventTime, eventBlurb].reduce((prev, curr) => prev + "\n\n" + curr, "").replace(/^\n\n/, "");
 
-It will happen between 10:00 AM and 11:00 AM on October 20, 2025.
-
-About the event: A seminar on public health.`;
-
-    await waitFor(() => {
+  await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedBody);
       expect(toast.success).toHaveBeenCalledWith(
         "successfully copied to clipboard!"

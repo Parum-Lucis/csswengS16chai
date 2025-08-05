@@ -24,7 +24,7 @@ jest.mock('../firebase/firebaseConfig', () => ({
   },
 }));
 
-jest.mock('./YourProfile', () => ({
+jest.mock('../routes/YourProfile', () => ({
   YourProfile: () => <div>Your Profile Page</div>,
 }));
 
