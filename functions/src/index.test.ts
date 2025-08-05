@@ -472,9 +472,9 @@ describe("Update Attendees on Event Update", () => {
 });
 
 describe("cronCleaner", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+  // beforeEach(() => {
+  //   jest.clearAllMocks();
+  // });
 
   // this was working before ???
   // it("deletes expired volunteer accounts", async () => {
