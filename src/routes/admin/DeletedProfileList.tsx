@@ -1,12 +1,13 @@
 import type { ReactNode } from "react"
 
 export function DeletedProfileList<T extends { docID: string }>({
-    profiles, loading, handleRestore, ProfileCard
+    profiles, loading, handleRestore, handleDelete, ProfileCard
 }: {
     profiles: T[],
     loading: boolean,
     handleRestore: (profile: T) => void,
-    ProfileCard: (props: { onRestore: (profile: T) => void, profile: T }) => ReactNode
+    handleDelete: (profile: T) => void,
+    ProfileCard: (props: { onRestore: (profile: T) => void, onDelete: (profile: T) => void, profile: T }) => ReactNode
 }) {
 
     return (
@@ -24,6 +25,7 @@ export function DeletedProfileList<T extends { docID: string }>({
                         <ProfileCard
                             key={`${index}${profile.docID}`}
                             onRestore={handleRestore}
+                            onDelete={handleDelete}
                             profile={profile}
                         />
                     ))

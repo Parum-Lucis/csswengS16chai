@@ -172,6 +172,7 @@ export function BeneficiaryList() {
           // dont include birthdate, messes up results
           isNaN(profile.accredited_id) ? "waitlisted" : profile.accredited_id.toString(),
           // dont include age, messes up results when looking for id
+          profile.cluster.toLocaleLowerCase()
         ];
         return terms.every(term =>
           values.some(value => value.includes(term))

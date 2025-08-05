@@ -1,11 +1,13 @@
 
-import { startTransition, useEffect, useMemo, useOptimistic, useState } from "react";
-import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { startTransition, useEffect, useMemo, useOptimistic, useRef, useState } from "react";
+import { collection, deleteDoc, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { compareAsc, differenceInDays, formatDate } from "date-fns";
 import { db } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { eventConverter } from "../../util/converters";
 import type { Event } from "@models/eventType";
+import { Ellipsis, Trash, Undo2 } from "lucide-react";
+import { Dropdown } from "../../components/Dropdown";
 
 
 export function DeletedEventList() {
@@ -48,10 +50,33 @@ export function DeletedEventList() {
             try {
                 removeOEvents(docID);
 
-                updateDoc(doc(db, "events", docID), {
+                await updateDoc(doc(db, "events", docID), {
                     time_to_live: null
                 })
                 toast.success("successfully restored " + name);
+                setEvents(b => b.filter(v => v.docID !== docID));
+            } catch (error) {
+                console.log(error);
+                toast.error("couldn't restored " + name);
+            }
+        })
+    }
+
+    function handleCompleteDelete(event: Event) {
+        const { docID } = event;
+        const name = event.name;
+
+        if (docID === undefined) {
+            toast.error("couldn't delete " + name);
+            return;
+        }
+
+        startTransition(async () => {
+            try {
+                removeOEvents(docID);
+
+                deleteDoc(doc(db, "events", docID))
+                toast.success("successfully deleted " + name);
                 setEvents(b => b.filter(v => v.docID !== docID));
             } catch (error) {
                 console.log(error);
@@ -154,6 +179,7 @@ export function DeletedEventList() {
                             <EventCard
                                 key={`${index}${profile.docID}`}
                                 onRestore={handleRestore}
+                                onDelete={handleCompleteDelete}
                                 event={profile}
                             />
                         ))
@@ -165,14 +191,30 @@ export function DeletedEventList() {
 }
 
 function EventCard(
-    { event, onRestore }: { event: Event, onRestore: (e: Event) => void }
+    { event, onRestore, onDelete }: { event: Event, onRestore: (e: Event) => void, onDelete: (e: Event) => void }
 ) {
-
+    const [showDropdown, setShowDropdown] = useState(false);
     const { name, start_date, location, description, time_to_live } = event;
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (!e.target || !(e.target instanceof Node)) return;
+
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setShowDropdown(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [dropdownRef]);
 
     return (
         <div
-            className="flex items-center bg-tertiary text-white rounded-xl p-4 shadow-md cursor-pointer hover:opacity-90 transition"
+            className="flex items-center bg-tertiary text-white rounded-xl p-4 shadow-md transition"
         >
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 shrink-0">
                 <svg
@@ -194,29 +236,33 @@ function EventCard(
                 </div>
                 <div className="h-1" />
                 <div className="text-sm">Date: {formatDate(start_date.toDate(), "MMMM d, yyyy")}</div>
-                <div className="block truncate w-35 sm:w-50 text-sm">Location: 
-                         {`${location}`}
+                <div className="block truncate w-35 sm:w-50 text-sm">Location:
+                    {`${location}`}
                 </div>
                 <span>Days Left: <span className="text-red-500 font-bold">{time_to_live ? differenceInDays(time_to_live.toDate(), new Date()) : "?"}</span></span>
             </div>
-            <button 
-                aria-label={`Restore ${name}`}
-                onClick={() => onRestore(event)}
-                className="cursor-pointer h-full">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                    width="48"
-                    height="48"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-undo2-icon lucide-undo-2">
-                    <path d="M9 14 4 9l5-5" />
-                    <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
-                </svg>
-            </button>
+            <div className="relative">
+                <button onClick={() => setShowDropdown(val => !val)} className="cursor-pointer">
+                    <Ellipsis />
+                </button>
+                <Dropdown
+                    ref={dropdownRef}
+                    show={showDropdown} className="right-0 divide-y text-black gap-2 border-gray-500">
+                    <button
+                        aria-label={`Restore ${name}`}
+                        onClick={() => onRestore(event)}
+                        className="cursor-pointer h-full flex border-inherit p-2 whitespace-nowrap gap-2 hover:opacity-60">
+                        <Undo2 color="black" /> Restore Event
+                    </button>
+                    <button
+                        aria-label={`Restore ${name}`}
+                        onClick={() => onDelete(event)}
+                        className="cursor-pointer h-full flex border-inherit p-2 whitespace-nowrap gap-2 hover:opacity-60">
+                        <Trash color="black" /> Delete Event
+                    </button>
+                </Dropdown>
+            </div>
+
         </div>
     )
 }

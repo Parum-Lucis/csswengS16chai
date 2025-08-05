@@ -4,14 +4,14 @@ import * as logger from "firebase-functions/logger";
 
 import { Beneficiary as BeneficiaryFrontend } from "@models/beneficiaryType";
 import { Guardian } from "@models/guardianType";
-import { splitToLines, capitalize, isValidContact, emailRegEx, isValidSex,  csvHelpers } from "./helpers";
+import { splitToLines, capitalize, isValidContact, emailRegEx, isValidSex, csvHelpers } from "./helpers";
 
 const firestore = getFirestore();
 
 // override for incoming changes to bene model
-type Beneficiary = Omit<BeneficiaryFrontend, "birthdate" | "grade_level"> & { 
-    birthdate: Timestamp; 
-    grade_level: string 
+type Beneficiary = Omit<BeneficiaryFrontend, "birthdate" | "grade_level"> & {
+    birthdate: Timestamp;
+    grade_level: string
 };
 
 export const importBeneficiaries = onCall<string>(async (req) => {
@@ -22,7 +22,7 @@ export const importBeneficiaries = onCall<string>(async (req) => {
 
     const lines = splitToLines(req.data);
     let skipped = 0;
-    
+
     // process beneficiaries by line
     const importedBeneficiaries: Beneficiary[] = lines.map((line, index) => {
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, ""));
@@ -30,10 +30,10 @@ export const importBeneficiaries = onCall<string>(async (req) => {
         // parse guardians
         const guardians: Guardian[] = [0, 1, 2].map(i => {
             const [name, relation, contact_number, email] = [
-                values[7 + i * 4] ?? "",
                 values[8 + i * 4] ?? "",
                 values[9 + i * 4] ?? "",
-                values[10 + i * 4] ?? ""
+                values[10 + i * 4] ?? "",
+                values[11 + i * 4] ?? ""
             ];
             const g = { name, relation, contact_number, email };
             if (!g.name && !g.relation && !g.contact_number && !g.email) {
@@ -50,13 +50,14 @@ export const importBeneficiaries = onCall<string>(async (req) => {
         }
 
         // parse beneficiary. add birthdate later, remove unnecessary fields
-        let b: Omit<Beneficiary, "birthdate" | "attended_events" | "docID"> = {
+        const b: Omit<Beneficiary, "birthdate" | "attended_events" | "docID"> = {
             accredited_id: values[0] ? Number(values[0]) : NaN,
             first_name: values[1]?.trim() ?? "",
             last_name: values[2]?.trim() ?? "",
             sex: values[3]?.trim() ?? "",
             grade_level: values[5]?.trim() ?? "",
             address: values[6]?.trim() ?? "",
+            cluster: values[7]?.trim() ?? "",
             guardians,
             time_to_live: null,
         };
@@ -114,11 +115,14 @@ export const importBeneficiaries = onCall<string>(async (req) => {
 
         // validate guardians' number & email. 
         for (const [i, g] of b.guardians.entries()) {
+            if (g.contact_number && g.contact_number.startsWith("9") && g.contact_number.length === 10) {
+                g.contact_number = "0" + g.contact_number;
+            }
             const invalidContact = g.contact_number && !isValidContact(g.contact_number);
             const invalidEmail = g.email && !emailRegEx.test(g.email);
             if (invalidContact) {
                 // skip if contact invalid
-                logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid contact number \"${g.contact_number}\"".`);
+                logger.warn(`Line ${index + 2} skipped: Guardian ${i + 1} has invalid contact number "${g.contact_number}"".`);
                 skipped++;
                 return null;
             } else if (invalidEmail) {
@@ -144,7 +148,7 @@ export const importBeneficiaries = onCall<string>(async (req) => {
     try {
         const batch = firestore.batch();
         const existingSnapshot = await firestore.collection("beneficiaries").where("time_to_live", "==", null).get();
-        
+
         // Use Map for O(1) duplicate checking
         const existingIds = new Set<number>(existingSnapshot.docs.map(doc => Number(doc.data().accredited_id)));
         const existingNames = new Map<string, boolean>();
@@ -187,9 +191,12 @@ export const importBeneficiaries = onCall<string>(async (req) => {
         // add beneficiaries
         await batch.commit();
         logger.info(`New beneficiaries imported successfully! Added: ${importedIds.size + importedWaitlist}, Skipped: ${skipped}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
         logger.error("Failed to import CSV", err);
-        throw new HttpsError("internal", err.message ?? "Failed to import CSV due to internal error. Please contact an admin or developer for assistance.");
+        if (err instanceof Error)
+            throw new HttpsError("internal", err.message ?? "Failed to import CSV due to internal error. Please contact an admin or developer for assistance.");
+        else
+            throw new HttpsError("internal", "Failed to import CSV due to internal error. Please contact an admin or developer for assistance.")
     }
 
     return { imported: importedIds.size + importedWaitlist, skipped };
@@ -218,6 +225,7 @@ export const exportBeneficiaries = onCall<void>(async (req) => {
         { label: "Birthdate", field: "birthdate" },
         { label: "Grade Level", field: "grade_level" },
         { label: "Address", field: "address" },
+        { label: "Cluster", field: "cluster" },
     ];
 
     // add guardian columns (for 3)
@@ -242,7 +250,7 @@ export const exportBeneficiaries = onCall<void>(async (req) => {
             const guardians: Guardian[] = doc.guardians;
             return [
                 ...beneficiaryCols.map(header => {
-                    let value = doc[header.field];
+                    const value = doc[header.field];
 
                     // handle waitlist ids
                     if (header.field === "accredited_id") {

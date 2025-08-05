@@ -3,7 +3,7 @@ import { Mail, FilesIcon, X, Bell } from "lucide-react";
 import { useMemo, useRef, useState, type ReactEventHandler } from "react"; // Removed useState as isAttemptingEmail is no longer needed
 import { toast } from "react-toastify";
 import type { Event } from "@models/eventType";
-import { add, format } from "date-fns";
+import { format } from "date-fns";
 import { Link } from "react-router-dom"; // Link is needed for mailto
 import { sendEmailReminder } from "../firebase/cloudFunctions";
 
@@ -24,13 +24,13 @@ export function SendEmailModal({ event, attendees, showModal, onClose }: { event
     const [isAttemptingEmail, setIsAttemptingEmail] = useState(false);
     const dialogRef = useRef<HTMLDialogElement>(null);
 
-    const { emailAddresses, emailSubject, emailBody, mailtoLink } = useMemo(() => {      
+    const { emailAddresses, emailSubject, emailBody, mailtoLink } = useMemo(() => {
         const emailAddresses = attendees.reduce((prev, curr) => (prev + "," + curr.email), "").replace(/^,/, "");
 
         const emailSubject = `Reminder: ${event.name}`;
 
         const eventTitle = `This is a reminder to attend the event titled ${event.name}.`
-        const eventTime = `It will happen between ${format(add(event.start_date.toDate(), { hours: -8 }), "h:mm bb")} and ${format(add(event.end_date.toDate(), { hours: -8 }), "h:mm bb")} on ${format(add(event.start_date.toDate(), { hours: -8 }), "MMMM d, yyyy")}.`
+        const eventTime = `It will happen between ${format(event.start_date.toDate(), "h:mm bb")} and ${format(event.end_date.toDate(), "h:mm bb")} on ${format(event.start_date.toDate(), "h:mm bb")}.`
         const eventBlurb = `About the event: ${event.description}`
         const emailBody = [eventTitle, eventTime, eventBlurb].reduce((prev, curr) => prev + "\n\n" + curr, "").replace(/^\n\n/, "");
 
@@ -80,7 +80,7 @@ export function SendEmailModal({ event, attendees, showModal, onClose }: { event
                             <div className="flex flex-col">
 
                                 <h2 className="m-0"><span className="font-bold">Automatically</span> send to all participants.</h2>
-                                <p className="italic text-sm">Please keep in mind the limitations of 
+                                <p className="italic text-sm">Please keep in mind the limitations of
                                     <span className="text-green-600 font-bold"> 500 </span>
                                     emails per day. For more information, please click {" "}
                                     <Link to="https://support.google.com/mail/answer/22839?hl=en" className="underline text-shadow-primary">here</Link>

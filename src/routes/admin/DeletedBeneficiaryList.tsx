@@ -1,12 +1,14 @@
 import type { Beneficiary } from "@models/beneficiaryType";
-import { startTransition, useEffect, useOptimistic, useState, useMemo } from "react";
-import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { startTransition, useEffect, useOptimistic, useState, useMemo, useRef } from "react";
+import { collection, deleteDoc, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { compareDesc, differenceInDays, differenceInYears } from "date-fns";
 import { db, store } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 import { DeletedProfileList } from "./DeletedProfileList";
 import { beneficiaryConverter } from "../../util/converters";
 import { getBlob, ref } from "firebase/storage";
+import { Dropdown } from "../../components/Dropdown";
+import { Ellipsis, Trash, Undo2 } from "lucide-react";
 
 export function DeletedBeneficiaryList() {
 
@@ -54,6 +56,25 @@ export function DeletedBeneficiaryList() {
             } catch (error) {
                 console.log(error);
                 toast.error("couldn't restored " + name);
+            }
+        })
+    }
+
+    function handleCompleteDelete(profile: Beneficiary) {
+        const name = profile.first_name + " " + profile.last_name;
+        const docId = profile.docID
+        startTransition(async () => {
+            try {
+                removeOProfiles(docId);
+                const d = doc(db, "beneficiaries", docId);
+
+                deleteDoc(d);
+
+                toast.success("successfully deleted " + name);
+                setProfiles(b => b.filter(v => v.docID !== docId));
+            } catch (error) {
+                console.log(error);
+                toast.error("couldn't deleted " + name);
             }
         })
     }
@@ -164,6 +185,7 @@ export function DeletedBeneficiaryList() {
                 profiles={modifiedList}
                 ProfileCard={DeletedBeneficiaryCard}
                 handleRestore={handleRestore}
+                handleDelete={handleCompleteDelete}
                 loading={isFetching}
 
 
@@ -172,13 +194,17 @@ export function DeletedBeneficiaryList() {
     )
 }
 
-function DeletedBeneficiaryCard({ profile, onRestore }:
-    { profile: Beneficiary, onRestore: (profile: Beneficiary) => void }) {
+function DeletedBeneficiaryCard({ profile, onRestore, onDelete }:
+    { profile: Beneficiary, onRestore: (profile: Beneficiary) => void, onDelete: (profile: Beneficiary) => void }) {
     const { first_name, last_name, sex, birthdate, time_to_live, pfpPath } = profile;
+    const fullName = `${first_name} ${last_name}`
     const [isLoading, setIsLoading] = useState(true);
+    const [showDropdown, setShowDropdown] = useState(false);
     const [picURL, setPicURL] = useState("");
     const daysLeftuntilDeleted = time_to_live ? differenceInDays(time_to_live.toDate(), new Date()) : "?"
-    // const daysLeftuntilDeleted = "hi"
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+
     useEffect(() => {
         async function fetchPictureBlob() {
             setIsLoading(true);
@@ -200,6 +226,23 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
         }
         fetchPictureBlob();
     }, [pfpPath]);
+
+
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (!e.target || !(e.target instanceof Node)) return;
+
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setShowDropdown(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [dropdownRef]);
+
     return (
 
         <div
@@ -224,7 +267,7 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
                 </div>
                 <div className="flex flex-col text-sm">
                     <span className="block truncate w-35 sm:w-50 font-bold text-base font-[Montserrat]">
-                        {`${last_name}, ${first_name}`}
+                        {fullName}
                     </span>
                     <span>Age: {differenceInYears(new Date(), birthdate.toDate())}</span>
                     <span>Sex: {sex}</span>
@@ -232,21 +275,27 @@ function DeletedBeneficiaryCard({ profile, onRestore }:
                 </div>
             </div>
 
-            <button onClick={() => onRestore(profile)} className="cursor-pointer h-full">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                    width="48"
-                    height="48"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-undo2-icon lucide-undo-2">
-                    <path d="M9 14 4 9l5-5" />
-                    <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
-                </svg>
-            </button>
+            <div className="relative">
+                <button onClick={() => setShowDropdown(val => !val)} className="cursor-pointer">
+                    <Ellipsis />
+                </button>
+                <Dropdown
+                    ref={dropdownRef}
+                    show={showDropdown} className="right-0 divide-y text-black gap-2 border-gray-500">
+                    <button
+                        aria-label={`Restore ${fullName}`}
+                        onClick={() => onRestore(profile)}
+                        className="cursor-pointer h-full flex border-inherit p-2 whitespace-nowrap gap-2 hover:opacity-60">
+                        <Undo2 color="black" /> Restore Beneficiary
+                    </button>
+                    <button
+                        aria-label={`Restore ${fullName}`}
+                        onClick={() => onDelete(profile)}
+                        className="cursor-pointer h-full flex border-inherit p-2 whitespace-nowrap gap-2 hover:opacity-60">
+                        <Trash color="black" /> Delete Beneficiary
+                    </button>
+                </Dropdown>
+            </div>
 
         </div>
 

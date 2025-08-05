@@ -72,9 +72,15 @@ export const importVolunteers = onCall<string>(async (req) => {
 
 
         // validate contact number
-        if (contact_number && !isValidContact(contact_number.trim())) {
+        if (contact_number) {
+            contact_number = contact_number.trim();
+            if (contact_number.startsWith("9") && contact_number.length === 10) {
+            contact_number = "0" + contact_number;
+            }
+            if (!isValidContact(contact_number)) {
             logger.warn(`Line ${index + 2} skipped: Invalid contact number "${contact_number}".`);
             return null;
+            }
         }
 
         // validate admin bool. if blank/invalid = false

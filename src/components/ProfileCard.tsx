@@ -7,10 +7,10 @@ import { store } from "../firebase/firebaseConfig";
 import { differenceInYears } from "date-fns";
 
 // :3 (id should come in as either null (always for Volunteer), number, or "waitlisted")
-type Volunteer = OriginalVolunteer & { accredited_id?: number | null };
+type Volunteer = OriginalVolunteer & { accredited_id?: number | null, cluster?: string | null };
 
 function ProfileCard({ profile: {
-  docID, pfpPath, first_name, last_name, sex, birthdate, accredited_id
+  docID, pfpPath, first_name, last_name, sex, birthdate, accredited_id, cluster
 }, sort }: { profile: Volunteer | Beneficiary, sort: string }) {
   const [picURL, setPicURL] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +46,7 @@ function ProfileCard({ profile: {
       to={docID}
       className="w-full flex items-center bg-primary text-white rounded-xl p-4 shadow-lg cursor-pointer hover:opacity-90 transition"
     >
-      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 overflow-hidden">
+      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4 overflow-hidden shrink-0">
         {
           isLoading || picURL === null ?
             <svg
@@ -62,9 +62,14 @@ function ProfileCard({ profile: {
         }
       </div>
       <div className="flex flex-col text-sm relative flex-1">
-        <span className="block truncate w-50 sm:w-60 font-bold text-base font-sans">
-          {fullName}
-        </span>
+        <div className="flex flex-col">
+          <h1 className="block truncate w-50 sm:w-60 font-bold text-base font-sans">
+            {fullName}
+          </h1>
+          {cluster &&
+            <span className="-mt-1.5 block italic">{cluster}</span>
+          }
+        </div>
         <span>Age: {differenceInYears(new Date(), birthdate.toDate())}</span>
         <span>Sex: {sex}</span>
         {accredited_id != null && (
