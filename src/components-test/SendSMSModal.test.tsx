@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { SendSMSModal } from "../components/SendSMSModal";
 import { toast } from "react-toastify";
 import { Timestamp } from "firebase/firestore";
@@ -193,6 +193,116 @@ describe("SendSmsModal", () => {
 
     await waitFor(() => {
       expect(screen.getByText("42")).toBeInTheDocument();
+    });
+  });
+
+  it("shows an error toast if the API returns a non-200 status", async () => {
+    mockedCallNotifyGuardiansBySMS.mockResolvedValue({
+      data: { status: 400, message: "Invalid phone number" },
+    });
+
+    renderSmsModal();
+    const notifyButton = screen.getByRole("button", { name: /notify/i, hidden: true });
+    fireEvent.click(notifyButton);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "Couldn't send notification. Try again. (possible credit lost!)"
+      );
+    });
+  });
+
+  it("shows an error toast if the notify function rejects", async () => {
+    mockedCallNotifyGuardiansBySMS.mockRejectedValue(new Error("Network failure"));
+
+    renderSmsModal();
+    const notifyButton = screen.getByRole("button", { name: /notify/i, hidden: true });
+    fireEvent.click(notifyButton);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "Couldn't send notification. Try again. (possible credit lost!)"
+      );
+    });
+  });
+
+  it("disables the notify button while sending an SMS", async () => {
+    let resolvePromise: (value: { data: { status: number } }) => void;
+    const promise = new Promise<{ data: { status: number } }>(resolve => {
+        resolvePromise = resolve;
+    });
+    mockedCallNotifyGuardiansBySMS.mockReturnValue(promise);
+
+    renderSmsModal();
+    const notifyButton = screen.getByRole("button", { name: /notify/i, hidden: true });
+
+    expect(notifyButton).not.toBeDisabled();
+
+    fireEvent.click(notifyButton);
+
+    expect(notifyButton).toBeDisabled();
+
+    await act(async () => {
+        resolvePromise({ data: { status: 200 } });
+        await promise; 
+    });
+
+    expect(notifyButton).not.toBeDisabled();
+  });
+
+  it("calls the onClose prop when the close button is clicked", () => {
+    const handleClose = jest.fn();
+    render(
+      <MemoryRouter>
+        <UserContext.Provider value={mockAdmin}>
+          <SendSMSModal
+            event={mockEvent}
+            attendees={mockAttendees}
+            showModal={true}
+            onClose={handleClose}
+          />
+        </UserContext.Provider>
+      </MemoryRouter>
+    );
+
+    const closeButton = screen.getByRole("button", { name: /close/i, hidden: true });
+    fireEvent.click(closeButton);
+    
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  describe("when attendees list is empty", () => {
+    beforeEach(() => {
+        render(
+            <MemoryRouter>
+              <UserContext.Provider value={mockAdmin}>
+                <SendSMSModal
+                  event={mockEvent}
+                  attendees={[]}
+                  showModal={true}
+                  onClose={() => {}}
+                />
+              </UserContext.Provider>
+            </MemoryRouter>
+        );
+    });
+
+    it("displays a cost of 0", () => {
+        const costSpan = screen.getByText("0", { selector: 'span.font-bold' });
+        expect(costSpan).toBeInTheDocument();
+    });
+
+    it("shows no phone numbers", () => {
+        const phoneNumbersDetails = screen.getByText("Phone numbers").closest("details");
+        expect(phoneNumbersDetails).toHaveTextContent("Phone numbers");
+        expect(phoneNumbersDetails?.textContent).not.toContain("+");
+    });
+
+    it("generates a manual sms link with no numbers", () => {
+        const smsLink = screen.getByRole("link", { name: /send/i, hidden: true });
+        const href = smsLink.getAttribute("href");
+        expect(href).not.toContain("+");
+        expect(href).toContain("sms://;?&body=");
     });
   });
 });

@@ -81,7 +81,7 @@ export function SendSMSModal({ event, attendees, showModal, onClose }: { event: 
             <div className="px-6 py-10">
                 <div className="flex justify-between flex-row mb-8">
                     <h1 className="text-xl">Send SMS</h1>
-                    <button type="button" onClick={onClose}><X /></button>
+                    <button type="button" onClick={onClose} aria-label="Close"><X /></button>
                 </div>
 
                 <div className="flex flex-col px-4 gap-4">

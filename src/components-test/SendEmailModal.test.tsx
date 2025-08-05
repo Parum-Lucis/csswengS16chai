@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { SendEmailModal } from "../components/SendEmailModal";
 import { toast } from "react-toastify";
 import { Timestamp } from "firebase/firestore";
@@ -10,6 +10,7 @@ import "@testing-library/jest-dom";
 import { UserContext } from "../util/userContext";
 import { User } from "firebase/auth";
 import { type UserStateType } from "../util/userContext";
+import { sendEmailReminder } from "../firebase/cloudFunctions";
 
 jest.mock("react-toastify", () => ({
   toast: {
@@ -173,6 +174,133 @@ describe("SendEmailModal", () => {
       expect(toast.success).toHaveBeenCalledWith(
         "Successfully copied to clipboard!"
       );
+    });
+  });
+
+  it("shows an error toast on API failure", async () => {
+    (sendEmailReminder as unknown as jest.Mock).mockRejectedValue(new Error("Network Error"));
+
+    renderEmailModal();
+    const notifyButton = screen.getByRole("button", {
+      name: /notify/i,
+      hidden: true,
+    });
+    fireEvent.click(notifyButton);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "Error: Couldn't send notifcation. Try again. (Possibly hit email limits!)"
+      );
+    });
+  });
+
+  it("shows an error toast if the API indicates failure", async () => {
+    (sendEmailReminder as unknown as jest.Mock).mockResolvedValue({ data: false });
+
+    renderEmailModal();
+    const notifyButton = screen.getByRole("button", {
+      name: /notify/i,
+      hidden: true,
+    });
+    fireEvent.click(notifyButton);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "Couldn't send notifcation. Try again. (Possibly hit email limits!)"
+      );
+    });
+  });
+
+  it("disables the notify button while sending an email", async () => {
+    let resolvePromise: (value: { data: boolean }) => void;
+    const promise = new Promise<{ data: boolean }>(resolve => {
+      resolvePromise = resolve;
+    });
+    (sendEmailReminder as unknown as jest.Mock).mockReturnValue(promise);
+
+    renderEmailModal();
+    const notifyButton = screen.getByRole("button", {
+      name: /notify/i,
+      hidden: true,
+    });
+    
+    expect(notifyButton).not.toBeDisabled();
+
+    fireEvent.click(notifyButton);
+
+    expect(notifyButton).toBeDisabled();
+
+    await act(async () => {
+      resolvePromise({ data: true });
+      await promise;
+    });
+
+    expect(notifyButton).not.toBeDisabled();
+  });
+
+  it("calls the onClose prop when the close button is clicked", () => {
+    const handleClose = jest.fn();
+    render(
+        <MemoryRouter>
+            <UserContext.Provider value={mockAdmin}>
+                <SendEmailModal
+                    event={mockEvent}
+                    attendees={mockAttendees}
+                    showModal={true}
+                    onClose={handleClose}
+                />
+            </UserContext.Provider>
+        </MemoryRouter>
+    );
+
+    const closeButton = screen.getByRole("button", { name: /close/i, hidden: true });
+    fireEvent.click(closeButton);
+
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders correctly when there are no attendees", () => {
+    render(
+      <MemoryRouter>
+        <UserContext.Provider value={mockAdmin}>
+          <SendEmailModal
+            event={mockEvent}
+            attendees={[]}
+            showModal={true}
+            onClose={() => {}}
+          />
+        </UserContext.Provider>
+      </MemoryRouter>
+    );
+
+    const mailtoLink = screen.getByRole("link", { 
+        name: /send/i, 
+        hidden: true 
+    });
+    expect(mailtoLink).toHaveAttribute(
+      "href",
+      expect.stringContaining("mailto:?subject=")
+    );
+
+    const emailDetails = screen.getByText("Email Addresses").closest("details");
+    expect(emailDetails).toHaveTextContent("Email Addresses");
+    expect(emailDetails?.textContent).not.toContain("@");
+  });
+
+  it("shows an error toast when copying to clipboard fails", async () => {
+    (navigator.clipboard.writeText as jest.Mock).mockRejectedValue(new Error("Clipboard Error"));
+    
+    renderEmailModal();
+    const subjectDetails = screen.getByText("Email Subject").closest("details");
+    const copyButton = subjectDetails?.parentElement?.querySelector("button");
+
+    if (copyButton) {
+      fireEvent.click(copyButton);
+    }
+    
+    await waitFor(() => {
+        expect(navigator.clipboard.writeText).toHaveBeenCalled();
+        expect(toast.error).toHaveBeenCalledWith("Couldn't copy into clipboard.");
     });
   });
 });
