@@ -30,10 +30,10 @@ export const importBeneficiaries = onCall<string>(async (req) => {
         // parse guardians
         const guardians: Guardian[] = [0, 1, 2].map(i => {
             const [name, relation, contact_number, email] = [
-                values[7 + i * 4] ?? "",
                 values[8 + i * 4] ?? "",
                 values[9 + i * 4] ?? "",
-                values[10 + i * 4] ?? ""
+                values[10 + i * 4] ?? "",
+                values[11 + i * 4] ?? ""
             ];
             const g = { name, relation, contact_number, email };
             if (!g.name && !g.relation && !g.contact_number && !g.email) {
@@ -57,8 +57,8 @@ export const importBeneficiaries = onCall<string>(async (req) => {
             sex: values[3]?.trim() ?? "",
             grade_level: values[5]?.trim() ?? "",
             address: values[6]?.trim() ?? "",
+            cluster: values[7]?.trim() ?? "",
             guardians,
-            cluster: "",
             time_to_live: null,
         };
 
@@ -225,6 +225,7 @@ export const exportBeneficiaries = onCall<void>(async (req) => {
         { label: "Birthdate", field: "birthdate" },
         { label: "Grade Level", field: "grade_level" },
         { label: "Address", field: "address" },
+        { label: "Cluster", field: "cluster" },
     ];
 
     // add guardian columns (for 3)
