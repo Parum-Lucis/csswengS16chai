@@ -5,7 +5,7 @@ jest.mock("../../firebase/firebaseConfig", () => ({
   db: {},
 }));
 
-jest.mock("./DeletedProfileList", () => ({
+jest.mock("../admin/DeletedProfileList", () => ({
   DeletedProfileList: ({ profiles, loading, handleRestore, ProfileCard }: any) => {
     if (loading) return <div>Loading profiles...</div>;
     if (profiles.length === 0) return <div>Nothing to show</div>;
